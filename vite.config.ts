@@ -24,6 +24,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/gangapulse-api/, '/api'),
         },
+        '/cctv-api': {
+          target: env.VITE_CCTV_API_BASE_URL || 'http://localhost:8080',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/cctv-api/, '/api'),
+        },
       },
     },
   }

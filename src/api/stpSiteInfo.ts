@@ -40,6 +40,12 @@ const STP_ID =
 
 const GANGAPULSE_TOKEN = import.meta.env.VITE_GANGAPULSE_API_TOKEN ?? ''
 
+function getAuthorizationHeader(): string {
+  const trimmed = GANGAPULSE_TOKEN.trim()
+  if (!trimmed) return ''
+  return trimmed.toLowerCase().startsWith('bearer ') ? trimmed : `Bearer ${trimmed}`
+}
+
 function defaultParameter(limit = '—'): ParameterReading {
   return { value: '—', limit, isAlert: false }
 }
@@ -668,7 +674,7 @@ export async function fetchStpSiteInfo(): Promise<StpDisplayData> {
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GANGAPULSE_TOKEN}`,
+      Authorization: getAuthorizationHeader(),
     },
   })
 
