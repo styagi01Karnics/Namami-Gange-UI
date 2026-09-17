@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Exact card shadow — set here so Tailwind's ring layers cannot override it. */
+.shadow-card {
+  box-shadow: 0px 0px 3px 3px #0768D21A;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* The app shell is viewport-height with its own scroll area (<main>), so the
+   document must never scroll — otherwise a stray absolute box drags the whole
+   page down and leaves blank space under the shell. */
+html,
+body {
+  overflow: hidden;
+}
+
+body {
+  @apply bg-canvas font-sans text-ink antialiased;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* thin scrollbars used by the sidebar + scrollable card lists */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d8e2ee transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #d8e2ee;
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* dashed separator used inside the compliance card */
+.dashed-divider {
+  border-top: 1px dashed #DCE6F1;
+}
+
+select.bare {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hidden on screen — PrintDocument portals here and @media print shows it alone. */
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #print-root,
+  #print-root * {
+    visibility: visible !important;
+  }
+
+  #print-root {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+
+  /* Never let the live app shell leak into the PDF. */
+  #root {
+    display: none !important;
+  }
+}
