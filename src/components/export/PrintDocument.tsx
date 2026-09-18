@@ -22,6 +22,7 @@ export default function PrintDocument({
   rows,
   renderCell = (row, col) => row[col.key] ?? '—',
   onDone,
+  children = null,
 }) {
   const target = document.getElementById('print-root')
   const onDoneRef = useRef(onDone)
@@ -100,11 +101,11 @@ export default function PrintDocument({
 
       <table className="mt-[20px] w-full border-collapse">
         <thead>
-          <tr className="bg-[#F7F9FC]">
+          <tr className="bg-canvas">
             {columns.map((c) => (
               <th
                 key={c.key}
-                className={`border-b border-line px-[12px] py-[11px] text-[11.5px] font-medium leading-4 text-ink-soft ${
+                className={`border-b border-line px-[12px] py-[11px] text-[11.5px] font-semibold leading-4 text-ink-soft ${
                   c.align === 'right' ? 'text-right' : 'text-left'
                 }`}
               >
@@ -130,6 +131,8 @@ export default function PrintDocument({
           ))}
         </tbody>
       </table>
+
+      {children}
     </article>,
     target,
   )

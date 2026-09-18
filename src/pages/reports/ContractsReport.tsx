@@ -6,7 +6,7 @@ import { DownloadAction, StpLink } from '../../components/reports/cells'
 import { contractsReportColumns, contractsReportRows, contractsSummary } from '../../data/mockData'
 
 export default function ContractsReport() {
-  const renderCell = (row, col) => {
+  const renderCell = (row, col, { exportRow } = {}) => {
     switch (col.key) {
       case 'id':
         return (
@@ -26,7 +26,7 @@ export default function ContractsReport() {
           </span>
         )
       case 'action':
-        return <DownloadAction label={`Download ${row.id}`} />
+        return <DownloadAction label={`Download ${row.id}`} onClick={exportRow} />
       default:
         return row[col.key]
     }
@@ -34,7 +34,7 @@ export default function ContractsReport() {
 
   return (
     <ReportShell>
-      <StatCardsRow items={contractsSummary} noteChip />
+      <StatCardsRow items={contractsSummary} />
       <ReportTable
         columns={contractsReportColumns}
         rows={contractsReportRows}

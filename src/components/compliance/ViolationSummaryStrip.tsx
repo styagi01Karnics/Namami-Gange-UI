@@ -2,7 +2,10 @@ import { TONE_TEXT, TrendValue } from './parts'
 
 export default function ViolationSummaryStrip({ items }) {
   return (
-    <div className="grid grid-cols-5 rounded-[12px] border border-line bg-white shadow-card">
+    <div
+      className="grid rounded-[12px] border border-line bg-white"
+      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+    >
       {items.map((item, i) => (
         <div key={item.label} className={`px-[20px] py-[13px] ${i > 0 ? 'border-l border-line' : ''}`}>
           <p className="text-[13px] leading-[18px] text-ink-soft">{item.label}</p>

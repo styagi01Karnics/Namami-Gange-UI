@@ -30,7 +30,11 @@ export default function ParamTile({ param }) {
       <p className={`mt-[7px] text-[13.5px] font-semibold leading-[18px] ${VALUE_TONE[param.tone]}`}>
         {param.value}
       </p>
-      <p className="mt-[5px] text-[11.5px] leading-4 text-brand-link">{param.note}</p>
+      {param.note && (
+        <span className="mt-[6px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[3px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
+          {param.note}
+        </span>
+      )}
     </div>
   )
 }

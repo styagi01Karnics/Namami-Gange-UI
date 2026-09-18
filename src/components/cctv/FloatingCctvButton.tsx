@@ -43,7 +43,7 @@ export default function FloatingCctvButton() {
   return (
     <div
       style={{ top: `${top}px` }}
-      className="fixed right-[12px] z-[45] flex w-[86px] flex-col items-center rounded-[16px] border border-[#8BB8E8] bg-[#CBE3F9] px-[12px] py-[14px] shadow-card"
+      className="fixed right-[12px] z-[45] flex w-[72px] flex-col items-center rounded-[16px] border border-[#8BB8E8] bg-[#CBE3F9] px-[10px] py-[14px] shadow-card"
     >
       <button
         type="button"

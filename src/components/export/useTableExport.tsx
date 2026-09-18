@@ -46,7 +46,7 @@ export function useTableExport({
 
   const valueOf = (row, col) => formatExportValue(row, col, getValue)
 
-  const exportPdf = (rows) => setDoc({ id: Date.now(), rows })
+  const exportPdf = (rows, extra = null) => setDoc({ id: Date.now(), rows, extra })
   const exportCsv = (rows) => downloadCsv(fileName, cols, rows, valueOf)
 
   const printNode = doc ? (
@@ -61,7 +61,9 @@ export function useTableExport({
       rows={doc.rows}
       renderCell={valueOf}
       onDone={() => setDoc(null)}
-    />
+    >
+      {doc.extra}
+    </PrintDocument>
   ) : null
 
   return { exportPdf, exportCsv, printNode }

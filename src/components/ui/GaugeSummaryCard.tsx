@@ -1,6 +1,6 @@
+import { type ReactNode } from 'react'
 import SegmentedGauge from '../charts/SegmentedGauge'
 import type { IconComponent } from '../../types'
-import type { ReactNode } from 'react'
 
 type GaugeSegment = {
   key: string
@@ -31,7 +31,7 @@ export default function GaugeSummaryCard({
   gaugeSize = 172,
 }: GaugeSummaryCardProps) {
   return (
-    <section className={`rounded-[12px] border border-line bg-white p-[15px] shadow-card ${className}`}>
+    <section className={`flex h-full flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card ${className}`}>
       <div className="flex items-center gap-[11px]">
         <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[11px] bg-brand-soft">
           <Icon size={22} strokeWidth={2.2} className="text-brand" />
@@ -43,15 +43,12 @@ export default function GaugeSummaryCard({
       </div>
 
       <div className="mt-[9px] pl-[53px]">
-        <button
-          type="button"
-          className="rounded-[6px] bg-brand-soft px-[9px] py-[4px] text-[12px] font-semibold leading-4 text-brand-link transition-colors hover:bg-[#DCE9FB]"
-        >
+        <span className="inline-flex rounded-full bg-[#EEF6FD] px-[9px] py-[4px] text-[12px] font-medium leading-4 text-[#0768D2]">
           {scopeLabel}
-        </button>
+        </span>
       </div>
 
-      <div className="mt-[10px] flex items-center gap-[16px]">
+      <div className="mt-[10px] flex flex-1 items-center gap-[16px]">
         <SegmentedGauge
           segments={breakdown}
           display={total}
@@ -61,11 +58,13 @@ export default function GaugeSummaryCard({
 
         <div className="flex-1 space-y-[14px]">
           {breakdown.map((b) => (
-            <div key={b.key} className="flex items-center gap-[11px]">
-              <span className="h-[23px] w-[5px] shrink-0 rounded-full" style={{ backgroundColor: b.color }} />
-              <span className="whitespace-nowrap text-[12.5px] font-medium leading-[18px] text-ink-soft">{b.label}</span>
-              <span className="ml-auto text-[13px] font-semibold leading-[18px] text-ink">{b.value}</span>
-              <span className="rounded-[6px] bg-brand-soft px-[8px] py-[3px] text-[12px] font-medium leading-4 text-brand-link">
+            <div key={b.key} className="grid grid-cols-3 items-center gap-[10px]">
+              <span className="flex min-w-0 items-center gap-[11px]">
+                <span className="h-[23px] w-[5px] shrink-0 rounded-full" style={{ backgroundColor: b.color }} />
+                <span className="whitespace-nowrap text-[12.5px] font-medium leading-[18px] text-ink-soft">{b.label}</span>
+              </span>
+              <span className="text-center text-[13px] font-semibold tabular-nums leading-[18px] text-ink">{b.value}</span>
+              <span className="justify-self-end rounded-full bg-[#EEF6FD] px-[8px] py-[3px] text-[12px] font-medium leading-4 text-brand-link">
                 {b.percent}
               </span>
             </div>

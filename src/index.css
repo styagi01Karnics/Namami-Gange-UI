@@ -9,6 +9,12 @@
   box-shadow: 0px 0px 3px 3px #0768D21A;
 }
 
+/* Nested cards drop the glow and use a blue border instead. */
+.shadow-card .shadow-card {
+  box-shadow: none;
+  border-color: #8BB8E8;
+}
+
 html,
 body,
 #root {
@@ -53,6 +59,12 @@ body {
 select.bare {
   -webkit-appearance: none;
   appearance: none;
+}
+
+/* Edge/IE draw their own password-reveal eye, which stacks on custom toggles. */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
 }
 
 /* Hidden on screen — PrintDocument portals here and @media print shows it alone. */

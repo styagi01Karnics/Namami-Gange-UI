@@ -9,7 +9,7 @@ export default function PasswordField({ label, required, value, onChange, placeh
 
   return (
     <label className="block">
-      <span className="mb-[7px] block text-[12.5px] font-medium leading-4 text-ink-soft">
+      <span className="mb-[7px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
         {label}
         {required && <span className="text-danger"> *</span>}
       </span>

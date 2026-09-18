@@ -52,7 +52,7 @@ export default function AttendanceTrendsCard() {
               dataKey="month"
               tickLine={false}
               axisLine={{ stroke: '#E7EEF7' }}
-              tick={{ fill: '#7B8A9C', fontSize: 11 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11, fontWeight: 600 }}
               tickMargin={9}
               interval={0}
             />
@@ -61,7 +61,7 @@ export default function AttendanceTrendsCard() {
               ticks={[0, 100, 200, 300, 400]}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#7B8A9C', fontSize: 11 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11, fontWeight: 600 }}
               width={42}
             />
             <Tooltip content={<TrendTooltip />} cursor={{ stroke: '#C3D5EA', strokeDasharray: '3 3' }} />

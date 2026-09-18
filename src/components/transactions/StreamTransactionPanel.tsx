@@ -1,21 +1,36 @@
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import ParamTile from '../stp/ParamTile'
 import { streamTransactionColumns } from '../../data/mockData'
 
+const ClockIcon = ico('fluent:clock-32-filled')
+
 const TONE = {
-  brand: { box: 'bg-brand', title: 'text-brand', id: 'text-brand-link', Icon: ico('akar-icons:arrow-forward') },
-  ok: { box: 'bg-ok', title: 'text-ok', id: 'text-ok', Icon: ico('akar-icons:arrow-back') },
+  brand: {
+    box: 'bg-brand',
+    title: 'text-brand',
+    id: 'text-brand-link',
+    panel: 'bg-[#F7FAFF]',
+    time: 'text-brand',
+    Icon: ico('akar-icons:arrow-forward'),
+  },
+  ok: {
+    box: 'bg-ok',
+    title: 'text-ok',
+    id: 'text-ok',
+    panel: 'bg-[#F4FBF6]',
+    time: 'text-ok',
+    Icon: ico('akar-icons:arrow-back'),
+  },
 }
 
 /**
  * One stream's transaction feed. A row expands to the reading it carried, so
  * the flow headline and parameter tiles match the realtime panel above.
  */
-export default function StreamTransactionPanel({ stream, data, defaultExpanded = 1 }) {
-  const [expanded, setExpanded] = useState(defaultExpanded)
+export default function StreamTransactionPanel({ stream, data, expanded, onToggleExpanded }) {
   const tone = TONE[stream.tone]
   const { Icon } = tone
 
@@ -42,11 +57,11 @@ export default function StreamTransactionPanel({ stream, data, defaultExpanded =
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-[#F7F9FC]">
+            <tr className="border-y border-line bg-canvas">
               {streamTransactionColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[14px] py-[13px] text-[12.5px] font-medium leading-4 text-ink-soft ${
+                  className={`px-[14px] py-[13px] text-[12.5px] font-semibold leading-4 text-ink-soft ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -71,7 +86,7 @@ export default function StreamTransactionPanel({ stream, data, defaultExpanded =
                     <td className="px-[14px] py-[15px] text-right">
                       <button
                         type="button"
-                        onClick={() => setExpanded(isExpanded ? null : i)}
+                        onClick={() => onToggleExpanded(i)}
                         aria-label={`${isExpanded ? 'Hide' : 'Show'} reading for ${row.timestamp}`}
                         aria-expanded={isExpanded}
                         className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
@@ -87,13 +102,21 @@ export default function StreamTransactionPanel({ stream, data, defaultExpanded =
 
                   {isExpanded && (
                     <tr className="border-b border-line last:border-0">
-                      <td colSpan={streamTransactionColumns.length} className="px-[14px] pb-[15px] pt-[13px]">
-                        <div className="rounded-[10px] border border-line bg-[#F7FAFF] p-[13px]">
-                          <p className="text-[13px] leading-[18px] text-ink-soft">Flow</p>
-                          <p className="mt-[3px] text-[19px] font-bold leading-6 text-ink">
-                            {row.reading.flow.value}
-                            <span className="ml-[4px] text-[14px] font-semibold">{row.reading.flow.unit}</span>
-                          </p>
+                      <td colSpan={streamTransactionColumns.length} className="px-[14px] pb-[16px] pt-[16px]">
+                        <div className={`rounded-[10px] border border-line p-[13px] ${tone.panel}`}>
+                          <div className="flex items-start justify-between gap-[12px]">
+                            <div>
+                              <p className="text-[13px] leading-[18px] text-ink-soft">Flow</p>
+                              <p className="mt-[3px] text-[19px] font-bold leading-6 text-ink">
+                                {row.reading.flow.value}
+                                <span className="ml-[4px] text-[14px] font-semibold">{row.reading.flow.unit}</span>
+                              </p>
+                            </div>
+                            <span className={`flex shrink-0 items-center gap-[6px] text-[12.5px] font-medium leading-4 ${tone.time}`}>
+                              <ClockIcon size={15} />
+                              {row.reading.at}
+                            </span>
+                          </div>
 
                           <div className="mt-[12px] grid grid-cols-3 gap-[10px]">
                             {row.reading.params.map((p) => (

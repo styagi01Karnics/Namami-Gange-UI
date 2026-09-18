@@ -11,9 +11,9 @@ export default function OverallComplianceCard() {
     <Card className="flex flex-col p-[15px]">
       <p className="text-[13.5px] font-medium leading-4 text-ink-soft">Overall Compliance</p>
       <p className="mt-[8px] text-[22px] font-bold leading-7 text-danger">{compliance.percent}%</p>
-      <button type="button" className="mt-[7px] self-start text-[12px] font-medium leading-4 text-brand-link hover:underline">
+      <span className="mt-[7px] inline-flex self-start rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
         {compliance.scopeLabel}
-      </button>
+      </span>
 
       <div className="mt-[13px] h-[7px] w-full rounded-full bg-[#E3ECF7]">
         <div className="h-full rounded-full bg-brand" style={{ width: `${compliance.barPercent}%` }} />

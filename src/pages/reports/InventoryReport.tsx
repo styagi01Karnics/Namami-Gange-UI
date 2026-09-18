@@ -45,7 +45,7 @@ export default function InventoryReport() {
           breakdown={inventorySummary.breakdown}
           gaugeSize={240}
         />
-        <StatCardsRow items={inventoryStats} columns={2} noteChip />
+        <StatCardsRow items={inventoryStats} columns={2} />
       </div>
 
       <ReportTable

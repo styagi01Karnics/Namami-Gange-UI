@@ -32,11 +32,11 @@ export default function TeamSection({ section }) {
               <col style={{ width: '21%' }} />
             </colgroup>
             <thead>
-              <tr className="border-b border-line bg-[#F7F9FC]">
+              <tr className="border-b border-line bg-canvas">
                 {['Member', 'Role', 'Status', ''].map((h, i) => (
                   <th
                     key={h || i}
-                    className={`px-[14px] py-[12px] text-[12.5px] font-medium leading-4 text-ink-soft ${
+                    className={`px-[14px] py-[12px] text-[12.5px] font-semibold leading-4 text-ink-soft ${
                       i === 3 ? 'text-right' : 'text-left'
                     }`}
                   >

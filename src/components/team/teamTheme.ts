@@ -1,5 +1,4 @@
 import { ico } from '../ui/Ico'
-import TeamIcon from '../ui/TeamIcon'
 
 /**
  * One accent colour per Team Management tab, driving the tab pill and the
@@ -8,12 +7,12 @@ import TeamIcon from '../ui/TeamIcon'
 export const TEAM_THEME = {
   'User Management': {
     color: '#2563EB',
-    icon: TeamIcon,
+    icon: ico('fluent:people-team-16-filled'),
     blurb: 'Manage user accounts, roles, access, and verification details',
   },
   'Role Management': {
     color: '#7C3AED',
-    icon: ico('fluent:person-board-32-filled'),
+    icon: ico('fluent:person-ribbon-16-filled'),
     blurb: 'Define roles, permissions, and access levels for different users.',
   },
   'Audit Logs': {

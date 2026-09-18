@@ -55,9 +55,9 @@ export default function ThresholdsSection({ section }) {
               <col style={{ width: '20%' }} />
             </colgroup>
             <thead>
-              <tr className="border-b border-line bg-[#F7F9FC]">
+              <tr className="border-b border-line bg-canvas">
                 {['Parameter', 'Unit', 'Minimum', 'Maximum', 'Warn at'].map((h) => (
-                  <th key={h} className="px-[14px] py-[12px] text-left text-[12.5px] font-medium leading-4 text-ink-soft">
+                  <th key={h} className="px-[14px] py-[12px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
                     {h}
                   </th>
                 ))}

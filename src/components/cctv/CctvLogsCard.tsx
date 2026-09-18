@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
 import IconToggle from '../ui/IconToggle'
+import GroupedTabs from '../ui/GroupedTabs'
 import { useTableExport } from '../export/useTableExport'
 import { cctvLogColumns, cctvLogs } from '../../data/mockData'
 
@@ -49,20 +50,7 @@ export default function CctvLogsCard() {
 
       {open && (
         <>
-          <div className="flex items-center gap-[8px] px-[15px]">
-            {cctvLogs.tabs.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setCamera(t)}
-                className={`rounded-[8px] px-[15px] py-[8px] text-[12.5px] font-semibold leading-4 transition-colors ${
-                  camera === t ? 'bg-brand text-white' : 'bg-[#F1F4F8] text-ink hover:bg-brand-soft'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <GroupedTabs className="px-[15px]" tabs={cctvLogs.tabs} active={camera} onChange={setCamera} />
 
           <div className="flex items-center justify-end gap-[12px] px-[15px] py-[15px]">
             <SearchInput value={query} onChange={setQuery} className="w-[268px]" />
@@ -80,9 +68,9 @@ export default function CctvLogsCard() {
               </colgroup>
 
               <thead>
-                <tr className="border-y border-line bg-[#F7F9FC]">
+                <tr className="border-y border-line bg-canvas">
                   {cctvLogColumns.map((c) => (
-                    <th key={c.key} className="px-[16px] py-[15px] text-left text-[13px] font-medium leading-4 text-ink-soft">
+                    <th key={c.key} className="px-[16px] py-[15px] text-left text-[13px] font-semibold leading-4 text-ink-soft">
                       {c.sortable ? (
                         <button
                           type="button"

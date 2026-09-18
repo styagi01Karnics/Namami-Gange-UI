@@ -3,29 +3,29 @@ import { ico } from '../../components/ui/Ico'
 import ReportShell from '../../components/reports/ReportShell'
 import ReportTable from '../../components/reports/ReportTable'
 import StatCardsRow from '../../components/ui/StatCardsRow'
+import GroupedTabs from '../../components/ui/GroupedTabs'
 import Select from '../../components/ui/Select'
 import StatusPill, { statusTone } from '../../components/ui/StatusPill'
 import { StpLink, TwoLineDate } from '../../components/reports/cells'
 import {
-  complianceBasisOptions,
   complianceReportColumns,
   complianceReportParameters,
   complianceReportRows,
   complianceSummary,
+  complianceTypes,
 } from '../../data/mockData'
 
 const ArrowOutIcon = ico('fluent:arrow-up-right-24-filled')
 
 export default function ComplianceReport() {
-  const [basis, setBasis] = useState(complianceBasisOptions[0])
+  const [type, setType] = useState(complianceTypes[0])
   const [parameter, setParameter] = useState(complianceReportParameters[1])
 
   const rows = useMemo(() => {
-    const wantedType = basis.replace('Based On ', '')
     return complianceReportRows.filter(
-      (r) => r.type === wantedType && (parameter === 'All' || r.parameter === parameter),
+      (r) => r.type === type && (parameter === 'All' || r.parameter === parameter),
     )
-  }, [basis, parameter])
+  }, [type, parameter])
 
   const renderCell = (row, col) => {
     switch (col.key) {
@@ -63,39 +63,24 @@ export default function ComplianceReport() {
 
   return (
     <ReportShell>
-      <StatCardsRow items={complianceSummary} noteChip />
+      <StatCardsRow items={complianceSummary} />
       <ReportTable
         columns={complianceReportColumns}
         rows={rows}
         searchKeys={['stp', 'id', 'type', 'parameter', 'location', 'status']}
+        leading={<GroupedTabs tabs={complianceTypes} active={type} onChange={setType} />}
         toolbar={
           <Select
-            options={complianceBasisOptions}
-            value={basis}
-            onChange={setBasis}
-            className="w-[234px]"
+            options={complianceReportParameters}
+            value={parameter}
+            onChange={setParameter}
+            className="w-[140px]"
             buttonClassName="h-[34px]"
           />
         }
-        filters={
-          <div className="flex flex-wrap items-center gap-[4px]">
-            {complianceReportParameters.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setParameter(p)}
-                className={`rounded-[8px] px-[15px] py-[8px] text-[13px] font-medium leading-4 transition-colors ${
-                  parameter === p ? 'bg-brand text-white' : 'text-ink hover:bg-brand-soft'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        }
         renderCell={renderCell}
         minWidth={1120}
-        emptyMessage={`No ${parameter === 'All' ? '' : `${parameter} `}violations under "${basis}".`}
+        emptyMessage={`No ${parameter === 'All' ? '' : `${parameter} `}violations under "${type}".`}
         exportTitle="Compliance Report"
         exportFileName="compliance-report"
         exportValue={(row, col) => {

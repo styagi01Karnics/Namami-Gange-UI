@@ -7,6 +7,10 @@ import StatusPill, { statusTone } from '../ui/StatusPill'
 
 const CalendarIcon = ico('fluent:calendar-32-filled')
 const PinIcon = ico('fluent:location-24-filled')
+const PersonIcon = ico('fluent:person-24-filled')
+const PhoneIcon = ico('fluent:call-24-filled')
+const MailIcon = ico('fluent:mail-24-filled')
+const RoleIcon = ico('fluent:hat-graduation-24-filled')
 
 function Stamp({ label, value }) {
   return (
@@ -15,6 +19,63 @@ function Stamp({ label, value }) {
       <span className="text-[12.5px] leading-4 text-ink-muted">{label} :</span>
       <span className="text-[12.5px] font-semibold leading-4 text-ink">{value}</span>
     </span>
+  )
+}
+
+function ContactItem({ icon: Glyph, children }) {
+  return (
+    <div className="flex min-w-0 items-center gap-[8px] text-[13px] leading-[18px] text-ink">
+      <Glyph size={15} className="shrink-0 text-brand" />
+      <span className="truncate">{children}</span>
+    </div>
+  )
+}
+
+function SiteField({ label, value }) {
+  return (
+    <div className="flex min-w-0 items-baseline gap-[10px]">
+      <span className="shrink-0 text-[12.5px] font-medium leading-4 text-ink-soft">{label}</span>
+      <span className="truncate text-[13px] font-semibold leading-[18px] text-ink">{value}</span>
+    </div>
+  )
+}
+
+function DetailsPanel({ stp }) {
+  const { inCharge, vendor, site } = stp
+
+  return (
+    <div className="mt-[16px]">
+      <div className="grid grid-cols-[1.35fr_1fr] items-start gap-x-[40px] gap-y-[16px]">
+        <div>
+          <h3 className="text-[13.5px] font-semibold leading-5 text-brand">STP In-Charges</h3>
+          <div className="mt-[12px] grid grid-cols-2 gap-x-[28px] gap-y-[12px]">
+            <ContactItem icon={PersonIcon}>{inCharge.name}</ContactItem>
+            <ContactItem icon={PhoneIcon}>{inCharge.phone}</ContactItem>
+            <ContactItem icon={MailIcon}>{inCharge.email}</ContactItem>
+            <ContactItem icon={RoleIcon}>{inCharge.role}</ContactItem>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-[13.5px] font-semibold leading-5 text-brand">Vendor Details</h3>
+          <div className="mt-[12px] space-y-[12px]">
+            <SiteField label="Vendor" value={vendor.name} />
+            <SiteField label="Prefix ID" value={vendor.prefixId} />
+          </div>
+        </div>
+      </div>
+
+      <h3 className="mt-[18px] text-[13.5px] font-semibold leading-5 text-brand">STP Details</h3>
+      <div className="mt-[10px] rounded-[10px] border border-line bg-white px-[18px] py-[14px]">
+        <div className="grid grid-cols-3 gap-x-[24px] gap-y-[12px]">
+          <SiteField label="State" value={site.state} />
+          <SiteField label="City" value={site.city} />
+          <SiteField label="Zip Code" value={site.zip} />
+          <SiteField label="Latitude" value={site.lat} />
+          <SiteField label="Longitude" value={site.lng} />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -59,11 +120,11 @@ export default function StpHeaderCard({ stp, showPenalty = true }) {
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium leading-4 text-ink">Total Penalty</p>
-                <p className="mt-[4px] text-[16px] font-bold leading-5 text-ink">{stp.penalty.amount}</p>
+                <p className="mt-[4px] text-[16px] font-bold leading-5 text-[#DC2626]">{stp.penalty.amount}</p>
               </div>
             </div>
             <div className="mt-[10px] flex justify-end">
-              <span className="rounded-[6px] bg-[#F4FAFF] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
+              <span className="rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
                 Across all location
               </span>
             </div>
@@ -71,16 +132,7 @@ export default function StpHeaderCard({ stp, showPenalty = true }) {
         )}
       </div>
 
-      {showDetails && (
-        <div className="mt-[15px] grid grid-cols-4 gap-x-[18px] gap-y-[14px] border-t border-line pt-[15px]">
-          {stp.details.map((d) => (
-            <div key={d.label}>
-              <p className="text-[11.5px] font-medium leading-4 text-ink-muted">{d.label}</p>
-              <p className="mt-[4px] text-[13px] font-semibold leading-[18px] text-ink">{d.value}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {showDetails && <DetailsPanel stp={stp} />}
     </Card>
   )
 }

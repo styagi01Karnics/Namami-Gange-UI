@@ -102,8 +102,8 @@ export default function FileUploadArea({ files, onChange, compact = false }) {
         >
           <UploadIcon size={compact ? 16 : 18} />
         </span>
-        <p className={`text-ink-soft ${compact ? 'mt-[6px] text-[12.5px] leading-4' : 'mt-[10px] text-[13px] leading-5'}`}>
-          Click to upload or <span className="font-semibold text-brand">drag and drop</span>
+        <p className={`text-ok ${compact ? 'mt-[6px] text-[12.5px] leading-4' : 'mt-[10px] text-[13px] leading-5'}`}>
+          <span className="font-bold">Click to upload or</span> drag and drop
         </p>
         <p className={`text-ink-muted ${compact ? 'mt-[2px] text-[11px] leading-4' : 'mt-[4px] text-[11.5px] leading-4'}`}>
           PDF, PNG, JPG or GIF (max. 10MB)

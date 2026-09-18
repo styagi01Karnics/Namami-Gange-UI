@@ -25,7 +25,7 @@ export default function ManpowerReport() {
   return (
     <ReportShell>
       <div className="grid grid-cols-2 items-stretch gap-[16px] [&>*]:min-w-0">
-        <StatCardsRow items={manpowerReportStats} columns={2} noteChip />
+        <StatCardsRow items={manpowerReportStats} columns={2} />
         <ManpowerTrendCard />
       </div>
 

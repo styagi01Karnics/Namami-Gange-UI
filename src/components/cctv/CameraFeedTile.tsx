@@ -6,7 +6,7 @@ export default function CameraFeedTile({ feed, divider = false }) {
   const isOffline = feed.status === 'Offline'
 
   return (
-    <div className="flex min-w-0 flex-col">
+    <div className="flex h-full min-w-0 flex-col">
       <div className="relative aspect-[5/3] w-full overflow-hidden rounded-[10px] bg-[#CBD9E5]">
         <div className={isOffline ? 'h-full w-full grayscale' : 'h-full w-full'}>
           {feed.image ? (

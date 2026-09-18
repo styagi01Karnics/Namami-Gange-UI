@@ -33,11 +33,12 @@ export function TwoLineDate({ date, time }) {
   )
 }
 
-export function DownloadAction({ label = 'Download row' }) {
+export function DownloadAction({ label = 'Download row', onClick }) {
   return (
     <button
       type="button"
       aria-label={label}
+      onClick={onClick}
       className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
     >
       <DownloadIcon size={16} />

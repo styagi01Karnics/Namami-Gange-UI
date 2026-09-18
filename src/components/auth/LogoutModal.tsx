@@ -31,7 +31,7 @@ export default function LogoutModal({ open, onClose, onConfirm }) {
           <LogOutIcon size={22} className="text-danger" />
         </span>
 
-        <h2 id="logout-title" className="mt-[18px] text-[18px] font-bold leading-6 text-ink">
+        <h2 id="logout-title" className="mt-[18px] text-[18px] font-extrabold leading-6 text-ink">
           Log Out
         </h2>
         <p className="mt-[8px] text-[13.5px] leading-5 text-ink-muted">

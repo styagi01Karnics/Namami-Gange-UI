@@ -13,7 +13,7 @@ export default function Dashboard() {
     <>
       <Filters />
 
-      <div className="flex items-start gap-[15px] pb-[22px]">
+      <div className="flex items-stretch gap-[15px] pb-[22px]">
         {/* main column */}
         <div className="flex min-w-0 flex-1 flex-col gap-[15px]">
           <div className="grid grid-cols-[1.4fr_1fr] gap-[15px]">

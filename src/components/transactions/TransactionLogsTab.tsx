@@ -10,7 +10,7 @@ const EXPORT_COLUMNS = [
   { key: 'txnId', label: 'ID' },
   { key: 'uniqueId', label: 'Unique ID' },
   { key: 'status', label: 'Status' },
-  { key: 'timestamp', label: 'Timestamp' },
+  { key: 'timestamp', label: 'Created At' },
 ]
 
 /**
@@ -19,6 +19,8 @@ const EXPORT_COLUMNS = [
  */
 export default function TransactionLogsTab() {
   const [query, setQuery] = useState('')
+  const [expanded, setExpanded] = useState(1)
+  const toggleExpanded = (index) => setExpanded((prev) => (prev === index ? null : index))
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Transaction Logs',
     fileName: 'transaction-logs',
@@ -66,6 +68,8 @@ export default function TransactionLogsTab() {
             key={stream.key}
             stream={stream}
             data={streamTransactions[stream.key]}
+            expanded={expanded}
+            onToggleExpanded={toggleExpanded}
           />
         ))}
       </div>

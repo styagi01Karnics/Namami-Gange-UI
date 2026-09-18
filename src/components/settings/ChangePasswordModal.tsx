@@ -59,7 +59,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
             <span className="flex h-[32px] w-[32px] items-center justify-center rounded-[9px] bg-brand-soft text-brand">
               <LockIcon size={16} />
             </span>
-            <h2 id="change-password-title" className="text-[16px] font-bold leading-6 text-ink">
+            <h2 id="change-password-title" className="text-[16px] font-extrabold leading-6 text-ink">
               Change Password
             </h2>
           </div>
@@ -77,7 +77,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
           <section className="overflow-hidden rounded-[10px] border border-line">
             <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[14px] py-[10px]">
               <FileIcon size={16} className="text-brand" />
-              <h3 className="text-[13px] font-semibold leading-[18px] text-brand">Account Details</h3>
+              <h3 className="text-[13px] font-bold leading-[18px] text-brand">Account Details</h3>
             </header>
 
             <div className="space-y-[12px] p-[14px]">
@@ -103,7 +103,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
               />
 
               <div>
-                <p className="text-[12.5px] font-medium leading-4 text-ink-soft">Password Must Contain</p>
+                <p className="text-[12.5px] font-semibold leading-4 text-ink-soft">Password Must Contain</p>
                 <ul className="mt-[8px] space-y-[6px]">
                   {RULES.map((rule) => {
                     const ok = rule.test(form.next)

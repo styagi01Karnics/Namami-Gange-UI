@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { ico } from '../ui/Ico'
 import { stpBillingSummary } from '../../data/mockData'
 
@@ -19,24 +20,25 @@ export default function CalculationSummaryCard() {
         <h3 className="text-[15px] font-semibold leading-5 text-ink">Calculation Summary</h3>
       </div>
 
-      <div className="scroll-thin mt-[14px] overflow-x-auto">
-        <div className="flex min-w-[720px] items-center gap-[18px]">
+      <div className="mt-[14px] flex w-full items-center">
           {terms.map((t) => (
-            <div key={t.key} className="flex items-center gap-[18px]">
-              <div>
+            <Fragment key={t.key}>
+              <div className="shrink-0">
                 <p className="text-[12.5px] font-medium leading-4 text-ink-soft">{t.label}</p>
                 <p className={`mt-[7px] text-[17px] font-bold leading-6 ${VALUE_TONE[t.tone]}`}>{t.value}</p>
               </div>
 
               {t.operator && (
-                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold leading-none text-white">
-                  {t.operator}
-                </span>
+                <div className="flex min-w-[56px] flex-1 items-center justify-center">
+                  <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold leading-none text-white">
+                    {t.operator}
+                  </span>
+                </div>
               )}
-            </div>
+            </Fragment>
           ))}
 
-          <span className="mx-[6px] h-[44px] w-px shrink-0 bg-line" />
+          <span className="mx-[24px] h-[44px] w-px shrink-0 bg-line" />
 
           <div className="flex shrink-0 items-center gap-[10px]">
             <CheckIcon size={22} className="text-ok" />
@@ -47,7 +49,6 @@ export default function CalculationSummaryCard() {
               </p>
             </div>
           </div>
-        </div>
       </div>
     </section>
   )

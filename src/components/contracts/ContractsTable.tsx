@@ -1,11 +1,14 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { ico } from '../ui/Ico'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { useTableExport } from '../export/useTableExport'
 import ContractDetailPanel from './ContractDetailPanel'
 import { contractColumns, contracts } from '../../data/mockData'
+
+const DownloadIcon = ico('fluent:arrow-download-16-filled')
 
 const contractValue = (row, col) => {
   if (col.key === 'duration') return `${row.startDate} - ${row.endDate}`
@@ -59,11 +62,11 @@ export default function ContractsTable() {
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-[#F7F9FC]">
+            <tr className="border-y border-line bg-canvas">
               {contractColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[18px] py-[15px] text-[13px] font-medium leading-4 text-ink-soft ${
+                  className={`px-[18px] py-[15px] text-[13px] font-semibold leading-4 text-ink-soft ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -111,22 +114,39 @@ export default function ContractsTable() {
                       {c.endDate}
                     </td>
                     <td className="px-[18px] py-[16px] text-right">
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(isOpen ? null : c.id)}
-                        aria-label={`${isOpen ? 'Hide' : 'Show'} details for ${c.id}`}
-                        aria-expanded={isOpen}
-                        className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
-                      >
-                        <ChevronDown size={17} strokeWidth={2.1} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                      <div className="inline-flex items-center gap-[8px]">
+                        <button
+                          type="button"
+                          onClick={() => setExpanded(isOpen ? null : c.id)}
+                          aria-label={`${isOpen ? 'Hide' : 'Show'} details for ${c.id}`}
+                          aria-expanded={isOpen}
+                          className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
+                        >
+                          <ChevronDown size={17} strokeWidth={2.1} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                          <button
+                          type="button"
+                          onClick={() =>
+                            exportPdf(
+                              [c],
+                              <div className="mt-[18px]">
+                                <ContractDetailPanel groups={c.detail} description={c.description} />
+                              </div>,
+                            )
+                          }
+                          aria-label={`Download ${c.id}`}
+                          className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
+                        >
+                          <DownloadIcon size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
                   {isOpen && (
                     <tr className="border-b border-line">
-                      <td colSpan={contractColumns.length} className="px-[18px] pb-[18px] pt-[2px]">
-                        <ContractDetailPanel groups={c.detail} />
+                      <td colSpan={contractColumns.length} className="px-[18px] pb-[18px] pt-[16px]">
+                        <ContractDetailPanel groups={c.detail} description={c.description} />
                       </td>
                     </tr>
                   )}

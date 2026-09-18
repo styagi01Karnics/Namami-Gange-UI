@@ -4,23 +4,22 @@ import { ico } from '../ui/Ico'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
 import Select from '../ui/Select'
-import StatusPill, { statusTone } from '../ui/StatusPill'
+import GroupedTabs from '../ui/GroupedTabs'
 import { useTableExport } from '../export/useTableExport'
 import ViolationDetailPanel from './ViolationDetailPanel'
-
-const ArrowOutIcon = ico('fluent:arrow-up-right-24-filled')
 import {
-  complianceBasisOptions,
   complianceParameters,
+  complianceTypes,
   violationColumns,
   violations,
 } from '../../data/mockData'
 
+const ArrowOutIcon = ico('fluent:arrow-up-right-24-filled')
+
 export default function ViolationsTable() {
   const [query, setQuery] = useState('')
-  const [basis, setBasis] = useState(complianceBasisOptions[0])
+  const [type, setType] = useState(complianceTypes[0])
   const [parameter, setParameter] = useState(complianceParameters[0])
-  const [sortDir, setSortDir] = useState(null)
   const [expanded, setExpanded] = useState(violations[0]?.id ?? null)
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Violations',
@@ -31,53 +30,37 @@ export default function ViolationsTable() {
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const wantedType = basis.replace('Based On ', '')
 
     const list = violations.filter((v) => {
-      const matchesBasis = v.type === wantedType
+      const matchesType = v.type === type
       const matchesParam = v.parameter === parameter
       const matchesQuery =
-        !q || [v.id, v.type, v.parameter, v.location, v.status].some((f) => f.toLowerCase().includes(q))
-      return matchesBasis && matchesParam && matchesQuery
+        !q || [v.id, v.type, v.parameter, v.location].some((f) => f.toLowerCase().includes(q))
+      return matchesType && matchesParam && matchesQuery
     })
 
-    if (!sortDir) return list
-    return [...list].sort((a, b) =>
-      sortDir === 'asc' ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status),
-    )
-  }, [query, basis, parameter, sortDir])
+    return list
+  }, [query, type, parameter])
 
   return (
     <div className="rounded-[12px] border border-line bg-white shadow-card">
-      <div className="flex flex-wrap items-center justify-end gap-[12px] p-[15px]">
-        <SearchInput value={query} onChange={setQuery} className="w-[268px]" />
-        <Select
-          options={complianceBasisOptions}
-          value={basis}
-          onChange={setBasis}
-          className="w-[234px]"
-          buttonClassName="h-[34px]"
-          align="right"
-        />
-        <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
-        <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
+      <div className="flex flex-wrap items-center gap-[12px] p-[15px]">
+        <GroupedTabs tabs={complianceTypes} active={type} onChange={setType} />
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-[12px]">
+          <SearchInput value={query} onChange={setQuery} className="w-[268px]" />
+          <Select
+            options={complianceParameters}
+            value={parameter}
+            onChange={setParameter}
+            className="w-[140px]"
+            buttonClassName="h-[34px]"
+            align="right"
+          />
+          <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
+          <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
+        </div>
       </div>
       {printNode}
-
-      <div className="flex flex-wrap items-center gap-[4px] px-[15px] pb-[15px]">
-        {complianceParameters.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setParameter(p)}
-            className={`rounded-[8px] px-[13px] py-[7px] text-[12.5px] font-medium leading-4 transition-colors ${
-              parameter === p ? 'bg-brand text-white' : 'text-ink hover:bg-brand-soft'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
 
       <div className="scroll-thin overflow-x-auto">
         <table className="w-full min-w-[980px] table-fixed border-collapse">
@@ -88,26 +71,15 @@ export default function ViolationsTable() {
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-[#F7F9FC]">
+            <tr className="border-y border-line bg-canvas">
               {violationColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[15px] text-[13px] font-medium leading-4 text-ink-soft ${
+                  className={`px-[16px] py-[15px] text-[13px] font-semibold leading-4 text-ink-soft ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
-                  {c.sortable ? (
-                    <button
-                      type="button"
-                      onClick={() => setSortDir((v) => (v === 'asc' ? 'desc' : 'asc'))}
-                      className="flex items-center gap-[5px] transition-colors hover:text-brand"
-                    >
-                      {c.label}
-                      <ChevronDown size={14} className={`transition-transform ${sortDir === 'desc' ? 'rotate-180' : ''}`} />
-                    </button>
-                  ) : (
-                    c.label
-                  )}
+                  {c.label}
                 </th>
               ))}
             </tr>
@@ -133,9 +105,6 @@ export default function ViolationsTable() {
                     <td className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink">{v.location}</td>
                     <td className="px-[16px] py-[15px] text-[13px] font-medium leading-[18px] text-orange">{v.downtime}</td>
                     <td className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink">{v.detectedOn}</td>
-                    <td className="px-[16px] py-[15px]">
-                      <StatusPill tone={statusTone(v.status)}>{v.status}</StatusPill>
-                    </td>
                     <td className="px-[16px] py-[15px] text-right">
                       <button
                         type="button"
@@ -151,7 +120,7 @@ export default function ViolationsTable() {
 
                   {isOpen && (
                     <tr className="border-b border-line">
-                      <td colSpan={violationColumns.length} className="px-[16px] pb-[18px] pt-[4px]">
+                      <td colSpan={violationColumns.length} className="px-[16px] pb-[18px] pt-[16px]">
                         <ViolationDetailPanel violation={v} />
                       </td>
                     </tr>
@@ -163,7 +132,7 @@ export default function ViolationsTable() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={violationColumns.length} className="px-[16px] py-[48px] text-center text-[13px] text-ink-muted">
-                  No violations for {parameter} under &ldquo;{basis}&rdquo;.
+                  No violations for {parameter} under &ldquo;{type}&rdquo;.
                 </td>
               </tr>
             )}

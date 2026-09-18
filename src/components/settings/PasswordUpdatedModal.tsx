@@ -42,7 +42,7 @@ export default function PasswordUpdatedModal({ open, onClose }) {
           </span>
         </span>
 
-        <h2 id="password-updated-title" className="mt-[16px] text-[16px] font-bold leading-6 text-brand">
+        <h2 id="password-updated-title" className="mt-[16px] text-[16px] font-extrabold leading-6 text-brand">
           Password Updated
         </h2>
         <p className="mt-[6px] text-[13px] leading-5 text-ink-muted">Your password has been changed successfully.</p>

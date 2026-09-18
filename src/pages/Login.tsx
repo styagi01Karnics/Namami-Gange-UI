@@ -6,8 +6,8 @@ import SupportIcon from '../components/ui/SupportIcon'
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../auth/AuthContext'
 
-const PersonIcon = ico('fluent:person-32-filled')
-const LockIcon = ico('fluent:lock-closed-24-filled')
+const PersonIcon = ico('fluent:person-24-regular')
+const LockIcon = ico('fluent:lock-closed-24-regular')
 const ShieldIcon = ico('fluent:shield-checkmark-32-filled')
 const FingerprintIcon = ico('fluent:fingerprint-24-filled')
 const UserRoundIcon = ico('fluent:person-32-filled')
@@ -46,7 +46,7 @@ function AuthField({ icon: Icon, type = 'text', value, onChange, placeholder, tr
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="h-[56px] w-full rounded-[12px] border border-[#E3E9F0] bg-white pl-[46px] pr-[46px] text-[16px] text-ink outline-none transition-colors placeholder:text-[#98A5B4] focus:border-brand"
+        className="h-[56px] w-full rounded-[12px] border border-[#E3E9F0] bg-white pl-[46px] pr-[46px] text-[16px] text-ink outline-none transition-colors placeholder:text-[#98A5B4] focus:border-brand [&::-ms-clear]:hidden [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-strong-password-auto-fill-button]:hidden"
       />
       {trailing}
     </label>
@@ -131,7 +131,7 @@ export default function Login() {
           <div
             role="group"
             aria-label="Login type"
-            className="mt-[22px] grid grid-cols-2 gap-[10px] rounded-[12px] bg-[#EEF5FE] p-[6px]"
+            className="mt-[22px] grid grid-cols-2 gap-[10px] rounded-[12px] bg-[#DFEFFF] p-[6px]"
           >
             {LOGIN_ROLES.map((role) => {
               const selected = loginRole === role.id
@@ -143,8 +143,8 @@ export default function Login() {
                   aria-pressed={selected}
                   className={`h-[44px] rounded-[9px] text-[14.5px] font-semibold leading-5 transition-colors ${
                     selected
-                      ? 'bg-[#0B3D7A] text-white shadow-sm'
-                      : 'bg-transparent text-brand hover:bg-white/70'
+                      ? 'bg-[#003C7A] text-white shadow-sm'
+                      : 'bg-[#DFEFFF] text-[#003C7A] hover:bg-white/70'
                   }`}
                 >
                   {role.label}
@@ -180,7 +180,7 @@ export default function Login() {
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#98A5B4] transition-colors hover:text-brand"
                 >
-                  {showPassword ? <Eye size={19} strokeWidth={1.8} /> : <EyeOff size={19} strokeWidth={1.8} />}
+                  {showPassword ? <EyeOff size={19} strokeWidth={1.8} /> : <Eye size={19} strokeWidth={1.8} />}
                 </button>
               }
             />
@@ -204,7 +204,8 @@ export default function Login() {
 
             <button
               type="submit"
-              className="mt-[10px] flex h-[56px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#1668E3] to-[#0B4FB8] text-[17px] font-semibold text-white transition-opacity hover:opacity-95"
+              className="mt-[10px] flex h-[56px] w-full items-center justify-center rounded-full text-[17px] font-semibold text-white transition-opacity hover:opacity-95"
+              style={{ background: 'linear-gradient(90deg, #0668D2 0%, #003C7A 100%)' }}
             >
               Sign in
             </button>
@@ -219,9 +220,9 @@ export default function Login() {
             SSO Login
           </button>
 
-          <div className="mt-[24px] rounded-[12px] bg-[#F1F4F7] px-[20px] py-[18px]">
-            <div className="flex items-start gap-[14px]">
-              <ShieldIcon size={28} className="mt-[1px] shrink-0 text-ok" />
+          <div className="mt-[24px] rounded-[12px] bg-[#EFF5F1] px-[20px] py-[18px]">
+            <div className="flex items-center gap-[14px]">
+              <ShieldIcon size={40} className="shrink-0 text-ok" />
               <p className="leading-[22px]">
                 <span className="text-[15px] font-semibold text-ink">Secure • Reliable • Responsible</span>
                 <br />

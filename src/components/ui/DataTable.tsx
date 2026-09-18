@@ -119,11 +119,11 @@ export default function DataTable<T extends DataRow>({
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-[#F7F9FC]">
+            <tr className="border-y border-line bg-canvas">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className="px-[16px] py-[16px] text-left text-[13px] font-medium leading-4 text-ink-soft"
+                  className="px-[16px] py-[16px] text-left text-[13px] font-semibold leading-4 text-ink-soft"
                 >
                   {c.sortable ? (
                     <button
@@ -160,7 +160,7 @@ export default function DataTable<T extends DataRow>({
 
                 {expanded === row.id && renderExpanded && (
                   <tr className="border-b border-line last:border-0">
-                    <td colSpan={columns.length} className="px-[16px] pb-[18px]">
+                    <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
                       {renderExpanded(row)}
                     </td>
                   </tr>

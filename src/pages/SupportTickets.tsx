@@ -71,7 +71,7 @@ export default function SupportTickets() {
         </Button>
       </div>
 
-      <StatCardsRow items={stats} columns={5} gap={14} noteChip />
+      <StatCardsRow items={stats} columns={5} gap={14} />
 
       <SupportTicketTable
         columns={supportTicketColumns}

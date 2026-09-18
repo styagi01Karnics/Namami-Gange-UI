@@ -24,11 +24,12 @@ const ICONS: Record<string, ReturnType<typeof ico> | typeof BuildingIcon> = {
   money: ico('fluent:money-24-filled'),
   boxes: ico('fluent:box-24-filled'),
   building: BuildingIcon,
-  clock: ico('fluent:clock-32-filled'),
   package: ico('fluent:box-multiple-24-filled'),
   days: ico('fluent:calendar-clock-24-filled'),
   user: ico('fluent:person-32-filled'),
   users: TeamIcon,
+  peopleTeam: ico('fluent:people-team-16-filled'),
+  personRibbon: ico('fluent:person-ribbon-16-filled'),
   userCheck: ico('fluent:person-available-24-filled'),
   userClock: ico('fluent:person-clock-24-filled'),
   userAlert: ico('fluent:person-add-24-filled'),
@@ -39,14 +40,15 @@ const ICONS: Record<string, ReturnType<typeof ico> | typeof BuildingIcon> = {
   cameraOn: ico('fluent:camera-20-filled'),
   cameraOff: ico('fluent:camera-off-20-filled'),
   maintenance: ico('fluent:square-32-filled'),
-  ticket: ico('fluent:ticket-diagonal-24-filled'),
-  ticketOpen: ico('fluent:ticket-diagonal-24-filled'),
+  ticket: ico('bi:ticket-fill'),
+  ticketOpen: ico('bi:ticket-fill'),
   progress: ico('fluent:arrow-sync-24-filled'),
   circleCheck: ico('fluent:checkmark-circle-32-filled'),
   circleAlert: ico('fluent:error-circle-24-filled'),
+  clock: ico('fluent:clock-20-filled'),
 }
 
-function StatCard({ item, noteChip }: { item: StatCardItem; noteChip: boolean }) {
+function StatCard({ item }: { item: StatCardItem }) {
   const tone = TONES[item.tone]
   const Icon = ICONS[item.icon]
 
@@ -64,15 +66,9 @@ function StatCard({ item, noteChip }: { item: StatCardItem; noteChip: boolean })
       </div>
 
       {item.note && (
-        noteChip ? (
-          <span className="mt-[12px] inline-flex rounded-[6px] bg-[#F4FAFF] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
-            {item.note}
-          </span>
-        ) : (
-          <button type="button" className="mt-[12px] text-[12px] font-medium leading-4 text-brand-link hover:underline">
-            {item.note}
-          </button>
-        )
+        <span className="mt-[12px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
+          {item.note}
+        </span>
       )}
     </div>
   )
@@ -83,17 +79,16 @@ type StatCardsRowProps = {
   columns?: number
   gap?: number
   className?: string
-  noteChip?: boolean
 }
 
-export default function StatCardsRow({ items, columns = 4, gap = 16, className = '', noteChip = false }: StatCardsRowProps) {
+export default function StatCardsRow({ items, columns = 4, gap = 16, className = '' }: StatCardsRowProps) {
   return (
     <div
       className={`grid ${className}`}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}
     >
       {items.map((item) => (
-        <StatCard key={item.key} item={item} noteChip={noteChip} />
+        <StatCard key={item.key} item={item} />
       ))}
     </div>
   )

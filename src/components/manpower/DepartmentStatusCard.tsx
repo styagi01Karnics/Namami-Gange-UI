@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import IconToggle from '../ui/IconToggle'
 import { departmentManpower } from '../../data/mockData'
 
@@ -20,18 +19,16 @@ function Metric({ label, value }) {
   )
 }
 
-export default function DepartmentStatusCard() {
-  const [open, setOpen] = useState(true)
-
+export default function DepartmentStatusCard({ open, onToggle }) {
   return (
-    <section className="flex flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
+    <section className="flex h-full flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       <div className="flex items-center justify-between">
         <h3 className="text-[13.5px] font-semibold leading-5 text-ink">Department Manpower Status</h3>
-        <IconToggle open={open} onClick={() => setOpen((v) => !v)} label="Toggle Department Manpower Status" />
+        <IconToggle open={open} onClick={onToggle} label="Toggle Department Manpower Status" />
       </div>
 
       {open && (
-        <div className="mt-[14px] grid grid-cols-2 gap-[12px]">
+        <div className="mt-[14px] grid flex-1 grid-cols-2 content-start gap-[12px]">
           {departmentManpower.map((d) => (
             <div key={d.key} className={`rounded-[10px] p-[11px] ${TONES[d.tone]}`}>
               <p className="text-[13px] font-semibold leading-4 text-ink">{d.name}</p>

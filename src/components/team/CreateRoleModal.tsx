@@ -11,7 +11,7 @@ import SupportIcon from '../ui/SupportIcon'
 import TeamIcon from '../ui/TeamIcon'
 import { ico } from '../ui/Ico'
 import { tint } from './teamTheme'
-import { permissionTemplates, rolePermissionModules, roleStatusOptions, teamRoleNames } from '../../data/mockData'
+import { permissionTemplates, rolePermissionModules, roleStatusOptions, teamRoleNames, grantsForRole } from '../../data/mockData'
 
 const MODULE_ICONS = {
   dashboard: DashboardIcon,
@@ -49,7 +49,7 @@ function FormSection({ icon: Icon, title, children }) {
     <section className="overflow-hidden rounded-[10px] border border-line">
       <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[14px] py-[10px]">
         <Icon size={16} strokeWidth={2} className="text-brand" />
-        <h3 className="text-[13px] font-semibold leading-[18px] text-brand">{title}</h3>
+        <h3 className="text-[13px] font-bold leading-[18px] text-brand">{title}</h3>
       </header>
       <div className="p-[14px]">{children}</div>
     </section>
@@ -87,21 +87,24 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
           <span className="block truncate text-[11.5px] leading-4 text-ink-muted">{module.blurb}</span>
         </span>
 
-        <span className="shrink-0 rounded-full bg-brand-soft px-[10px] py-[3px] text-[11.5px] font-medium leading-4 text-brand">
-          {count} {count === 1 ? 'permission' : 'permissions'}
+        <span className="flex shrink-0 items-center gap-[8px]">
+          <span className="inline-flex min-w-[118px] justify-center rounded-full bg-brand-soft px-[10px] py-[3px] text-center text-[11.5px] font-medium leading-4 text-brand">
+            {count} {count === 1 ? 'permission' : 'permissions'}
+          </span>
+          {module.permissions.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={`Toggle ${module.label} permissions`}
+              className="flex h-4 w-4 shrink-0 items-center justify-center text-ink-soft transition-colors hover:text-brand"
+            >
+              <ChevronDown size={16} strokeWidth={2.2} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+          ) : (
+            <span className="h-4 w-4 shrink-0" aria-hidden />
+          )}
         </span>
-
-        {module.permissions.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-label={`Toggle ${module.label} permissions`}
-            className="shrink-0 text-ink-soft transition-colors hover:text-brand"
-          >
-            <ChevronDown size={16} strokeWidth={2.2} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-          </button>
-        )}
       </div>
 
       {open && module.permissions.length > 0 && (
@@ -120,23 +123,41 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
   )
 }
 
-export default function CreateRoleModal({ open, onClose, onSubmit }) {
+export default function CreateRoleModal({ open, onClose, onSubmit, role = null }) {
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
+  const editing = Boolean(role)
 
   useEffect(() => {
     if (!open) return undefined
     const onKey = (e) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open, onClose])
 
   useEffect(() => {
     if (!open) {
       setForm(EMPTY)
       setGranted({})
+      return
     }
-  }, [open])
+
+    if (role) {
+      setForm({
+        role: role.name,
+        description: role.description ?? '',
+        status: role.status ?? 'Active',
+        template: role.template ?? '',
+      })
+      setGranted(grantsForRole(role))
+      return
+    }
+
+    setForm(EMPTY)
+    setGranted({})
+  }, [open, role])
 
   const total = useMemo(() => Object.values(granted).reduce((n, list) => n + list.length, 0), [granted])
 
@@ -168,6 +189,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
       description: form.description.trim(),
       status: form.status,
       permissions: total,
+      granted,
+      template: form.template,
     })
     onClose()
   }
@@ -181,7 +204,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="create-role-title"
+        aria-labelledby="role-modal-title"
         onClick={(e) => e.stopPropagation()}
         className="my-auto w-full max-w-[560px] overflow-hidden rounded-[16px] bg-white shadow-pop"
       >
@@ -190,8 +213,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
             <span className="flex h-[32px] w-[32px] items-center justify-center rounded-[9px] bg-[#F0EBFD] text-[#7C3AED]">
               <RoleIcon size={17} className="text-[#7C3AED]" />
             </span>
-            <h2 id="create-role-title" className="text-[16px] font-bold leading-6 text-ink">
-              Create Role
+            <h2 id="role-modal-title" className="text-[16px] font-extrabold leading-6 text-ink">
+              {editing ? 'Edit Role' : 'Create Role'}
             </h2>
           </div>
           <button
@@ -208,12 +231,12 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
           <FormSection icon={FileTextIcon} title="Role & Access">
             <div className="space-y-[12px]">
               <div>
-                <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Role *</span>
+                <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
                 <Select options={teamRoleNames} value={form.role} onChange={set('role')} placeholder="Select Role" />
               </div>
 
               <label className="block">
-                <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Description *</span>
+                <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Description *</span>
                 <textarea
                   value={form.description}
                   onChange={(e) => set('description')(e.target.value)}
@@ -225,11 +248,11 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
 
               <div className="grid grid-cols-2 gap-[12px]">
                 <div>
-                  <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Status *</span>
+                  <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status *</span>
                   <Select options={roleStatusOptions} value={form.status} onChange={set('status')} />
                 </div>
                 <div>
-                  <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">
+                  <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
                     Permission Template
                   </span>
                   <Select
@@ -267,7 +290,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit }) {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={!canSubmit}>
-              Create Role
+              {editing ? 'Save Changes' : 'Create Role'}
             </Button>
           </div>
         </div>

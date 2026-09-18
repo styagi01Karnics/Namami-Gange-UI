@@ -10,7 +10,7 @@ export default function CctvReport() {
 
   return (
     <ReportShell>
-      <StatCardsRow items={cctvReportStats} noteChip />
+      <StatCardsRow items={cctvReportStats} />
       <ReportTable
         columns={cctvReportColumns}
         rows={cctvReportRows}

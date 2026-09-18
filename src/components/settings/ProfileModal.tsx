@@ -44,7 +44,7 @@ export default function ProfileModal({ open, onClose }) {
             <span className="flex h-[32px] w-[32px] items-center justify-center rounded-[9px] bg-brand-soft text-brand">
               <PersonIcon size={16} />
             </span>
-            <h2 id="profile-title" className="text-[16px] font-bold leading-6 text-ink">
+            <h2 id="profile-title" className="text-[16px] font-extrabold leading-6 text-ink">
               My Profile
             </h2>
           </div>
@@ -62,7 +62,7 @@ export default function ProfileModal({ open, onClose }) {
           <div className="flex items-center gap-[16px]">
             <Avatar size={64} />
             <div>
-              <p className="text-[13.5px] font-semibold leading-5 text-ink">Profile photo</p>
+              <p className="text-[13.5px] font-bold leading-5 text-ink">Profile photo</p>
               <p className="mt-[3px] text-[12px] leading-4 text-ink-muted">PNG or JPG, up to 2 MB.</p>
               <div className="mt-[10px] flex gap-[8px]">
                 <Button variant="outline" className="h-[32px] px-[13px]">

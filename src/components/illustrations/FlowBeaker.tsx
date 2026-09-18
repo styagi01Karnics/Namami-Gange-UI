@@ -7,7 +7,7 @@ export default function FlowBeaker({ variant = 'inlet', percent = 78.5, id = 'be
   const iconSrc = variant === 'inlet' ? '/inlet-flow.png' : '/outlet-flow.png'
 
   // Measured water surface in tank PNGs (from top of artwork).
-  const waterLinePct = variant === 'inlet' ? 38.7 : 35.8
+  const waterLinePct = variant === 'inlet' ? 29.5 : 35.8
 
   return (
     <div className="relative h-[168px] w-[148px] shrink-0" data-beaker={id}>
@@ -20,23 +20,23 @@ export default function FlowBeaker({ variant = 'inlet', percent = 78.5, id = 'be
       />
 
       {variant === 'inlet' ? (
-        /* Pipe overlaps left tank rim; mouth just above water, stream pours in */
+        /* Pipe overlaps left tank rim; raised and larger so the stream pours from above the water line */
         <img
           src={iconSrc}
           alt=""
-          className="pointer-events-none absolute left-[2px] w-[56px]"
+          className="pointer-events-none absolute left-0 w-[74px]"
           style={{
             top: `${waterLinePct}%`,
-            transform: 'translateY(-40%)',
+            transform: 'translateY(-42%)',
           }}
           draggable={false}
         />
       ) : (
-        /* Tap overlaps right tank rim; spout aligned to water surface */
+        /* Tap sits on the right rim so the spout touches the cylinder */
         <img
           src={iconSrc}
           alt=""
-          className="pointer-events-none absolute right-[4px] w-[34px]"
+          className="pointer-events-none absolute right-[-24px] w-[50px]"
           style={{
             top: `${waterLinePct}%`,
             transform: 'translateY(-52%)',
@@ -45,7 +45,7 @@ export default function FlowBeaker({ variant = 'inlet', percent = 78.5, id = 'be
         />
       )}
 
-      <span className="pointer-events-none absolute bottom-[16px] left-1/2 -translate-x-1/2 text-[13.5px] font-bold leading-none text-white">
+      <span className="pointer-events-none absolute bottom-[30px] left-1/2 -translate-x-1/2 text-[13.5px] font-bold leading-none text-white">
         {percent}%
       </span>
     </div>

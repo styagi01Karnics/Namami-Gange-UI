@@ -84,7 +84,7 @@ export default function AuditLogsTab({ onExportPdf }) {
     <div className="flex flex-col gap-[16px]">
       <TeamSectionHeader tab="Audit Logs" />
 
-      <StatCardsRow items={auditLogStats} columns={4} gap={14} noteChip />
+      <StatCardsRow items={auditLogStats} columns={4} gap={14} />
 
       <DataTable
         columns={auditLogColumns}

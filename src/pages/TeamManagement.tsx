@@ -8,16 +8,28 @@ import { teamTabs } from '../data/mockData'
 
 export default function TeamManagement() {
   const [tab, setTab] = useState(teamTabs[0])
+  const [userRoleFilter, setUserRoleFilter] = useState('All Roles')
   const [printDoc, setPrintDoc] = useState(null)
 
   const exportPdf = (title, columns, rows) => setPrintDoc({ id: Date.now(), title, columns, rows })
+
+  const viewRoleUsers = (roleName) => {
+    setUserRoleFilter(roleName)
+    setTab('User Management')
+  }
 
   return (
     <div className="flex flex-col gap-[16px] pb-[22px]">
       <TeamTabs tabs={teamTabs} active={tab} onChange={setTab} />
 
-      {tab === 'User Management' && <UserManagementTab onExportPdf={exportPdf} />}
-      {tab === 'Role Management' && <RoleManagementTab />}
+      {tab === 'User Management' && (
+        <UserManagementTab
+          onExportPdf={exportPdf}
+          roleFilter={userRoleFilter}
+          onRoleFilterChange={setUserRoleFilter}
+        />
+      )}
+      {tab === 'Role Management' && <RoleManagementTab onViewUsers={viewRoleUsers} />}
       {tab === 'Audit Logs' && <AuditLogsTab onExportPdf={exportPdf} />}
 
       {printDoc && (

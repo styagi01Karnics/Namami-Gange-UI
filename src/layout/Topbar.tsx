@@ -4,10 +4,11 @@ import { Bell, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
 import { ico } from '../components/ui/Ico'
 import { useAuth } from '../auth/AuthContext'
 import LogoutModal from '../components/auth/LogoutModal'
+import NotificationsModal from '../components/notifications/NotificationsModal'
 import ChangePasswordModal from '../components/settings/ChangePasswordModal'
 import PasswordUpdatedModal from '../components/settings/PasswordUpdatedModal'
 import ProfileModal from '../components/settings/ProfileModal'
-import { currentUser } from '../data/mockData'
+import { currentUser, inboxNotifications } from '../data/mockData'
 import type { PageTitle, TitleCrumb } from '../types'
 
 const UserIcon = ico('fluent:person-32-filled')
@@ -30,11 +31,16 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const menuRef = useRef<HTMLDivElement>(null)
+  const notifRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [passwordOpen, setPasswordOpen] = useState(false)
   const [updatedOpen, setUpdatedOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(
+    () => inboxNotifications.filter((item) => !item.read).length,
+  )
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -49,6 +55,15 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
       document.removeEventListener('keydown', onKey)
     }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (!notificationsOpen) return undefined
+    const onDoc = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotificationsOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [notificationsOpen])
 
   const confirmLogout = () => {
     logout()
@@ -92,19 +107,37 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
       </nav>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-full text-[#4A5A6D] transition-colors hover:bg-white"
-        >
-          <Bell size={19} strokeWidth={1.8} />
-          <span className="absolute right-[9px] top-[8px] h-[6px] w-[6px] rounded-full bg-danger ring-2 ring-canvas" />
-        </button>
+        <div ref={notifRef} className="relative z-40">
+          <button
+            type="button"
+            aria-label="Notifications"
+            aria-haspopup="dialog"
+            aria-expanded={notificationsOpen}
+            onClick={() => {
+              setMenuOpen(false)
+              setNotificationsOpen((v) => !v)
+            }}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#4A5A6D] transition-colors hover:bg-white"
+          >
+            <Bell size={19} strokeWidth={1.8} />
+            {unreadCount > 0 && (
+              <span className="absolute right-[9px] top-[8px] h-[6px] w-[6px] rounded-full bg-danger ring-2 ring-canvas" />
+            )}
+          </button>
+          <NotificationsModal
+            open={notificationsOpen}
+            onClose={() => setNotificationsOpen(false)}
+            onUnreadChange={setUnreadCount}
+          />
+        </div>
 
         <div ref={menuRef} className="relative">
           <button
             type="button"
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => {
+              setNotificationsOpen(false)
+              setMenuOpen((v) => !v)
+            }}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label="Open account menu"
@@ -151,7 +184,7 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
           type="button"
           aria-label="Log out"
           onClick={() => setLogoutOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[#4A5A6D] transition-colors hover:bg-white hover:text-danger"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#4A5A6D] transition-colors hover:bg-white hover:text-danger"
         >
           <LogOut size={19} strokeWidth={1.8} />
         </button>

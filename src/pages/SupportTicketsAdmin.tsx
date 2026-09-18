@@ -45,7 +45,7 @@ export default function SupportTicketsAdmin() {
         <DateRangeField value={range} onChange={setRange} className="w-[280px]" />
       </div>
 
-      <StatCardsRow items={stats} columns={5} gap={14} noteChip />
+      <StatCardsRow items={stats} columns={5} gap={14} />
 
       <AdminTicketTable
         columns={adminTicketColumns}

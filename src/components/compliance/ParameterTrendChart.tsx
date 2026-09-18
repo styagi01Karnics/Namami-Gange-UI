@@ -66,7 +66,7 @@ export default function ParameterTrendChart({ trend }) {
               ticks={ticks}
               tickLine={false}
               axisLine={{ stroke: '#E7EEF7' }}
-              tick={{ fill: '#7B8A9C', fontSize: 11 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11, fontWeight: 600 }}
               tickMargin={9}
               interval={0}
             />
@@ -76,7 +76,7 @@ export default function ParameterTrendChart({ trend }) {
               tickFormatter={(v) => (v === 0 ? '0' : v.toFixed(1))}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#7B8A9C', fontSize: 11 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11, fontWeight: 600 }}
               width={44}
             />
 

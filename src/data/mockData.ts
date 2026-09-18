@@ -162,17 +162,14 @@ export const stpDetails = {
     createdOn: '15/02/2026 ,10:30 AM',
     lastSeen: '15/04/2026 ,10:30 AM',
     penalty: { amount: '₹7,000', reason: 'Parameter Breach' },
-    // revealed by the "Details" toggle
-    details: [
-      { label: 'Capacity', value: '14 MLD' },
-      { label: 'Technology', value: 'SBR' },
-      { label: 'Commissioned', value: '12/08/2023' },
-      { label: 'Operator', value: 'UP Jal Nigam' },
-      { label: 'Contract ID', value: 'NG/UK/HDR/2023/014' },
-      { label: 'Site Engineer', value: 'A. Bhattacharya' },
-      { label: 'Contact', value: '+91 98110 42207' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'Sanjay kumar',
+      phone: '+91 8006358423',
+      email: 'sanjaykumar.tungalsingh@wabag.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'AAXIS NANO TECHNOLOGIES PVT  LTD', prefixId: '1mldfd4p2' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '286073', lat: '29.94569', lng: '78.16425' },
   },
   'lakkar-ghat-26': {
     name: '26 MLD STP, Lakkar Ghat',
@@ -181,16 +178,14 @@ export const stpDetails = {
     createdOn: '08/01/2026 ,08:45 AM',
     lastSeen: '15/04/2026 ,10:29 AM',
     penalty: { amount: '₹4,500', reason: 'Parameter Breach' },
-    details: [
-      { label: 'Capacity', value: '26 MLD' },
-      { label: 'Technology', value: 'SBR' },
-      { label: 'Commissioned', value: '21/05/2022' },
-      { label: 'Operator', value: 'Uttarakhand Peyjal' },
-      { label: 'Contract ID', value: 'NG/UK/RSK/2022/026' },
-      { label: 'Site Engineer', value: 'K. Semwal' },
-      { label: 'Contact', value: '+91 98110 33418' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'K. Semwal',
+      phone: '+91 98110 33418',
+      email: 'k.semwal@uttarakhandpeyjal.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'Ganga Enviro Systems Pvt. Ltd.', prefixId: '26mldlkgt2' },
+    site: { state: 'Uttarakhand', city: 'Rishikesh', zip: '249201', lat: '30.08690', lng: '78.26760' },
   },
   'jagjeetpur-68': {
     name: '68 MLD STP, Jagjeetpur',
@@ -199,16 +194,14 @@ export const stpDetails = {
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹12,500', reason: 'Equipment Failure' },
-    details: [
-      { label: 'Capacity', value: '68 MLD' },
-      { label: 'Technology', value: 'ASP' },
-      { label: 'Commissioned', value: '04/03/2021' },
-      { label: 'Operator', value: 'UP Jal Nigam' },
-      { label: 'Contract ID', value: 'NG/UK/HDR/2021/068' },
-      { label: 'Site Engineer', value: 'M. Iyer' },
-      { label: 'Contact', value: '+91 98110 55310' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'M. Iyer',
+      phone: '+91 98110 55310',
+      email: 'm.iyer@upjalnigam.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '68mldjgt1' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94520', lng: '78.16480' },
   },
   'sarai-18': {
     name: '18 MLD STP, Sarai',
@@ -217,16 +210,14 @@ export const stpDetails = {
     createdOn: '11/03/2026 ,11:40 AM',
     lastSeen: '14/04/2026 ,06:05 PM',
     penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
-    details: [
-      { label: 'Capacity', value: '18 MLD' },
-      { label: 'Technology', value: 'MBBR' },
-      { label: 'Commissioned', value: '19/11/2022' },
-      { label: 'Operator', value: 'Uttarakhand Peyjal' },
-      { label: 'Contract ID', value: 'NG/UK/HDR/2022/018' },
-      { label: 'Site Engineer', value: 'S. Rawat' },
-      { label: 'Contact', value: '+91 98110 77841' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'S. Rawat',
+      phone: '+91 98110 77841',
+      email: 's.rawat@uttarakhandpeyjal.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'Aqua Controls India Pvt. Ltd.', prefixId: '18mldsar3' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249401', lat: '29.94610', lng: '78.16390' },
   },
   'kankhal-27': {
     name: '27 MLD STP, Kankhal',
@@ -235,16 +226,14 @@ export const stpDetails = {
     createdOn: '28/12/2025 ,08:00 AM',
     lastSeen: '15/04/2026 ,10:31 AM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
-    details: [
-      { label: 'Capacity', value: '27 MLD' },
-      { label: 'Technology', value: 'SBR' },
-      { label: 'Commissioned', value: '07/06/2020' },
-      { label: 'Operator', value: 'UP Jal Nigam' },
-      { label: 'Contract ID', value: 'NG/UK/HDR/2020/027' },
-      { label: 'Site Engineer', value: 'D. Chauhan' },
-      { label: 'Contact', value: '+91 98110 90222' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'D. Chauhan',
+      phone: '+91 98110 90222',
+      email: 'd.chauhan@upjalnigam.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'Eco Smart Solutions Pvt. Ltd.', prefixId: '27mldknh4' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.93210', lng: '78.14840' },
   },
   'bhagwanpur-5': {
     name: '5 MLD STP, Bhagwanpur',
@@ -253,16 +242,14 @@ export const stpDetails = {
     createdOn: '20/02/2026 ,02:10 PM',
     lastSeen: '10/04/2026 ,04:45 PM',
     penalty: { amount: '₹18,000', reason: 'Equipment Failure' },
-    details: [
-      { label: 'Capacity', value: '5 MLD' },
-      { label: 'Technology', value: 'FAB' },
-      { label: 'Commissioned', value: '23/09/2019' },
-      { label: 'Operator', value: 'Uttarakhand Peyjal' },
-      { label: 'Contract ID', value: 'NG/UK/HDR/2019/005' },
-      { label: 'Site Engineer', value: 'P. Negi' },
-      { label: 'Contact', value: '+91 98110 61093' },
-      { label: 'Zone', value: 'Upper Ganga' },
-    ],
+    inCharge: {
+      name: 'P. Negi',
+      phone: '+91 98110 61093',
+      email: 'p.negi@uttarakhandpeyjal.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'Bharat Chem Distributors', prefixId: '5mldbgp6' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '247661', lat: '29.93880', lng: '77.81820' },
   },
 }
 
@@ -540,10 +527,10 @@ export const contractColumns = [
   { key: 'sno', label: 'S.No.', width: '6%' },
   { key: 'id', label: 'Contract No.', width: '13%', sortable: true },
   { key: 'name', label: 'Contract Name', width: '18%', sortable: true },
-  { key: 'vendor', label: 'Vendor', width: '22%', sortable: true },
+  { key: 'vendor', label: 'Vendor', width: '20%', sortable: true },
   { key: 'status', label: 'Status', width: '11%', sortable: true },
   { key: 'duration', label: 'Duration', width: '16%' },
-  { key: 'details', label: 'Details', width: '8%', align: 'right' },
+  { key: 'details', label: 'Details', width: '10%', align: 'right' },
 ]
 
 /**
@@ -559,6 +546,7 @@ export const contracts = [
     status: 'Active',
     startDate: '19 May 2026',
     endDate: '19 May 2026',
+    description: 'Construction of 20 MLD STP at Haridwar',
     detail: [
       {
         title: 'Agreement Details',
@@ -566,7 +554,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹1,24,500' },
           { label: 'Security Deposit', value: '₹24,500 (5%)' },
           { label: 'Contract Document', value: 'CN-001_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-001_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -595,6 +582,7 @@ export const contracts = [
     status: 'Active',
     startDate: '01 Apr 2026',
     endDate: '31 Mar 2029',
+    description: 'Operation and maintenance of Jagjeetpur STP',
     detail: [
       {
         title: 'Agreement Details',
@@ -602,7 +590,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹8,64,000' },
           { label: 'Security Deposit', value: '₹86,400 (10%)' },
           { label: 'Contract Document', value: 'CN-002_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-002_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -631,6 +618,7 @@ export const contracts = [
     status: 'Inactive',
     startDate: '12 Jan 2025',
     endDate: '11 Jan 2026',
+    description: 'Upgrade of sludge handling infrastructure',
     detail: [
       {
         title: 'Agreement Details',
@@ -638,7 +626,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹3,42,750' },
           { label: 'Security Deposit', value: '₹17,140 (5%)' },
           { label: 'Contract Document', value: 'CN-003_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-003_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -667,6 +654,7 @@ export const contracts = [
     status: 'Active',
     startDate: '05 Jun 2026',
     endDate: '04 Jun 2028',
+    description: 'Annual SCADA and instrumentation maintenance',
     detail: [
       {
         title: 'Agreement Details',
@@ -674,7 +662,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹2,10,000' },
           { label: 'Security Deposit', value: '₹21,000 (10%)' },
           { label: 'Contract Document', value: 'CN-004_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-004_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -703,6 +690,7 @@ export const contracts = [
     status: 'Inactive',
     startDate: '20 Feb 2025',
     endDate: '19 Feb 2026',
+    description: 'Annual chemical supply for treatment operations',
     detail: [
       {
         title: 'Agreement Details',
@@ -710,7 +698,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹96,300' },
           { label: 'Security Deposit', value: '₹4,815 (5%)' },
           { label: 'Contract Document', value: 'CN-005_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-005_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -739,6 +726,7 @@ export const contracts = [
     status: 'Active',
     startDate: '01 Jul 2026',
     endDate: '30 Jun 2027',
+    description: 'Housekeeping and security services at the plant',
     detail: [
       {
         title: 'Agreement Details',
@@ -746,7 +734,6 @@ export const contracts = [
           { label: 'Contract Value', value: '₹1,48,200' },
           { label: 'Security Deposit', value: '₹7,410 (5%)' },
           { label: 'Contract Document', value: 'CN-006_Contract.pdf', type: 'file' },
-          { label: 'Agreement Regulation', value: 'CN-006_Regulation.pdf', type: 'file' },
         ],
       },
       {
@@ -779,18 +766,18 @@ export const complianceSummary = [
   { key: 'payable', label: 'Total Amount to Pay', value: '26', note: 'Across all locations', icon: 'money', tone: 'danger' },
 ]
 
+export const complianceTypes = ['Parameter Breach', 'Equipment Failure']
 export const complianceBasisOptions = ['Based On Parameter Breach', 'Based On Equipment Failure']
 
 export const complianceParameters = ['pH', 'BOD', 'COD', 'TSS', 'Flow', 'Temperature']
 
 export const violationColumns = [
-  { key: 'id', label: 'Violation ID', width: '12%' },
-  { key: 'type', label: 'Type', width: '14%' },
-  { key: 'parameter', label: 'Parameter', width: '11%' },
-  { key: 'location', label: 'Location', width: '11%' },
-  { key: 'downtime', label: 'Downtime Duration', width: '15%' },
-  { key: 'detectedOn', label: 'Detected On', width: '17%' },
-  { key: 'status', label: 'Status', width: '12%', sortable: true },
+  { key: 'id', label: 'Violation ID', width: '14%' },
+  { key: 'type', label: 'Type', width: '16%' },
+  { key: 'parameter', label: 'Parameter', width: '13%' },
+  { key: 'location', label: 'Location', width: '13%' },
+  { key: 'downtime', label: 'Downtime Duration', width: '18%' },
+  { key: 'detectedOn', label: 'Detected On', width: '18%' },
   { key: 'details', label: 'Details', width: '8%', align: 'right' },
 ]
 
@@ -850,7 +837,6 @@ export const violations = [
       { label: 'Current Value', value: '10.20', tone: 'danger' },
       { label: 'Ideal Range', value: '6.0 – 9.0', tone: 'ok' },
       { label: 'Exceedance', value: '13.3%', tone: 'danger', trend: 'up' },
-      { label: 'Status', value: 'Recovered', tone: 'ok' },
     ],
 
     tracking: {
@@ -914,7 +900,6 @@ export const violations = [
       { label: 'Current Value', value: '9.88', tone: 'danger' },
       { label: 'Ideal Range', value: '6.0 – 9.0', tone: 'ok' },
       { label: 'Exceedance', value: '9.8%', tone: 'danger', trend: 'up' },
-      { label: 'Status', value: 'Recovered', tone: 'ok' },
     ],
     tracking: {
       rows: [
@@ -974,7 +959,6 @@ export const violations = [
       { label: 'Current Value', value: '18.5 mg/L', tone: 'danger' },
       { label: 'Ideal Range', value: '< 10 mg/L', tone: 'ok' },
       { label: 'Exceedance', value: '23.3%', tone: 'danger', trend: 'up' },
-      { label: 'Status', value: 'Pending', tone: 'warn' },
     ],
     tracking: {
       rows: [
@@ -1432,11 +1416,12 @@ export const transactionLogColumns = [
 export const streamTransactionColumns = [
   { key: 'id', label: 'ID', width: '38%' },
   { key: 'status', label: 'Status', width: '22%' },
-  { key: 'timestamp', label: 'Timestamp', width: '26%' },
+  { key: 'timestamp', label: 'Created At', width: '26%' },
   { key: 'details', label: 'Details', width: '14%', align: 'right' },
 ]
 
 const influentReading = {
+  at: '19 May 2026, 05:30 PM',
   flow: { value: '748.83', unit: 'm³/hr' },
   params: [
     { key: 'bod', label: 'BOD', icon: 'bod', value: '394.74 mg/L', tone: 'breach', note: 'Ideal: 0 – 10' },
@@ -1449,6 +1434,7 @@ const influentReading = {
 }
 
 const effluentReading = {
+  at: '19 May 2026, 05:30 PM',
   flow: { value: '748.83', unit: 'm³/hr' },
   params: [
     { key: 'bod', label: 'BOD', icon: 'bod', value: '4.51 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
@@ -1595,6 +1581,50 @@ export const notificationChannels = [
   { key: 'push', label: 'In-app', blurb: 'Bell icon in the portal header.', enabled: true },
 ]
 
+export type InboxNotificationKind = 'stp-offline' | 'ticket-update'
+
+export type InboxNotification = {
+  id: string
+  kind: InboxNotificationKind
+  title: string
+  message: string
+  time: string
+  read: boolean
+  action?: 'comment'
+  href?: string
+}
+
+export const inboxNotifications: InboxNotification[] = [
+  {
+    id: 'n-stp-offline-1',
+    kind: 'stp-offline',
+    title: 'STP Offline',
+    message: 'STP Haridwar-01 has stopped transmitting operational data.',
+    time: 'Today at 9:42 AM',
+    read: false,
+    href: '/live-delay-offline',
+  },
+  {
+    id: 'n-ticket-1048',
+    kind: 'ticket-update',
+    title: 'Support Ticket Updated',
+    message: 'Ticket #TKT-1048 requires additional clarification from the vendor and has been on and off for a while.',
+    time: 'Last Wednesday at 9:42 AM',
+    read: true,
+    action: 'comment',
+    href: '/support-tickets',
+  },
+  {
+    id: 'n-stp-offline-2',
+    kind: 'stp-offline',
+    title: 'STP Offline',
+    message: 'STP Haridwar-01 has stopped transmitting operational data.',
+    time: 'Today at 9:42 AM',
+    read: false,
+    href: '/live-delay-offline',
+  },
+]
+
 export const digestTimeOptions = ['07:00 AM', '09:00 AM', '06:00 PM', '09:00 PM']
 
 export const alertThresholds = [
@@ -1658,6 +1688,16 @@ export const supportTicketCategories = [
   'Other',
 ]
 
+export const supportTicketSubCategories: Record<string, string[]> = {
+  Penalty: ['Penalty clarification for STP', 'Incorrect penalty amount', 'Penalty waiver request'],
+  Payment: ['Payment-related query', 'Invoice pending', 'Duplicate deduction'],
+  'Plant Maintenance': ['Plant maintenance issue', 'Equipment failure', 'Blower tripping'],
+  Compliance: ['Readings mismatch', 'Reopen closed violation', 'Unable to export report'],
+  'CCTV / Devices': ['Camera offline', 'Recording storage full', 'Device malfunction'],
+  Manpower: ['Attendance not recorded', 'Shortage against headcount', 'Add site engineer'],
+  Other: ['General query', 'Portal access', 'Other issue'],
+}
+
 export const supportTicketPriorities = [
   { id: 'Low', label: 'Low' },
   { id: 'Mid', label: 'Medium' },
@@ -1694,10 +1734,10 @@ export const buildSupportTicketStats = (rows) => {
 
   return [
     { key: 'total', label: 'Total Tickets', value: rows.length, note: 'Across all location', icon: 'ticket', tone: 'brand' },
-    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticketOpen', tone: 'dangerQuiet' },
-    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'progress', tone: 'warnQuiet' },
-    { key: 'closed', label: 'Closed', value: closed, note: share(closed), icon: 'circleCheck', tone: 'okQuiet' },
-    { key: 'action', label: 'Action Required', value: action, note: 'Out of In progress', icon: 'circleAlert', tone: 'warnQuiet' },
+    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticket', tone: 'dangerQuiet' },
+    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'ticket', tone: 'warnQuiet' },
+    { key: 'closed', label: 'Closed', value: closed, note: share(closed), icon: 'ticket', tone: 'okQuiet' },
+    { key: 'action', label: 'Action Required', value: action, note: 'Out of In progress', icon: 'clock', tone: 'warnQuiet' },
   ]
 }
 
@@ -1750,9 +1790,9 @@ export const buildAdminTicketStats = (rows) => {
 
   return [
     { key: 'total', label: 'Total Tickets', value: rows.length, note: "Across all STP's", icon: 'ticket', tone: 'brand' },
-    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticketOpen', tone: 'okQuiet' },
-    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'progress', tone: 'warnQuiet' },
-    { key: 'closed', label: 'Closed Tickets', value: closed, note: share(closed), icon: 'circleCheck', tone: 'dangerQuiet' },
+    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticket', tone: 'okQuiet' },
+    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'ticket', tone: 'warnQuiet' },
+    { key: 'closed', label: 'Closed Tickets', value: closed, note: share(closed), icon: 'ticket', tone: 'dangerQuiet' },
     { key: 'action', label: 'Action Required', value: count('Pending'), note: 'Out of In progress', icon: 'clock', tone: 'violetQuiet' },
   ]
 }
@@ -1927,10 +1967,10 @@ export const buildTeamUserStats = (rows, roleCount) => {
   const inactive = count('Inactive')
 
   return [
-    { key: 'total', label: 'Total Users', value: rows.length, note: "Across all STP's", icon: 'users', tone: 'brand' },
-    { key: 'active', label: 'Active Users', value: active, note: share(active), icon: 'users', tone: 'okQuiet' },
-    { key: 'inactive', label: 'Inactive Users', value: inactive, note: share(inactive), icon: 'users', tone: 'dangerQuiet' },
-    { key: 'roles', label: 'Roles', value: roleCount, note: 'System Roles', icon: 'roles', tone: 'violetQuiet' },
+    { key: 'total', label: 'Total Users', value: rows.length, note: "Across all STP's", icon: 'peopleTeam', tone: 'brand' },
+    { key: 'active', label: 'Active Users', value: active, note: share(active), icon: 'peopleTeam', tone: 'okQuiet' },
+    { key: 'inactive', label: 'Inactive Users', value: inactive, note: share(inactive), icon: 'peopleTeam', tone: 'dangerQuiet' },
+    { key: 'roles', label: 'Roles', value: roleCount, note: 'System Roles', icon: 'personRibbon', tone: 'violetQuiet' },
   ]
 }
 
@@ -2024,6 +2064,37 @@ export const rolePermissionModules = [
 export const roleStatusOptions = ['Active', 'Inactive']
 
 export const permissionTemplates = ['Full Access', 'Read Only', 'Operations', 'Reporting']
+
+const allModuleGrants = () =>
+  Object.fromEntries(
+    rolePermissionModules.map((m) => [m.id, m.permissions.length > 0 ? [...m.permissions] : [m.label]]),
+  )
+
+/** Starting grants shown when a stored role is opened in the edit modal. */
+export const roleGrantedPresets = {
+  'Super Admin': allModuleGrants(),
+  'Content Manager': {
+    dashboard: ['Dashboard'],
+    reports: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Compliance'],
+    settings: ['Settings'],
+  },
+  Vendor: {
+    stp: ['Inventory', 'Contracts', 'Billing'],
+    support: ['View Tickets'],
+    reports: ['Contracts', 'Compliance'],
+  },
+  'Field Volunteer': {
+    dashboard: ['Dashboard'],
+    stp: ['Manpower', 'CCTV'],
+    cctv: ['Live Camera Feed'],
+  },
+  Viewer: {
+    dashboard: ['Dashboard'],
+    reports: ['Manpower'],
+  },
+}
+
+export const grantsForRole = (role) => role?.granted ?? roleGrantedPresets[role?.name] ?? {}
 
 /* --------------------------------------------------------------------------
    Audit logs
@@ -2160,8 +2231,8 @@ export const auditLogs = [
 
 export const auditLogStats = [
   { key: 'activities', label: 'Total Activities', value: '1,248', note: '12% vs last month', icon: 'history', tone: 'brand' },
-  { key: 'users', label: 'User Changes', value: '420', note: '8% vs last month', icon: 'users', tone: 'okQuiet' },
-  { key: 'roles', label: 'Role Changes', value: '186', note: '5% vs last month', icon: 'roles', tone: 'violetQuiet' },
+  { key: 'users', label: 'User Changes', value: '420', note: '8% vs last month', icon: 'peopleTeam', tone: 'okQuiet' },
+  { key: 'roles', label: 'Role Changes', value: '186', note: '5% vs last month', icon: 'personRibbon', tone: 'violetQuiet' },
   { key: 'status', label: 'Status Changes', value: '8', note: '18 % vs last month', icon: 'settings', tone: 'warnQuiet' },
 ]
 

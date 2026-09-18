@@ -58,7 +58,7 @@ export default function ManpowerTrendCard() {
               ticks={axisTicks}
               tickLine={false}
               axisLine={{ stroke: '#E7EEF7' }}
-              tick={{ fill: '#7B8A9C', fontSize: 11.5 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11.5, fontWeight: 600 }}
               tickMargin={10}
               interval={0}
             />
@@ -68,7 +68,7 @@ export default function ManpowerTrendCard() {
               tickFormatter={(v) => v.toLocaleString('en-IN')}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#7B8A9C', fontSize: 11.5 }}
+              tick={{ fill: '#3D4D5E', fontSize: 11.5, fontWeight: 600 }}
               width={52}
             />
             <Tooltip content={<TrendTooltip />} cursor={{ stroke: '#C3D5EA', strokeDasharray: '3 3' }} />

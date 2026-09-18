@@ -13,8 +13,9 @@ import { useTableExport } from '../export/useTableExport'
  *  rows       already filtered by whatever page-level controls exist
  *  searchKeys row fields the search box matches against
  *  toolbar    optional node dropped between Search and the PDF/CSV buttons
+ *  leading    optional node pinned to the left of the toolbar (tabs, etc.)
  *  filters    optional node rendered on its own line under the toolbar
- *  renderCell (row, column, { isExpanded, toggle }) => node
+ *  renderCell (row, column, { isExpanded, toggle, exportRow }) => node
  *  renderDetail  optional (row) => node; supplying it makes rows expandable
  *  exportTitle / exportFileName  PDF letterhead title and CSV filename
  *  exportValue   optional (row, col) => plain text for PDF/CSV cells
@@ -24,6 +25,7 @@ export default function ReportTable({
   rows,
   searchKeys = [],
   toolbar = null,
+  leading = null,
   filters = null,
   renderCell,
   renderDetail = null,
@@ -71,7 +73,9 @@ export default function ReportTable({
         nested ? '' : 'shadow-card'
       }`}
     >
-      <div className="flex flex-wrap items-center justify-end gap-[14px] px-[16px] pb-[16px] pt-[16px]">
+      <div className="flex flex-wrap items-center gap-[14px] px-[16px] pb-[16px] pt-[16px]">
+        {leading}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-[14px]">
         {showSearch && (
           <SearchInput
             value={query}
@@ -83,6 +87,7 @@ export default function ReportTable({
         {toolbar}
         <ExportButton label="PDF" onClick={() => exportPdf(visible)} />
         <ExportButton label="CSV" onClick={() => exportCsv(visible)} />
+        </div>
       </div>
       {printNode}
 
@@ -97,11 +102,11 @@ export default function ReportTable({
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-[#F7F9FC]">
+            <tr className="border-y border-line bg-canvas">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[16px] text-[13px] font-medium leading-4 text-ink-soft ${
+                  className={`px-[16px] py-[16px] text-[13px] font-semibold leading-4 text-ink-soft ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -143,14 +148,14 @@ export default function ReportTable({
                           c.align === 'right' ? 'text-right' : ''
                         }`}
                       >
-                        {renderCell(row, c, { isExpanded, toggle })}
+                        {renderCell(row, c, { isExpanded, toggle, exportRow: () => exportPdf([row]) })}
                       </td>
                     ))}
                   </tr>
 
                   {isExpanded && (
                     <tr className="border-b border-line last:border-0">
-                      <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[2px]">
+                      <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
                         {renderDetail(row)}
                       </td>
                     </tr>

@@ -61,7 +61,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
             <span className="flex h-[36px] w-[36px] items-center justify-center rounded-[10px] bg-brand-soft text-brand">
               <PersonAddIcon size={18} />
             </span>
-            <h2 id="add-user-title" className="text-[17px] font-bold leading-6 text-ink">
+            <h2 id="add-user-title" className="text-[17px] font-extrabold leading-6 text-ink">
               Add User
             </h2>
           </div>
@@ -77,7 +77,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
 
         <div className="mt-[14px] space-y-[12px]">
           <label className="block">
-            <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Name *</span>
+            <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Name *</span>
             <input
               value={form.name}
               onChange={(e) => set('name')(e.target.value)}
@@ -88,7 +88,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
 
           <div className="grid grid-cols-2 gap-[12px]">
             <label className="block">
-              <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Phone</span>
+              <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Phone</span>
               <input
                 value={form.phone}
                 onChange={(e) => set('phone')(e.target.value)}
@@ -98,7 +98,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
             </label>
 
             <label className="block">
-              <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Email *</span>
+              <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Email *</span>
               <input
                 value={form.email}
                 onChange={(e) => set('email')(e.target.value)}
@@ -110,12 +110,12 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
 
           <div className="grid grid-cols-2 gap-[12px]">
             <div>
-              <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Role *</span>
+              <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
               <Select options={teamRoleNames} value={form.role} onChange={set('role')} placeholder="Select Role" />
             </div>
 
             <div>
-              <span className="mb-[6px] block text-[12.5px] font-medium leading-4 text-ink-soft">Status</span>
+              <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status</span>
               <Select options={roleStatusOptions} value={form.status} onChange={set('status')} />
             </div>
           </div>

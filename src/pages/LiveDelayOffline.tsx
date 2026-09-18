@@ -23,7 +23,7 @@ export default function LiveDelayOffline() {
 
   return (
     <div className="flex flex-col gap-[16px] pb-[22px]">
-      <StatCardsRow items={stats} columns={4} gap={14} noteChip />
+      <StatCardsRow items={stats} columns={4} gap={14} />
 
       <div className="flex justify-end">
         <DateRangeField value={range} onChange={setRange} className="w-[280px]" />

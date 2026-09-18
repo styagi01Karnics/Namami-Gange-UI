@@ -8,10 +8,10 @@ export default function ViolationDetailPanel({ violation }) {
   const { summary, tracking, recovery, penalty, trend } = violation
 
   return (
-    <div className="space-y-[14px]">
+    <div className="space-y-[14px] rounded-[12px] border border-line bg-canvas p-[18px]">
       <ViolationSummaryStrip items={summary} />
 
-      <div className="grid grid-cols-[1.78fr_1fr] rounded-[12px] border border-line bg-white p-[18px] shadow-card">
+      <div className="grid grid-cols-[1.78fr_1fr] rounded-[12px] border border-line bg-white p-[18px]">
         {/* left region: tracking + timeline, with the trend chart underneath */}
         <div className="pr-[20px]">
           <div className="grid grid-cols-[1.45fr_1fr]">
