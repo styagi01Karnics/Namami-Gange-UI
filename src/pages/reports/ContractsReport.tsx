@@ -6,7 +6,7 @@ import { DownloadAction, StpLink } from '../../components/reports/cells'
 import { contractsReportColumns, contractsReportRows, contractsSummary } from '../../data/mockData'
 
 export default function ContractsReport() {
-  const renderCell = (row, col, { exportRow } = {}) => {
+  const renderCell = (row: any, col: any, { exportRow }: { exportRow?: () => void } = {}) => {
     switch (col.key) {
       case 'id':
         return (
