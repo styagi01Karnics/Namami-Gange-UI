@@ -14,14 +14,14 @@ const ICON_SIZE = 24
 
 const itemClass = (isActive: boolean, collapsed: boolean) =>
   [
-    'group mx-3 flex w-[calc(100%-24px)] items-center gap-[13px] rounded-[10px] py-[11px] transition-colors',
+    'group mx-3 flex shrink-0 items-center gap-[13px] rounded-[10px] py-[11px] transition-colors',
     collapsed ? 'justify-center px-0' : 'px-3',
     isActive
       ? 'bg-[#003C7A] text-white shadow-[0_2px_8px_rgba(0,60,122,0.28)]'
       : 'text-[#003C7A] hover:bg-white/75',
   ].join(' ')
 
-const labelClass = 'flex-1 text-left text-[15px] font-semibold leading-5'
+const labelClass = 'min-w-0 flex-1 truncate text-left text-[15px] font-semibold leading-5'
 
 /**
  * A section stays lit for its own sub-pages too — `match` widens that to a
@@ -51,18 +51,18 @@ export default function Sidebar({ collapsed, onToggleCollapse }: { collapsed: bo
 
   return (
     <aside
-      className={`relative z-20 flex h-full shrink-0 flex-col bg-canvas transition-[width] duration-200 ${
+      className={`relative z-20 flex h-full min-h-0 shrink-0 flex-col bg-canvas transition-[width] duration-200 ${
         collapsed ? 'w-[82px]' : 'w-[280px]'
       }`}
     >
-      {/* sidebarbg.png is a tall banner with a white gutter and rounded corners baked into its
-          right edge, so it is drawn wider than the rail and clipped to hide that edge. */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* Pin the river art to the bottom so short Windows viewports keep the
+          nav on the pale sky instead of cropping onto the illustration. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden bg-canvas">
         <img
           src="/sidebarbg.png"
           alt=""
           aria-hidden="true"
-          className="h-full w-full object-cover object-[center_80%]"
+          className="absolute bottom-0 left-0 w-full max-w-none"
         />
         <div
           aria-hidden="true"
@@ -79,7 +79,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }: { collapsed: bo
 
       <div className="relative mx-6 border-t border-white/70" />
 
-      <nav className="scroll-thin relative flex-1 overflow-y-auto pb-4 pt-4">
+      <nav className="scroll-thin relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-4 pt-4">
         <div className="space-y-[3px]">
           {NAV_ITEMS.map((item) => (
             <NavItem key={item.id} item={item} pathname={pathname} collapsed={collapsed} />

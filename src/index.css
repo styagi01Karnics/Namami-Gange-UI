@@ -50,6 +50,10 @@ body {
 .scroll-thin::-webkit-scrollbar-track {
   background: transparent;
 }
+/* Windows classic scrollbars steal layout width; keep the gutter off the nav. */
+.scroll-thin::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 /* dashed separator used inside the compliance card */
 .dashed-divider {
