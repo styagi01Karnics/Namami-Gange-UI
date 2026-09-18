@@ -1,0 +1,14 @@
+services:
+
+  namami-gange-ui:
+    image: sunardock/namami-gange-ui:${IMAGE_TAG:-latest}
+
+    container_name: namami-gange-ui
+
+    restart: unless-stopped
+
+    ports:
+      - "18085:80"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
