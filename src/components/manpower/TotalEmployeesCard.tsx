@@ -12,6 +12,8 @@ export default function TotalEmployeesCard() {
       total={stpManpower.totalEmployees}
       scopeLabel={stpManpower.scopeLabel}
       breakdown={stpManpower.breakdown}
+      className="h-full"
+      gaugeSize={172}
     />
   )
 }

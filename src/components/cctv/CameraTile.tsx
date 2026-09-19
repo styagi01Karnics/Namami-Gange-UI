@@ -60,14 +60,14 @@ export default function CameraTile({ camera, onExpand }) {
             <Info size={13} strokeWidth={2.2} />
           </button>
 
-          <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 hidden w-[204px] rounded-[9px] bg-white p-[11px] shadow-pop group-focus-within/info:block group-hover/info:block">
+          <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 hidden w-max min-w-[280px] rounded-[9px] bg-white p-[11px] shadow-pop group-focus-within/info:block group-hover/info:block">
             {[
               ['Camera ID:', camera.id],
               ['Last Active:', camera.lastActive],
             ].map(([label, value]) => (
-              <div key={label} className="flex items-baseline justify-between gap-[10px] py-[3px]">
+              <div key={label} className="flex items-baseline justify-between gap-[16px] whitespace-nowrap py-[3px]">
                 <span className="text-[11.5px] leading-4 text-ink-soft">{label}</span>
-                <span className="text-right text-[11.5px] font-semibold leading-4 text-ink">{value}</span>
+                <span className="text-[11.5px] font-semibold leading-4 text-ink">{value}</span>
               </div>
             ))}
           </div>

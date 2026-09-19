@@ -3,9 +3,8 @@ import { ChevronDown } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import ParamTile from '../stp/ParamTile'
+import { HistoryGlyph } from '../ui/sectionIcons'
 import { streamTransactionColumns } from '../../data/mockData'
-
-const ClockIcon = ico('fluent:clock-32-filled')
 
 const TONE = {
   brand: {
@@ -104,7 +103,7 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
                     <tr className="border-b border-line last:border-0">
                       <td colSpan={streamTransactionColumns.length} className="px-[14px] pb-[16px] pt-[16px]">
                         <div className={`rounded-[10px] border border-line p-[13px] ${tone.panel}`}>
-                          <div className="flex items-start justify-between gap-[12px]">
+                          <div className="flex items-center justify-between gap-[12px]">
                             <div>
                               <p className="text-[13px] leading-[18px] text-ink-soft">Flow</p>
                               <p className="mt-[3px] text-[19px] font-bold leading-6 text-ink">
@@ -113,7 +112,7 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
                               </p>
                             </div>
                             <span className={`flex shrink-0 items-center gap-[6px] text-[12.5px] font-medium leading-4 ${tone.time}`}>
-                              <ClockIcon size={15} />
+                              <HistoryGlyph size={16} />
                               {row.reading.at}
                             </span>
                           </div>

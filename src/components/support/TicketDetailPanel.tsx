@@ -22,7 +22,7 @@ export default function TicketDetailPanel({ ticket }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1.9fr_1fr] items-start gap-[16px]">
+      <div className="grid grid-cols-[1.9fr_1fr] items-stretch gap-[16px]">
         <TicketConversation violationId={ticket.violationId} messages={ticket.conversation} />
         <TicketTimeline steps={ticket.timeline} />
       </div>

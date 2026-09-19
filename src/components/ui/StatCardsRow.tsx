@@ -23,9 +23,11 @@ const ICONS: Record<string, ReturnType<typeof ico> | typeof BuildingIcon> = {
   triangleAlert: ico('clarity:warning-standard-solid'),
   money: ico('fluent:money-24-filled'),
   boxes: ico('fluent:box-24-filled'),
+  boxOut: ico('fluent:box-arrow-left-20-filled'),
   building: BuildingIcon,
   package: ico('fluent:box-multiple-24-filled'),
   days: ico('fluent:calendar-clock-24-filled'),
+  timer: ico('fluent:timer-12-filled'),
   user: ico('fluent:person-32-filled'),
   users: TeamIcon,
   peopleTeam: ico('fluent:people-team-16-filled'),
@@ -48,28 +50,45 @@ const ICONS: Record<string, ReturnType<typeof ico> | typeof BuildingIcon> = {
   clock: ico('fluent:clock-20-filled'),
 }
 
-function StatCard({ item }: { item: StatCardItem }) {
+const SIZE = {
+  default: {
+    card: 'p-[14px]',
+    box: 'h-[50px] w-[50px] rounded-[12px]',
+    icon: 26,
+    value: 'mt-[6px]',
+    note: 'mt-[12px]',
+  },
+  comfortable: {
+    card: 'px-[16px] py-[18px]',
+    box: 'h-[50px] w-[50px] rounded-[12px]',
+    icon: 26,
+    value: 'mt-[6px]',
+    note: 'mt-[12px]',
+  },
+}
+
+function StatCard({ item, size = 'default' }: { item: StatCardItem; size?: keyof typeof SIZE }) {
   const tone = TONES[item.tone]
   const Icon = ICONS[item.icon]
+  const s = SIZE[size]
 
   return (
-    <div className="rounded-[12px] border border-line bg-white p-[14px] shadow-card">
-      <div className="flex items-center gap-[10px]">
-        <span className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[11px] ${tone.box}`}>
-          <Icon size={22} strokeWidth={2.2} className={tone.glyph} />
+    <div className={`flex h-full flex-col justify-center rounded-[12px] border border-line bg-white shadow-card ${s.card}`}>
+      <div className="flex items-start gap-[12px]">
+        <span className={`flex shrink-0 items-center justify-center ${s.box} ${tone.box}`}>
+          <Icon size={s.icon} strokeWidth={2.2} className={tone.glyph} />
         </span>
 
         <div className="min-w-0">
           <p className="text-[13px] font-medium leading-4 text-ink-soft">{item.label}</p>
-          <p className={`mt-[5px] text-[19px] font-bold leading-6 ${tone.value}`}>{item.value}</p>
+          <p className={`text-[19px] font-bold leading-6 ${s.value} ${tone.value}`}>{item.value}</p>
+          {item.note && (
+            <span className={`inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2] ${s.note}`}>
+              {item.note}
+            </span>
+          )}
         </div>
       </div>
-
-      {item.note && (
-        <span className="mt-[12px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
-          {item.note}
-        </span>
-      )}
     </div>
   )
 }
@@ -79,16 +98,17 @@ type StatCardsRowProps = {
   columns?: number
   gap?: number
   className?: string
+  size?: keyof typeof SIZE
 }
 
-export default function StatCardsRow({ items, columns = 4, gap = 16, className = '' }: StatCardsRowProps) {
+export default function StatCardsRow({ items, columns = 4, gap = 16, className = '', size = 'default' }: StatCardsRowProps) {
   return (
     <div
       className={`grid ${className}`}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: `${gap}px` }}
     >
       {items.map((item) => (
-        <StatCard key={item.key} item={item} />
+        <StatCard key={item.key} item={item} size={size} />
       ))}
     </div>
   )

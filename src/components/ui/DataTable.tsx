@@ -27,6 +27,7 @@ type DataTableProps<T extends DataRow> = {
   emptyMessage?: string
   minWidth?: number
   pageSize?: number
+  toolbarFill?: boolean
 }
 
 export default function DataTable<T extends DataRow>({
@@ -41,6 +42,7 @@ export default function DataTable<T extends DataRow>({
   emptyMessage = 'Nothing matches the current filters.',
   minWidth = 980,
   pageSize: initialPageSize = 5,
+  toolbarFill = false,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<{ key: string | null; dir: 'asc' | 'desc' }>({ key: null, dir: 'asc' })
@@ -88,22 +90,25 @@ export default function DataTable<T extends DataRow>({
   return (
     <div className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
       <div
-        className={`flex flex-wrap items-center gap-[14px] px-[16px] pb-[16px] pt-[16px] ${
-          filters ? 'justify-between' : 'justify-end'
+        className={`flex items-center gap-[14px] px-[16px] pb-[16px] pt-[16px] ${
+          toolbarFill ? '' : filters ? 'flex-wrap justify-between' : 'flex-wrap justify-end'
         }`}
       >
-        <div className="flex flex-wrap items-center gap-[14px]">
+        <div className={`flex items-center gap-[14px] ${toolbarFill ? 'min-w-0 flex-1' : 'flex-wrap'}`}>
           <SearchInput
             value={query}
             onChange={onSearch}
             placeholder="Search"
-            className={filters ? 'w-[260px] max-w-full' : 'w-[440px] max-w-full'}
+            size={toolbarFill ? 'comfortable' : 'default'}
+            className={
+              toolbarFill ? 'min-w-0 flex-1' : filters ? 'w-[260px] max-w-full' : 'w-[440px] max-w-full'
+            }
           />
-          {filters}
+          {toolbarFill ? <div className="flex min-w-0 flex-1 items-center gap-[14px]">{filters}</div> : filters}
         </div>
 
         {(onExportPdf || onExportCsv) && (
-          <div className="flex items-center gap-[14px]">
+          <div className="flex shrink-0 items-center gap-[14px]">
             {onExportPdf && <ExportButton label="PDF" onClick={() => onExportPdf(filtered)} />}
             {onExportCsv && <ExportButton label="CSV" onClick={() => onExportCsv(filtered)} />}
           </div>

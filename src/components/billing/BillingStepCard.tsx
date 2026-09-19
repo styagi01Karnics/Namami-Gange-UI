@@ -1,27 +1,28 @@
 import { ico } from '../ui/Ico'
 import { statusTone } from '../ui/StatusPill'
 
-const AlertIcon = ico('clarity:warning-standard-solid')
+const AlertIcon = ico('fluent:money-off-24-filled')
 const CheckIcon = ico('fluent:checkmark-circle-32-filled')
-const FileIcon = ico('famicons:document-sharp')
+const MoneyIcon = ico('fluent:money-24-filled')
 const WalletIcon = ico('fluent:wallet-32-filled')
+const CalendarIcon = ico('fluent:calendar-32-filled')
 
 const CARD = {
-  warn: { shell: 'bg-[#FFF8E8] border-[#F5E3B8]', icon: 'bg-[#F6E3A8] text-warn' },
-  brand: { shell: 'bg-[#EEF5FE] border-[#C8DCF8]', icon: 'bg-[#CDE0F8] text-brand' },
-  danger: { shell: 'bg-[#FEF0F1] border-[#F6C9CB]', icon: 'bg-[#F5D0D2] text-danger' },
-  violet: { shell: 'bg-[#F4F0FF] border-[#DDD1FA]', icon: 'bg-[#DDD4F5] text-[#7C5CFC]' },
+  warn: { shell: 'bg-[#FFF8E8]', icon: 'bg-[#FFE8B8] text-[#E9A020]' },
+  brand: { shell: 'bg-[#EEF5FE]', icon: 'bg-[#D6E8FC] text-brand' },
+  danger: { shell: 'bg-[#FEF0F1]', icon: 'bg-[#F8D4D6] text-danger' },
+  ok: { shell: 'bg-[#F0F9F3]', icon: 'bg-[#D4EEDD] text-ok' },
 }
 
 const PILL = {
-  warn: 'bg-[#F6E3A8] text-[#C4890B]',
-  brand: 'bg-[#CDE0F8] text-brand',
-  danger: 'bg-[#F5D0D2] text-danger',
-  ok: 'bg-[#C5E6CF] text-ok',
+  warn: 'bg-[#FFE8B8] text-[#C4890B]',
+  brand: 'bg-[#D6E8FC] text-brand',
+  danger: 'bg-[#F8D4D6] text-danger',
+  ok: 'bg-[#D4EEDD] text-ok',
 }
 
 const ICONS = {
-  file: FileIcon,
+  money: MoneyIcon,
   check: CheckIcon,
   alert: AlertIcon,
   wallet: WalletIcon,
@@ -30,33 +31,34 @@ const ICONS = {
 /** One step in the billing workflow — raised, approved, penalty, payable. */
 export default function BillingStepCard({ step }) {
   const card = CARD[step.tone] ?? CARD.brand
-  const Icon = ICONS[step.icon] ?? FileIcon
+  const Icon = ICONS[step.icon] ?? MoneyIcon
   const pillTone = statusTone(step.status)
 
   return (
-    <div className={`flex min-w-[200px] flex-1 flex-col rounded-[12px] border p-[14px] shadow-card ${card.shell}`}>
-      <div className="flex items-start justify-between gap-[10px]">
-        <span className={`flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[11px] ${card.icon}`}>
-          <Icon size={22} />
-        </span>
-        <p className="min-w-0 text-right text-[11.5px] font-medium leading-[16px] text-ink-soft">{step.title}</p>
+    <div className={`flex min-w-0 flex-1 basis-0 flex-col rounded-[12px] p-[16px] ${card.shell}`}>
+      <span className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[8px] ${card.icon}`}>
+        <Icon size={16} />
+      </span>
+
+      <p className="mt-[14px] text-[13px] font-medium leading-[18px] text-ink">{step.title}</p>
+      <p className="mt-[8px] text-[20px] font-bold leading-7 text-ink">{step.amount}</p>
+
+      <span
+        className={`mt-[10px] inline-flex w-fit items-center whitespace-nowrap rounded-full px-[10px] py-[3px] text-[11.5px] font-semibold leading-[16px] ${
+          PILL[pillTone] ?? PILL.brand
+        }`}
+      >
+        {step.status}
+      </span>
+
+      <div className="mt-auto flex items-start gap-[6px] pt-[16px]">
+        <CalendarIcon size={14} className="mt-[2px] shrink-0 text-ink-muted" />
+        <p className="text-[12px] leading-[16px] text-ink-muted">
+          {step.dateLabel}
+          <br />
+          <span className="font-medium text-ink-soft">{step.date}</span>
+        </p>
       </div>
-
-      <p className="mt-[18px] text-[22px] font-bold leading-7 text-ink">{step.amount}</p>
-
-      <div className="mt-[10px]">
-        <span
-          className={`inline-flex items-center whitespace-nowrap rounded-full px-[11px] py-[3px] text-[11.5px] font-semibold leading-[16px] ${
-            PILL[pillTone] ?? PILL.brand
-          }`}
-        >
-          {step.status}
-        </span>
-      </div>
-
-      <p className="mt-auto pt-[16px] text-[11.5px] leading-4 text-ink-muted">
-        {step.dateLabel}: <span className="font-semibold text-ink-soft">{step.date}</span>
-      </p>
     </div>
   )
 }

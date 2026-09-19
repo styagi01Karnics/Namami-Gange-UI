@@ -39,6 +39,7 @@ export default function ReportTable({
   exportTitle,
   exportFileName,
   exportValue,
+  striped = false,
 }: any) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
@@ -140,7 +141,7 @@ export default function ReportTable({
 
               return (
                 <Fragment key={key}>
-                  <tr className="border-b border-line last:border-0">
+                  <tr className={`border-b border-line last:border-0 ${striped && i % 2 === 1 ? 'bg-[#F8F8F8E5]' : 'bg-white'}`}>
                     {columns.map((c) => (
                       <td
                         key={c.key}

@@ -36,16 +36,17 @@ export default function InventoryReport() {
 
   return (
     <ReportShell>
-      <div className="grid grid-cols-[0.95fr_1fr] items-start gap-[16px] [&>*]:min-w-0">
+      <div className="grid grid-cols-[0.95fr_1fr] items-stretch gap-[14px] [&>*]:min-w-0">
         <GaugeSummaryCard
+          className="h-full"
           icon={BoxIcon}
           label={inventorySummary.label}
           total={inventorySummary.total}
           scopeLabel={inventorySummary.scopeLabel}
           breakdown={inventorySummary.breakdown}
-          gaugeSize={240}
+          gaugeSize={172}
         />
-        <StatCardsRow items={inventoryStats} columns={2} />
+        <StatCardsRow className="h-full [&>*]:h-full" items={inventoryStats} columns={2} gap={14} />
       </div>
 
       <ReportTable

@@ -76,7 +76,7 @@ export default function FileUploadArea({ files, onChange, compact = false }) {
 
   return (
     <div>
-      <p className="mb-[6px] text-[12.5px] font-medium leading-4 text-ink-soft">Attachments</p>
+      <p className="mb-[10px] text-[12.5px] font-medium leading-4 text-ink-soft">Attachments</p>
 
       <button
         type="button"

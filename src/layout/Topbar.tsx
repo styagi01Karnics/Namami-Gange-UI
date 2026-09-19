@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
+import { ChevronDown, ChevronRight, LogOut } from 'lucide-react'
 import { ico } from '../components/ui/Ico'
 import { useAuth } from '../auth/AuthContext'
 import LogoutModal from '../components/auth/LogoutModal'
@@ -13,6 +13,7 @@ import type { PageTitle, TitleCrumb } from '../types'
 
 const UserIcon = ico('fluent:person-32-filled')
 const LockIcon = ico('fluent:lock-closed-24-filled')
+const BellIcon = ico('fluent:alert-20-regular')
 
 function Avatar() {
   return (
@@ -119,9 +120,9 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
             }}
             className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#4A5A6D] transition-colors hover:bg-white"
           >
-            <Bell size={19} strokeWidth={1.8} />
+            <BellIcon size={20} />
             {unreadCount > 0 && (
-              <span className="absolute right-[9px] top-[8px] h-[6px] w-[6px] rounded-full bg-danger ring-2 ring-canvas" />
+              <span className="absolute right-[9px] top-[8px] h-[6px] w-[6px] rounded-full bg-danger ring-2 ring-white" />
             )}
           </button>
           <NotificationsModal

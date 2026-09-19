@@ -23,13 +23,13 @@ export default function CalculationSummaryCard() {
       <div className="mt-[14px] flex w-full items-center">
           {terms.map((t) => (
             <Fragment key={t.key}>
-              <div className="shrink-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[12.5px] font-medium leading-4 text-ink-soft">{t.label}</p>
                 <p className={`mt-[7px] text-[17px] font-bold leading-6 ${VALUE_TONE[t.tone]}`}>{t.value}</p>
               </div>
 
               {t.operator && (
-                <div className="flex min-w-[56px] flex-1 items-center justify-center">
+                <div className="flex flex-1 items-center justify-center">
                   <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold leading-none text-white">
                     {t.operator}
                   </span>
@@ -38,10 +38,12 @@ export default function CalculationSummaryCard() {
             </Fragment>
           ))}
 
-          <span className="mx-[24px] h-[44px] w-px shrink-0 bg-line" />
+          <div className="flex flex-1 items-center justify-center">
+            <span className="h-[44px] w-px bg-line" />
+          </div>
 
-          <div className="flex shrink-0 items-center gap-[10px]">
-            <CheckIcon size={22} className="text-ok" />
+          <div className="flex min-w-0 flex-1 items-center gap-[10px]">
+            <CheckIcon size={22} className="shrink-0 text-ok" />
             <div>
               <p className="text-[12.5px] font-medium leading-4 text-ink-soft">Payment Status</p>
               <p className="mt-[6px] inline-flex items-center rounded-full bg-ok-soft px-[11px] py-[3px] text-[11.5px] font-semibold leading-4 text-ok">

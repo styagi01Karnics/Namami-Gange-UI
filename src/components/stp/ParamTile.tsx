@@ -18,16 +18,16 @@ export default function ParamTile({ param }) {
   return (
     <div className="rounded-[10px] border border-line bg-card p-[11px]">
       <div className="flex items-start gap-[10px]">
-        <span className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] ${box}`}>
+        <span className={`flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[12px] ${box}`}>
           {src ? (
-            <img src={src} alt="" width={24} height={24} className="shrink-0" />
+            <img src={src} alt="" width={26} height={26} className="shrink-0" />
           ) : (
-            <Icon icon={icon} width={24} height={24} className={`shrink-0 ${glyph}`} />
+            <Icon icon={icon} width={26} height={26} className={`shrink-0 ${glyph}`} />
           )}
         </span>
         <div className="min-w-0">
           <p className="text-[13px] font-medium leading-4 text-ink">{param.label}</p>
-          <p className={`mt-[5px] text-[13.5px] font-semibold leading-[18px] ${VALUE_TONE[param.tone]}`}>
+          <p className={`mt-[6px] text-[13.5px] font-semibold leading-[18px] ${VALUE_TONE[param.tone]}`}>
             {param.value}
           </p>
         </div>

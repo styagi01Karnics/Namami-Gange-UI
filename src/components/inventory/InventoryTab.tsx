@@ -23,6 +23,7 @@ export default function InventoryTab() {
           total={inventorySummary.total}
           scopeLabel={inventorySummary.scopeLabel}
           breakdown={inventorySummary.breakdown}
+          gaugeSize={172}
         />
         <StatCardsRow className="h-full [&>*]:h-full" items={inventoryStats} columns={2} gap={14} />
       </div>

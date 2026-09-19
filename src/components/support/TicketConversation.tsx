@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ico } from '../ui/Ico'
 import { AttachmentRow, SectionLabel } from './parts'
 
@@ -52,6 +52,12 @@ function Bubble({ message, onRemoveAttachment }) {
 export default function TicketConversation({ violationId, messages }) {
   const [thread, setThread] = useState(messages)
   const [draft, setDraft] = useState('')
+  const listRef = useRef(null)
+
+  useEffect(() => {
+    const node = listRef.current
+    if (node) node.scrollTop = node.scrollHeight
+  }, [thread])
 
   const send = () => {
     const text = draft.trim()
@@ -83,19 +89,19 @@ export default function TicketConversation({ violationId, messages }) {
     )
 
   return (
-    <div className="flex flex-col rounded-[12px] border border-line bg-white p-[16px] shadow-card">
+    <div className="flex h-[560px] min-h-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white p-[16px] shadow-card">
       <SectionLabel>Conversation</SectionLabel>
-      <p className="mt-[6px] text-[12.5px] leading-4 text-ink-soft">
+      <p className="mt-[6px] shrink-0 text-[12.5px] leading-4 text-ink-soft">
         Violation ID : <span className="font-semibold text-danger">{violationId}</span>
       </p>
 
-      <ul className="scroll-thin mt-[16px] max-h-[420px] flex-1 space-y-[18px] overflow-y-auto pr-[4px]">
+      <ul ref={listRef} className="scroll-thin mt-[16px] min-h-0 flex-1 space-y-[18px] overflow-y-auto pr-[4px]">
         {thread.map((message) => (
           <Bubble key={message.id} message={message} onRemoveAttachment={removeAttachment} />
         ))}
       </ul>
 
-      <div className="mt-[16px] rounded-[10px] border border-line bg-white px-[14px] pb-[10px] pt-[12px]">
+      <div className="mt-[16px] shrink-0 rounded-[10px] border border-line bg-white px-[14px] pb-[10px] pt-[12px]">
         <div className="flex items-start gap-[10px]">
           <textarea
             value={draft}

@@ -1,4 +1,5 @@
-import { ChevronRight } from 'lucide-react'
+import { Fragment } from 'react'
+import { ArrowRight } from 'lucide-react'
 import BillingStepCard from './BillingStepCard'
 import CalculationSummaryCard from './CalculationSummaryCard'
 import BillingLogsCard from './BillingLogsCard'
@@ -6,11 +7,8 @@ import { stpBilling } from '../../data/mockData'
 
 function FlowArrow() {
   return (
-    <div className="flex shrink-0 items-center px-[6px] pt-[28px]">
-      <div className="flex items-center gap-[2px]">
-        <span className="h-px w-[18px] border-t border-dashed border-[#B8C9DC]" />
-        <ChevronRight size={16} strokeWidth={2.2} className="text-[#98AABB]" />
-      </div>
+    <div className="flex shrink-0 items-center px-[10px]">
+      <ArrowRight size={18} strokeWidth={1.8} className="text-[#98AABB]" />
     </div>
   )
 }
@@ -24,10 +22,10 @@ export default function BillingTab() {
       <div className="scroll-thin overflow-x-auto pb-[4px]">
         <div className="flex min-w-[920px] items-stretch">
           {steps.map((step, i) => (
-            <div key={step.key} className="flex flex-1 items-stretch">
+            <Fragment key={step.key}>
               <BillingStepCard step={step} />
               {i < steps.length - 1 && <FlowArrow />}
-            </div>
+            </Fragment>
           ))}
         </div>
       </div>

@@ -56,6 +56,7 @@ export default function CalibrationTab() {
       ))}
       renderCell={renderCell}
       minWidth={1120}
+      striped
       emptyMessage="Select a sampling point to see calibration records."
       exportTitle="Remote Calibration"
       exportFileName="remote-calibration"

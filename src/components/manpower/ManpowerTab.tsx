@@ -9,8 +9,8 @@ export default function ManpowerTab() {
   const toggleDetails = () => setDetailsOpen((v) => !v)
 
   return (
-    <div className="space-y-[12px]">
-      <div className="grid grid-cols-[0.95fr_1fr] items-stretch gap-[12px] [&>*]:min-w-0">
+    <div className="space-y-[14px]">
+      <div className="grid grid-cols-[0.95fr_1fr] items-stretch gap-[14px] [&>*]:min-w-0">
         <TotalEmployeesCard />
         <AttendanceTrendsCard />
       </div>

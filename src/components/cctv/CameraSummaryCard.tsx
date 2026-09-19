@@ -31,21 +31,17 @@ export default function CameraSummaryCard() {
 
   return (
     <section className="flex h-full flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
-      <div className="flex items-center gap-[11px]">
-        <span className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[11px] bg-brand-soft">
-          <CameraIcon size={22} className="text-brand" />
+      <div className="flex items-start gap-[12px]">
+        <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[12px] bg-brand-soft">
+          <CameraIcon size={26} className="text-brand" />
         </span>
         <div className="min-w-0">
           <p className="text-[14px] font-semibold leading-5 text-ink-soft">Total Cameras</p>
-          <p className="text-[20px] font-bold leading-7 text-ink">{cctvSummary.total}</p>
+          <p className="mt-[6px] text-[20px] font-bold leading-7 text-ink">{cctvSummary.total}</p>
+          <span className="mt-[12px] inline-flex rounded-full bg-[#EEF6FD] px-[9px] py-[4px] text-[12px] font-medium leading-4 text-[#0768D2]">
+            {cctvSummary.scopeLabel}
+          </span>
         </div>
-      </div>
-
-      {/* Indented to sit under the label rather than the icon. */}
-      <div className="mt-[9px] pl-[53px]">
-        <span className="inline-flex rounded-full bg-[#EEF6FD] px-[9px] py-[4px] text-[12px] font-medium leading-4 text-[#0768D2]">
-          {cctvSummary.scopeLabel}
-        </span>
       </div>
 
       <div className="mt-[14px] grid flex-1 grid-cols-2 gap-[13px]">

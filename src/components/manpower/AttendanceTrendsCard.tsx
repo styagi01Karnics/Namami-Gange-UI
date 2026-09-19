@@ -31,7 +31,7 @@ export default function AttendanceTrendsCard() {
   const { legend, series, marker } = attendanceTrends
 
   return (
-    <section className="flex flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
+    <section className="flex h-full flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       <div className="flex items-start justify-between">
         <h3 className="text-[15px] font-semibold leading-5 text-ink">Attendance Trends</h3>
         <div className="flex items-center gap-[14px]">
@@ -44,9 +44,9 @@ export default function AttendanceTrendsCard() {
         </div>
       </div>
 
-      <div className="mt-[14px] h-[188px] w-full flex-1">
+      <div className="mt-[14px] min-h-0 w-full flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={series} margin={{ top: 22, right: 10, left: -14, bottom: 0 }}>
+          <LineChart data={series} margin={{ top: 22, right: 12, left: 5, bottom: 0 }}>
             <CartesianGrid stroke="#EDF2F8" vertical={false} />
             <XAxis
               dataKey="month"
@@ -55,6 +55,7 @@ export default function AttendanceTrendsCard() {
               tick={{ fill: '#3D4D5E', fontSize: 11, fontWeight: 600 }}
               tickMargin={9}
               interval={0}
+              padding={{ left: 18, right: 8 }}
             />
             <YAxis
               domain={[0, 400]}

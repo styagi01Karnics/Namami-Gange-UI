@@ -12,7 +12,7 @@ const EMPTY = { category: '', issue: '', description: '', priority: 'Mid' }
 
 function FieldLabel({ children, required = false }) {
   return (
-    <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
+    <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
       {children}
       {required && <span className="text-danger"> *</span>}
     </span>
@@ -22,11 +22,11 @@ function FieldLabel({ children, required = false }) {
 function FormSection({ icon: Icon, title, children }) {
   return (
     <section className="overflow-hidden rounded-[10px] border border-line">
-      <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[14px] py-[10px]">
+      <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[16px] py-[12px]">
         <Icon size={16} className="text-brand" />
         <h3 className="text-[13px] font-bold leading-[18px] text-brand">{title}</h3>
       </header>
-      <div className="space-y-[12px] p-[14px]">{children}</div>
+      <div className="space-y-[18px] px-[16px] pb-[18px] pt-[18px]">{children}</div>
     </section>
   )
 }
@@ -90,7 +90,7 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
           </h2>
         </div>
 
-        <div className="mt-[16px]">
+        <div className="mt-[20px]">
           <FormSection icon={ListIcon} title="Issue Details">
             <div>
               <FieldLabel required>Category</FieldLabel>
@@ -124,7 +124,7 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
             </label>
 
             <fieldset>
-              <legend className="mb-[8px] text-[12.5px] font-semibold leading-4 text-ink-soft">Priority</legend>
+              <legend className="mb-[10px] text-[12.5px] font-semibold leading-4 text-ink-soft">Priority</legend>
               <div className="grid grid-cols-3 gap-[10px]">
                 {supportTicketPriorities.map((p) => {
                   const selected = form.priority === p.id

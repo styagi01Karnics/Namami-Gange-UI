@@ -47,11 +47,13 @@ function Checkbox({ checked, onChange, label, className = '' }) {
 function FormSection({ icon: Icon, title, children }) {
   return (
     <section className="overflow-hidden rounded-[10px] border border-line">
-      <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[14px] py-[10px]">
-        <Icon size={16} strokeWidth={2} className="text-brand" />
+      <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[16px] py-[11px]">
+        <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[4px] bg-[#D6E8FC] text-[#2F7CD6]">
+          <Icon size={13} strokeWidth={2} />
+        </span>
         <h3 className="text-[13px] font-bold leading-[18px] text-brand">{title}</h3>
       </header>
-      <div className="p-[14px]">{children}</div>
+      <div className="px-[16px] pb-[16px] pt-[16px]">{children}</div>
     </section>
   )
 }
@@ -208,7 +210,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         onClick={(e) => e.stopPropagation()}
         className="my-auto w-full max-w-[560px] overflow-hidden rounded-[16px] bg-white shadow-pop"
       >
-        <div className="flex items-start justify-between gap-[12px] px-[20px] pb-[14px] pt-[18px]">
+        <div className="flex items-start justify-between gap-[12px] px-[22px] pb-[8px] pt-[22px]">
           <div className="flex items-center gap-[10px]">
             <span className="flex h-[32px] w-[32px] items-center justify-center rounded-[9px] bg-[#F0EBFD] text-[#7C3AED]">
               <RoleIcon size={17} className="text-[#7C3AED]" />
@@ -227,16 +229,16 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </button>
         </div>
 
-        <div className="scroll-thin max-h-[68vh] space-y-[14px] overflow-y-auto px-[20px] pb-[16px]">
+        <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
           <FormSection icon={FileTextIcon} title="Role & Access">
-            <div className="space-y-[12px]">
+            <div className="space-y-[16px]">
               <div>
-                <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
+                <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
                 <Select options={teamRoleNames} value={form.role} onChange={set('role')} placeholder="Select Role" />
               </div>
 
               <label className="block">
-                <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Description *</span>
+                <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Description *</span>
                 <textarea
                   value={form.description}
                   onChange={(e) => set('description')(e.target.value)}
@@ -246,13 +248,13 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
                 />
               </label>
 
-              <div className="grid grid-cols-2 gap-[12px]">
+              <div className="grid grid-cols-2 gap-[16px]">
                 <div>
-                  <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status *</span>
+                  <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status *</span>
                   <Select options={roleStatusOptions} value={form.status} onChange={set('status')} />
                 </div>
                 <div>
-                  <span className="mb-[6px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
+                  <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
                     Permission Template
                   </span>
                   <Select
@@ -267,7 +269,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </FormSection>
 
           <FormSection icon={KeyIcon} title="Module Permissions">
-            <div className="space-y-[10px]">
+            <div className="space-y-[12px]">
               {rolePermissionModules.map((module) => (
                 <ModuleRow
                   key={module.id}
@@ -281,7 +283,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </FormSection>
         </div>
 
-        <div className="flex items-center justify-between gap-[12px] border-t border-line px-[20px] py-[14px]">
+        <div className="flex items-center justify-between gap-[12px] px-[22px] pb-[22px] pt-[18px]">
           <p className="text-[12.5px] leading-4 text-ink-soft">
             {total} permission{total === 1 ? '' : 's'} selected
           </p>

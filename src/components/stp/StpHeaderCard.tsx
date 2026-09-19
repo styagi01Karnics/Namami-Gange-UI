@@ -113,14 +113,14 @@ export default function StpHeaderCard({ stp, showPenalty = true }) {
         </div>
 
         {showPenalty && (
-          <div className="w-[196px] shrink-0 rounded-[10px] bg-[#FFF8F8] p-[16px] shadow-[0px_0px_3px_1px_#DC26261A]">
-            <div className="flex items-center gap-[10px]">
-              <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[4px] bg-[#FDE6E6]">
-                <Icon icon="clarity:warning-standard-solid" width={18} height={18} className="text-danger" />
+          <div className="w-[248px] shrink-0 rounded-[10px] bg-[#FFF8F8] p-[16px] shadow-[0px_0px_3px_1px_#DC26261A]">
+            <div className="flex items-center gap-[12px]">
+              <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[8px] bg-[#FDE6E6]">
+                <Icon icon="clarity:warning-standard-solid" width={26} height={26} className="text-danger" />
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium leading-4 text-ink">Total Penalty</p>
-                <p className="mt-[4px] text-[16px] font-bold leading-5 text-[#DC2626]">{stp.penalty.amount}</p>
+                <p className="mt-[10px] text-[16px] font-bold leading-5 text-[#DC2626]">{stp.penalty.amount}</p>
               </div>
             </div>
             <div className="mt-[10px] flex justify-end">

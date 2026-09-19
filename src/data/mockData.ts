@@ -350,7 +350,7 @@ export const stpBilling = {
       tone: 'warn',
       dateLabel: 'Raised On',
       date: '15/02/2026',
-      icon: 'file',
+      icon: 'money',
     },
     {
       key: 'approved',
@@ -358,7 +358,7 @@ export const stpBilling = {
       amount: '₹4,80,000',
       status: 'Approved',
       tone: 'brand',
-      dateLabel: 'Approved on',
+      dateLabel: 'Approved On',
       date: '15/02/2026',
       icon: 'check',
     },
@@ -368,7 +368,7 @@ export const stpBilling = {
       amount: '₹20,000',
       status: 'Applied',
       tone: 'danger',
-      dateLabel: 'Imposed on',
+      dateLabel: 'Approved On',
       date: '15/02/2026',
       icon: 'alert',
     },
@@ -377,8 +377,8 @@ export const stpBilling = {
       title: 'Final Amount Payable',
       amount: '₹4,60,000',
       status: 'Paid',
-      tone: 'violet',
-      dateLabel: 'Payment date',
+      tone: 'ok',
+      dateLabel: 'Approved On',
       date: '15/02/2026',
       icon: 'wallet',
     },
@@ -1162,9 +1162,9 @@ export const inventorySummary = {
 
 export const inventoryStats = [
   { key: 'value', label: 'Total Inventory Value', value: '₹7,000', note: 'Across all locations', icon: 'money', tone: 'warn' },
-  { key: 'required', label: 'Required inventory', value: '730 L', note: 'Across all locations', icon: 'boxes', tone: 'brand' },
-  { key: 'consumption', label: 'Total Consumption', value: '1230 L', note: 'Across all locations', icon: 'package', tone: 'okQuiet' },
-  { key: 'daysLeft', label: 'Days of inventory left', value: '18', note: 'Across all locations', icon: 'days', tone: 'dangerQuiet' },
+  { key: 'required', label: 'Required inventory', value: '730 L', note: 'Across all locations', icon: 'boxOut', tone: 'brand' },
+  { key: 'consumption', label: 'Total Consumption', value: '1230 L', note: 'Across all locations', icon: 'boxes', tone: 'okQuiet' },
+  { key: 'daysLeft', label: 'Days of inventory left', value: '18', note: 'Across all locations', icon: 'timer', tone: 'dangerQuiet' },
 ]
 
 export const chemicalInventory = {

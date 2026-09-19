@@ -14,26 +14,26 @@ const ICONS = {
 /** Vertical activity log on the right of both ticket detail pages. */
 export default function TicketTimeline({ steps }) {
   return (
-    <div className="rounded-[12px] border border-line bg-white p-[16px] shadow-card">
+    <div className="flex h-[560px] min-h-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white p-[16px] shadow-card">
       <SectionLabel tone="muted">Ticket Timeline</SectionLabel>
 
-      <ol className="mt-[16px]">
+      <ol className="scroll-thin mt-[16px] min-h-0 flex-1 overflow-y-auto">
         {steps.map((step, i) => {
           const Icon = ICONS[step.icon] ?? ICONS.raised
           const last = i === steps.length - 1
 
           return (
-            <li key={step.key} className="flex gap-[11px]">
+            <li key={step.key} className="flex gap-[16px]">
               <span className="flex flex-col items-center">
-                <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] bg-[#EAF2FD] text-brand">
-                  <Icon size={14} />
+                <span className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[9px] bg-[#EAF2FD] text-brand">
+                  <Icon size={18} />
                 </span>
                 {!last && <span className="w-px flex-1 bg-line" />}
               </span>
 
-              <span className={`min-w-0 ${last ? '' : 'pb-[16px]'}`}>
-                <span className="block text-[12.5px] leading-[17px] text-ink-soft">{step.label}</span>
-                <span className="mt-[3px] block text-[13px] font-medium leading-[18px] text-ink">{step.time}</span>
+              <span className={`min-w-0 ${last ? '' : 'pb-[24px]'}`}>
+                <span className="block text-[14.5px] leading-[21px] text-ink-soft">{step.label}</span>
+                <span className="mt-[6px] block text-[15px] font-medium leading-[22px] text-ink">{step.time}</span>
               </span>
             </li>
           )

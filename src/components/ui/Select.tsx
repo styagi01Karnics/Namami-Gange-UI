@@ -10,6 +10,8 @@ type SelectProps = {
   buttonClassName?: string
   placeholder?: string
   align?: 'left' | 'right'
+  chevronSize?: number
+  dropUp?: boolean
 }
 
 export default function Select({
@@ -20,6 +22,8 @@ export default function Select({
   buttonClassName = '',
   placeholder = 'Select',
   align = 'left',
+  chevronSize = 17,
+  dropUp = false,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -54,7 +58,7 @@ export default function Select({
       >
         <span className={`truncate whitespace-nowrap ${selected ? '' : 'text-ink-muted'}`}>{selected?.label ?? placeholder}</span>
         <ChevronDown
-          size={17}
+          size={chevronSize}
           className={`shrink-0 text-[#5B6B7F] transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
@@ -62,9 +66,9 @@ export default function Select({
       {open && (
         <ul
           role="listbox"
-          className={`scroll-thin absolute z-40 mt-[6px] max-h-[248px] w-full min-w-[180px] overflow-y-auto rounded-[10px] border border-line bg-white py-[5px] shadow-pop ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
+          className={`scroll-thin absolute z-50 max-h-[180px] w-full min-w-[180px] overflow-y-auto rounded-[10px] border border-line bg-white py-[5px] shadow-pop ${
+            dropUp ? 'bottom-full mb-[6px]' : 'mt-[6px]'
+          } ${align === 'right' ? 'right-0' : 'left-0'}`}
         >
           {normalized.map((o) => {
             const isSelected = o.id === value

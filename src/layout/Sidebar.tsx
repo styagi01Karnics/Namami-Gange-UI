@@ -14,10 +14,10 @@ const ICON_SIZE = 24
 
 const itemClass = (isActive: boolean, collapsed: boolean) =>
   [
-    'group mx-3 flex shrink-0 items-center gap-[13px] rounded-[10px] py-[11px] transition-colors',
+    'group ml-3 mr-0 flex shrink-0 items-center gap-[13px] rounded-l-[10px] rounded-r-none py-[11px] transition-colors',
     collapsed ? 'justify-center px-0' : 'px-3',
     isActive
-      ? 'bg-[#003C7A] text-white shadow-[0_2px_8px_rgba(0,60,122,0.28)]'
+      ? 'bg-[#003C7A] text-white'
       : 'text-[#003C7A] hover:bg-white/75',
   ].join(' ')
 

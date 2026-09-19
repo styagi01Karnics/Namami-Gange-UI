@@ -56,7 +56,7 @@ export function PersonCard({ label, person }) {
   return (
     <div>
       <SectionLabel>{label}</SectionLabel>
-      <div className="mt-[9px] rounded-[10px] border border-line bg-white px-[13px] py-[12px]">
+      <div className="mt-[9px] rounded-[10px] border border-[#BFD8F8] bg-white px-[13px] py-[12px]">
         <p className="text-[12.5px] leading-4 text-ink-soft">
           User ID : <span className="font-semibold text-brand-link">{person.userId}</span>
         </p>
@@ -76,7 +76,7 @@ export function LastUpdatedCard({ update }) {
   return (
     <div>
       <SectionLabel>Last Updated</SectionLabel>
-      <div className="mt-[9px] rounded-[10px] border border-line bg-white px-[13px] py-[12px]">
+      <div className="mt-[9px] rounded-[10px] border border-[#BFD8F8] bg-white px-[13px] py-[12px]">
         <p className="truncate text-[13.5px] font-semibold leading-5 text-ink">{update.message}</p>
         <DateLine label="Last Update On" value={update.on} className="mt-[9px]" />
       </div>
@@ -90,7 +90,7 @@ const fileKind = (name) => (name.toLowerCase().endsWith('.csv') ? 'csv' : 'pdf')
 export function AttachmentRow({ file, onRemove, className = '' }: { file: any; onRemove?: () => void; className?: string }) {
   return (
     <div
-      className={`flex items-center gap-[10px] rounded-[9px] border border-line bg-white px-[12px] py-[10px] ${className}`}
+      className={`flex items-center gap-[10px] rounded-[9px] px-[12px] py-[10px] ${className || 'border border-line bg-white'}`}
     >
       <FileBadgeIcon kind={fileKind(file.name)} size={18} />
       <span className="min-w-0 flex-1">

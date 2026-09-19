@@ -7,6 +7,7 @@ type SearchInputProps = {
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  size?: 'default' | 'comfortable'
 }
 
 export default function SearchInput({
@@ -14,9 +15,14 @@ export default function SearchInput({
   onChange,
   placeholder = 'Search',
   className = '',
+  size = 'default',
 }: SearchInputProps) {
   return (
-    <label className={`relative flex h-[34px] items-center rounded-[8px] border border-line bg-white pl-[13px] pr-[34px] ${className}`}>
+    <label
+      className={`relative flex items-center rounded-[8px] border border-line bg-white pl-[13px] pr-[34px] ${
+        size === 'comfortable' ? 'h-[40px]' : 'h-[34px]'
+      } ${className}`}
+    >
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}

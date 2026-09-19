@@ -202,16 +202,23 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         searchKeys={['name', 'email', 'phone', 'role', 'status', 'userId']}
         renderCell={renderCell}
         minWidth={1100}
+        toolbarFill
         filters={
           <>
             <Select
               options={roleOptions}
               value={selectedRole}
               onChange={setSelectedRole}
-              className="w-[190px]"
-              buttonClassName="h-[34px]"
+              className="min-w-0 flex-1"
+              buttonClassName="h-[40px]"
             />
-            <Select options={STATUS_FILTER} value={status} onChange={setStatus} className="w-[170px]" buttonClassName="h-[34px]" />
+            <Select
+              options={STATUS_FILTER}
+              value={status}
+              onChange={setStatus}
+              className="min-w-0 flex-1"
+              buttonClassName="h-[40px]"
+            />
           </>
         }
         onExportCsv={(visible) => downloadCsv('team-users', CSV_COLUMNS, visible)}
