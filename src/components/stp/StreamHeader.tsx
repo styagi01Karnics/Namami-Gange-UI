@@ -8,7 +8,7 @@ const TONE = {
 const ICON = { in: 'akar-icons:arrow-forward', out: 'akar-icons:arrow-back' }
 
 /** Influent / Effluent card heading — icon, title, subtitle and a right-hand slot. */
-export default function StreamHeader({ stream, children }) {
+export default function StreamHeader({ stream, children = null }) {
   const tone = TONE[stream.tone]
 
   return (
