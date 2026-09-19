@@ -17,21 +17,23 @@ export default function ParamTile({ param }) {
 
   return (
     <div className="rounded-[10px] border border-line bg-card p-[11px]">
-      <div className="flex items-center gap-[8px]">
-        <span className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[8px] ${box}`}>
+      <div className="flex items-start gap-[10px]">
+        <span className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] ${box}`}>
           {src ? (
-            <img src={src} alt="" width={15} height={15} className="shrink-0" />
+            <img src={src} alt="" width={24} height={24} className="shrink-0" />
           ) : (
-            <Icon icon={icon} width={15} height={15} className={`shrink-0 ${glyph}`} />
+            <Icon icon={icon} width={24} height={24} className={`shrink-0 ${glyph}`} />
           )}
         </span>
-        <span className="text-[13px] font-medium leading-4 text-ink">{param.label}</span>
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium leading-4 text-ink">{param.label}</p>
+          <p className={`mt-[5px] text-[13.5px] font-semibold leading-[18px] ${VALUE_TONE[param.tone]}`}>
+            {param.value}
+          </p>
+        </div>
       </div>
-      <p className={`mt-[7px] text-[13.5px] font-semibold leading-[18px] ${VALUE_TONE[param.tone]}`}>
-        {param.value}
-      </p>
       {param.note && (
-        <span className="mt-[6px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[3px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
+        <span className="mt-[8px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[3px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
           {param.note}
         </span>
       )}

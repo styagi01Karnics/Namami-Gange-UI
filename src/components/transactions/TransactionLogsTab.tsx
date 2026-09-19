@@ -19,7 +19,7 @@ const EXPORT_COLUMNS = [
  */
 export default function TransactionLogsTab() {
   const [query, setQuery] = useState('')
-  const [expanded, setExpanded] = useState(1)
+  const [expanded, setExpanded] = useState(null)
   const toggleExpanded = (index) => setExpanded((prev) => (prev === index ? null : index))
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Transaction Logs',
