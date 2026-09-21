@@ -1,6 +1,7 @@
 import { Info } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import PlantScene from './PlantScene'
+import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
 
 const ExpandIcon = ico('fluent:full-screen-maximize-24-filled')
 
@@ -13,6 +14,22 @@ const STATUS_DOT = {
 /** The camera still itself — shared by the tile and the expanded overlay. */
 export function CameraStill({ camera, sceneId }) {
   const dimmed = camera.status !== 'Live'
+  const streamUrl = camera.streamUrl
+
+  if (streamUrl && camera.status === 'Live') {
+    if (camera.player === 'whep') {
+      return <MediaMtxWhepPlayer src={streamUrl} title={camera.location} />
+    }
+
+    return (
+      <iframe
+        title={camera.location}
+        src={streamUrl}
+        allow="autoplay; fullscreen"
+        className="absolute inset-0 h-full w-full border-0"
+      />
+    )
+  }
 
   return (
     <>
@@ -39,19 +56,19 @@ export default function CameraTile({ camera, onExpand }) {
         </span>
       </div>
 
-      <div className="relative mt-[10px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#CBD9E5]">
+      <div className="relative mt-[10px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
         <CameraStill camera={camera} sceneId={`tile-${camera.key}`} />
 
         <button
           type="button"
           onClick={() => onExpand?.(camera)}
           aria-label={`Expand ${camera.location} camera`}
-          className="absolute right-[10px] top-[10px] flex h-[26px] w-[26px] items-center justify-center rounded-[7px] bg-white/90 text-ink-soft shadow-card transition-colors hover:text-brand"
+          className="absolute right-[10px] top-[10px] z-[1] flex h-[26px] w-[26px] items-center justify-center rounded-[7px] bg-white/90 text-ink-soft shadow-card transition-colors hover:text-brand"
         >
           <ExpandIcon size={13} />
         </button>
 
-        <div className="group/info absolute bottom-[10px] left-[10px]">
+        <div className="group/info absolute bottom-[10px] left-[10px] z-[1]">
           <button
             type="button"
             aria-label={`${camera.location} camera details`}
@@ -73,7 +90,7 @@ export default function CameraTile({ camera, onExpand }) {
           </div>
         </div>
 
-        {camera.timecode && (
+        {camera.timecode && !camera.streamUrl && (
           <span className="absolute bottom-[10px] right-[10px] inline-flex items-center gap-[5px] rounded-full bg-white/90 px-[8px] py-[3px] text-[11px] font-medium leading-4 text-ink">
             <span className="h-[5px] w-[5px] rounded-full bg-danger" />
             {camera.timecode}

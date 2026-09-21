@@ -23,14 +23,10 @@ export const currentUser = {
 
 export const stateOptions = [
   'All States',
-  'Uttar Pradesh',
   'Uttarakhand',
-  'Bihar',
-  'West Bengal',
-  'Jharkhand',
 ]
 
-export const defaultDateRange = '6 May 2026 - 6 June 2026'
+export const defaultDateRange = '1 Sep 2026 - 21 Sep 2026'
 
 /** Options for the STP picker at the top of STP Management. */
 export const stpOptions = [
@@ -158,7 +154,7 @@ export const stpDetails = {
   'sarai-14': {
     name: '14 MLD STP, Sarai',
     status: 'Online',
-    address: 'Haridwar, Uttarakhand, 249401, India',
+    address: 'Sarai, Haridwar, Uttarakhand, 249404, India',
     createdOn: '15/02/2026 ,10:30 AM',
     lastSeen: '15/04/2026 ,10:30 AM',
     penalty: { amount: '₹7,000', reason: 'Parameter Breach' },
@@ -168,9 +164,10 @@ export const stpDetails = {
       email: 'sanjaykumar.tungalsingh@wabag.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'AAXIS NANO TECHNOLOGIES PVT  LTD', prefixId: '1mldfd4p2' },
-    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '286073', lat: '29.94569', lng: '78.16425' },
+    vendor: { name: 'AAXIS NANO TECHNOLOGIES PVT  LTD', prefixId: '14mldsarai' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249404', lat: '29.94569', lng: '78.16425' },
   },
+
   'lakkar-ghat-26': {
     name: '26 MLD STP, Lakkar Ghat',
     status: 'Online',
@@ -200,13 +197,29 @@ export const stpDetails = {
       email: 'm.iyer@upjalnigam.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '68mldjgt1' },
+    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '68mldjag' },
     site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94520', lng: '78.16480' },
+  },
+  'saliar-33': {
+    name: '33 MLD STP, Saliar, Roorkee',
+    status: 'Online',
+    address: 'Saliyar, Roorkee, Uttarakhand, 247667, India',
+    createdOn: '02/01/2026 ,09:15 AM',
+    lastSeen: '15/04/2026 ,10:28 AM',
+    penalty: { amount: '₹0', reason: 'No active penalty' },
+    inCharge: {
+      name: 'M. Iyer',
+      phone: '+91 98110 55310',
+      email: 'm.iyer@upjalnigam.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'M/s R.K. Engineers, Sales Ltd. (Lead Partner)', prefixId: '33mldsali' },
+    site: { state: 'Uttarakhand', city: 'Roorkee', zip: '247667', lat: '29.85430', lng: '77.88800' },
   },
   'sarai-18': {
     name: '18 MLD STP, Sarai',
-    status: 'Under Maintenance',
-    address: 'Sarai, Haridwar, Uttarakhand, 249401, India',
+    status: 'Online',
+    address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
     createdOn: '11/03/2026 ,11:40 AM',
     lastSeen: '14/04/2026 ,06:05 PM',
     penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
@@ -217,7 +230,7 @@ export const stpDetails = {
       role: 'Plant In charge',
     },
     vendor: { name: 'Aqua Controls India Pvt. Ltd.', prefixId: '18mldsar3' },
-    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249401', lat: '29.94610', lng: '78.16390' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94610', lng: '78.16390' },
   },
   'kankhal-27': {
     name: '27 MLD STP, Kankhal',
@@ -761,9 +774,9 @@ export const contracts = [
    ========================================================================== */
 
 export const complianceSummary = [
-  { key: 'violations', label: 'Total Violations', value: '10', note: 'Across all locations', icon: 'triangleAlert', tone: 'brand' },
-  { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', note: 'Across all locations', icon: 'money', tone: 'warn' },
-  { key: 'payable', label: 'Total Amount to Pay', value: '26', note: 'Across all locations', icon: 'money', tone: 'danger' },
+  { key: 'violations', label: 'Total Violations', value: '10', icon: 'triangleAlert', tone: 'brand' },
+  { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', icon: 'money', tone: 'warn' },
+  { key: 'payable', label: 'Total Amount to Pay', value: '26', icon: 'money', tone: 'danger' },
 ]
 
 export const complianceTypes = ['Parameter Breach', 'Equipment Failure']
@@ -1096,6 +1109,13 @@ export const cctvLogs = {
 
 const cctvSiteCameras = [
   {
+    stpId: 'jagjeetpur-68',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-03', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,09:52 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-03', location: 'Effluent', status: 'Under Maintenance', lastActive: '13/04/2026 ,04:15 PM', timecode: null, image: null },
+    ],
+  },
+  {
     stpId: 'sarai-14',
     cameras: [
       { key: 'influent', id: 'CAM-IN-01', location: 'Influent', status: 'Live', lastActive: '15/02/2026 ,10:30 AM', timecode: '9:03:36:20', image: null },
@@ -1107,13 +1127,6 @@ const cctvSiteCameras = [
     cameras: [
       { key: 'influent', id: 'CAM-IN-02', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
       { key: 'effluent', id: 'CAM-EF-02', location: 'Effluent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
-    ],
-  },
-  {
-    stpId: 'jagjeetpur-68',
-    cameras: [
-      { key: 'influent', id: 'CAM-IN-03', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,09:52 AM', timecode: '9:03:36:20', image: null },
-      { key: 'effluent', id: 'CAM-EF-03', location: 'Effluent', status: 'Under Maintenance', lastActive: '13/04/2026 ,04:15 PM', timecode: null, image: null },
     ],
   },
   {
@@ -1326,13 +1339,11 @@ export const cctvReportStats = [
 ]
 
 export const cctvReportColumns = [
-  { key: 'stp', label: 'STP', width: '22%', sortable: true },
-  { key: 'cameraId', label: 'Camera ID', width: '11%' },
-  { key: 'availability', label: 'Recording Availability', width: '15%' },
-  { key: 'interruptions', label: 'Interruptions', width: '11%' },
-  { key: 'downtime', label: 'Total Downtime', width: '13%' },
-  { key: 'timestamp', label: 'Timestamp', width: '16%' },
-  { key: 'storage', label: 'Storage Status', width: '12%' },
+  { key: 'stp', label: 'STP', width: '28%', sortable: true },
+  { key: 'cameraId', label: 'Camera ID', width: '14%' },
+  { key: 'status', label: 'Status', width: '16%' },
+  { key: 'availability', label: 'Recording Availability', width: '22%' },
+  { key: 'storage', label: 'Storage Status', width: '20%' },
 ]
 
 export const cctvReportRows = [
@@ -1414,10 +1425,10 @@ export const transactionLogColumns = [
  * shape from `stpRealtime`, so both panels render through the same component.
  */
 export const streamTransactionColumns = [
-  { key: 'id', label: 'ID', width: '38%' },
+  { key: 'id', label: 'ID', width: '18%' },
   { key: 'status', label: 'Status', width: '22%' },
-  { key: 'timestamp', label: 'Created At', width: '26%' },
-  { key: 'details', label: 'Details', width: '14%', align: 'right' },
+  { key: 'timestamp', label: 'Created At', width: '44%' },
+  { key: 'details', label: 'Details', width: '16%', align: 'right' },
 ]
 
 const influentReading = {

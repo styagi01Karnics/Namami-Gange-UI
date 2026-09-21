@@ -33,7 +33,13 @@ function PeakTooltip({ active, payload, label, unit }: { active?: boolean; paylo
 
 export default function ParameterTrendChart({ trend }) {
   const legend = [{ ...LEGEND[0], label: `${trend.unit} Value` }, ...LEGEND.slice(1)]
-  const ticks = trend.series.length > 10 ? trendHourTicks : trend.series.map((p) => p.t)
+  // Prefer Violation Started → Recovered ticks when provided.
+  const ticks =
+    Array.isArray(trend.xTicks) && trend.xTicks.length > 0
+      ? trend.xTicks
+      : trend.series.length > 10
+        ? trendHourTicks
+        : trend.series.map((p) => p.t)
 
   return (
     <div>

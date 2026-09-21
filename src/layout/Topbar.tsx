@@ -105,6 +105,7 @@ export default function Topbar({ title = 'Dashboard' }: { title?: PageTitle }) {
             </span>
           )
         })}
+        <span id="page-title-action" className="ml-[4px] flex items-center" />
       </nav>
 
       <div className="flex items-center gap-2">

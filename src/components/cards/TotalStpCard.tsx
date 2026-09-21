@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useState } from 'react'
 import Card from '../ui/Card'
 import BuildingIcon from '../ui/BuildingIcon'
 import { stpSummary } from '../../data/mockData'
+import { fetchDashboardPlants } from '../../api/plants'
 
 const TONES = {
   ok: { bg: 'bg-ok-soft', chip: 'bg-[#DCEFE3]', text: 'text-ok' },
@@ -28,6 +30,34 @@ function MiniStat({ item }) {
 }
 
 export default function TotalStpCard() {
+  const [onlineCount, setOnlineCount] = useState(
+    () => stpSummary.breakdown.find((item) => item.key === 'operational')?.value ?? 0,
+  )
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadOnlineCount() {
+      const plants = await fetchDashboardPlants()
+      if (cancelled || plants.length === 0) return
+      setOnlineCount(plants.length)
+    }
+
+    loadOnlineCount()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const breakdown = useMemo(
+    () =>
+      stpSummary.breakdown.map((item) => {
+        if (item.key === 'operational') return { ...item, value: onlineCount }
+        return { ...item, value: 0 }
+      }),
+    [onlineCount],
+  )
+
   return (
     <Card className="flex flex-col p-[15px]">
       <div className="flex items-center gap-[12px]">
@@ -36,13 +66,13 @@ export default function TotalStpCard() {
         </span>
         <div>
           <p className="text-[13px] font-medium leading-4 text-ink-soft">Total STP</p>
-          <p className="mt-[5px] text-[22px] font-bold leading-7 text-ink">{stpSummary.total}</p>
+          <p className="mt-[5px] text-[22px] font-bold leading-7 text-ink">13</p>
         </div>
       </div>
 
       {/* segmented distribution bar */}
       <div className="mt-[15px] flex h-[5px] w-full gap-[6px]">
-        {stpSummary.breakdown.map((item, i) => (
+        {breakdown.map((item, i) => (
           <span
             key={item.key}
             style={{ flex: item.value }}
@@ -52,7 +82,7 @@ export default function TotalStpCard() {
       </div>
 
       <div className="mt-[15px] grid grid-cols-2 gap-[13px]">
-        {stpSummary.breakdown.map((item) => (
+        {breakdown.map((item) => (
           <MiniStat key={item.key} item={item} />
         ))}
       </div>

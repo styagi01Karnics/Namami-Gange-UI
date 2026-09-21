@@ -32,34 +32,65 @@ export function useTableExport({
   fileName,
   columns,
   getValue,
+  renderPdfCell,
   rangeLabel,
+  resolveBadge,
 }: {
   title: string
-  fileName: string
+  fileName: string | (() => string)
   columns: { key: string; label: string; align?: string }[]
   getValue?: (row: any, col: { key: string; label: string; align?: string }) => unknown
+  /** Optional rich cell renderer for PDF (falls back to getValue / plain text). */
+  renderPdfCell?: (row: any, col: { key: string; label: string; align?: string }) => unknown
   rangeLabel?: string
+  /** Override letterhead badge from the rows being exported. */
+  resolveBadge?: (rows: any[]) => { badge: string | null; badgeTone?: string } | null | undefined
 }) {
   const meta = useExportMeta()
-  const [doc, setDoc] = useState(null)
+  const [doc, setDoc] = useState<{
+    id: number
+    rows: any[]
+    extra: any
+    fileName: string
+    badge: string | null
+    badgeTone: string
+  } | null>(null)
   const cols = useMemo(() => toExportColumns(columns), [columns])
 
   const valueOf = (row, col) => formatExportValue(row, col, getValue)
+  const pdfCell = (row, col) => {
+    const rich = renderPdfCell?.(row, col)
+    if (rich !== undefined) return rich
+    return valueOf(row, col)
+  }
 
-  const exportPdf = (rows, extra = null) => setDoc({ id: Date.now(), rows, extra })
-  const exportCsv = (rows) => downloadCsv(fileName, cols, rows, valueOf)
+  const resolveFileName = () => (typeof fileName === 'function' ? fileName() : fileName)
+
+  const exportPdf = (rows, extra = null) => {
+    const badgeMeta = resolveBadge?.(rows)
+    setDoc({
+      id: Date.now(),
+      rows,
+      extra,
+      fileName: resolveFileName(),
+      badge: badgeMeta?.badge !== undefined ? badgeMeta.badge : meta.badge,
+      badgeTone: badgeMeta?.badgeTone ?? meta.badgeTone,
+    })
+  }
+  const exportCsv = (rows) => downloadCsv(resolveFileName(), cols, rows, valueOf)
 
   const printNode = doc ? (
     <PrintDocument
       key={doc.id}
       title={title}
-      badge={meta.badge}
-      badgeTone={meta.badgeTone}
+      fileName={doc.fileName}
+      badge={doc.badge}
+      badgeTone={doc.badgeTone}
       address={meta.address}
       rangeLabel={rangeLabel ?? meta.rangeLabel ?? defaultDateRange}
       columns={cols}
       rows={doc.rows}
-      renderCell={valueOf}
+      renderCell={pdfCell}
       onDone={() => setDoc(null)}
     >
       {doc.extra}
