@@ -104,6 +104,42 @@ input[type='password']::-ms-clear {
     background: white;
   }
 
+  /* Keep header fill + borders visible in Save as PDF. */
+  #print-root table {
+    border: 1px solid #b8c9dc !important;
+    border-collapse: collapse !important;
+  }
+
+  #print-root table th,
+  #print-root table td {
+    border: 1px solid #b8c9dc !important;
+  }
+
+  #print-root table th {
+    background-color: #e6f4fe !important;
+    color: #1f2a37 !important;
+    font-weight: 700 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #print-root .font-bold {
+    font-weight: 700 !important;
+  }
+
+  #print-root [style*='color: #F5B417'],
+  #print-root .text-\[\#F5B417\] {
+    color: #f5b417 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #print-root .bg-\[\#E6F4FE\],
+  #print-root .bg-\[\#FDECEE\] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   /* Never let the live app shell leak into the PDF. */
   #root {
     display: none !important;

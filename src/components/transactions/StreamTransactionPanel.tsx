@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { useEffect, useRef } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import StatusPill, { statusTone } from '../ui/StatusPill'
@@ -30,9 +30,22 @@ const TONE = {
  * One stream's transaction feed. A row expands to the reading it carried, so
  * the flow headline and parameter tiles match the realtime panel above.
  */
-export default function StreamTransactionPanel({ stream, data, expanded, onToggleExpanded }) {
+export default function StreamTransactionPanel({
+  stream,
+  data,
+  expandedKey,
+  onToggleExpanded,
+  onRegisterScroll,
+  onScrollSync,
+}) {
   const tone = TONE[stream.tone]
   const { Icon } = tone
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    onRegisterScroll?.(stream.key, scrollRef.current)
+    return () => onRegisterScroll?.(stream.key, null)
+  }, [onRegisterScroll, stream.key])
 
   return (
     <section className="flex min-w-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
@@ -48,22 +61,26 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
         </div>
       </div>
 
-      <div className="scroll-thin overflow-x-auto">
-        <table className="w-full min-w-[380px] table-fixed border-collapse">
+      <div
+        ref={scrollRef}
+        onScroll={(event) => onScrollSync?.(stream.key, event.currentTarget.scrollTop)}
+        className={`scroll-thin overflow-auto ${expandedKey ? 'max-h-[min(720px,70vh)]' : 'max-h-[480px]'}`}
+      >
+        <table className="w-full min-w-[420px] table-fixed border-collapse">
           <colgroup>
             {streamTransactionColumns.map((c) => (
               <col key={c.key} style={{ width: c.width }} />
             ))}
           </colgroup>
 
-          <thead>
+          <thead className="sticky top-0 z-[1]">
             <tr className="border-y border-line bg-canvas">
               {streamTransactionColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[14px] py-[13px] text-[12.5px] font-semibold leading-4 text-ink-soft ${
+                  className={`px-[10px] py-[13px] text-[12.5px] font-semibold leading-4 text-ink-soft ${
                     c.align === 'right' ? 'text-right' : 'text-left'
-                  }`}
+                  } ${c.key === 'id' || c.key === 'status' ? 'px-[8px]' : ''}`}
                 >
                   {c.label}
                 </th>
@@ -71,22 +88,40 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
             </tr>
           </thead>
 
-          <tbody>
-            {data.rows.map((row, i) => {
-              const isExpanded = expanded === i
+          {data.rows.length === 0 ? (
+            <tbody>
+              <tr>
+                <td
+                  colSpan={streamTransactionColumns.length}
+                  className="px-[14px] py-[18px] text-[13px] text-ink-soft"
+                >
+                  No transactions found.
+                </td>
+              </tr>
+            </tbody>
+          ) : (
+            data.rows.map((row, i) => {
+              const rowKey = row.syncKey || row.id
+              const isExpanded = expandedKey === rowKey
 
               return (
-                <Fragment key={`${row.id}-${row.timestamp}`}>
+                <tbody
+                  key={`${stream.key}-${rowKey}-${i}`}
+                  data-txn-key={rowKey}
+                  className={isExpanded ? 'bg-[#F8FBFF]' : undefined}
+                >
                   <tr className="border-b border-line">
-                    <td className="px-[14px] py-[15px] text-[12.5px] leading-[18px] text-ink">{row.id}</td>
-                    <td className="px-[14px] py-[15px]">
+                    <td className="px-[8px] py-[15px] text-[12.5px] leading-[18px] text-ink">{row.id}</td>
+                    <td className="px-[8px] py-[15px]">
                       <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>
                     </td>
-                    <td className="px-[14px] py-[15px] text-[12.5px] leading-[18px] text-ink">{row.timestamp}</td>
-                    <td className="px-[14px] py-[15px] text-right">
+                    <td className="whitespace-nowrap px-[10px] py-[15px] text-[12.5px] leading-[18px] text-ink">
+                      {row.timestamp}
+                    </td>
+                    <td className="px-[10px] py-[15px] text-right">
                       <button
                         type="button"
-                        onClick={() => onToggleExpanded(i)}
+                        onClick={() => onToggleExpanded(rowKey)}
                         aria-label={`${isExpanded ? 'Hide' : 'Show'} reading for ${row.timestamp}`}
                         aria-expanded={isExpanded}
                         className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
@@ -103,7 +138,11 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
                   {isExpanded && (
                     <tr className="border-b border-line last:border-0">
                       <td colSpan={streamTransactionColumns.length} className="px-[14px] pb-[16px] pt-[16px]">
-                        <div className={`rounded-[10px] border border-line p-[13px] ${tone.panel}`}>
+                        <div
+                          data-txn-details
+                          tabIndex={-1}
+                          className={`rounded-[10px] border border-line p-[13px] outline-none ${tone.panel}`}
+                        >
                           <div className="flex items-start justify-between gap-[12px]">
                             <div>
                               <p className="text-[13px] leading-[18px] text-ink-soft">Flow</p>
@@ -127,10 +166,10 @@ export default function StreamTransactionPanel({ stream, data, expanded, onToggl
                       </td>
                     </tr>
                   )}
-                </Fragment>
+                </tbody>
               )
-            })}
-          </tbody>
+            })
+          )}
         </table>
       </div>
     </section>

@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Icon } from '@iconify/react'
 import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
 import StatusPill, { statusTone } from '../ui/StatusPill'
+import { useAuth } from '../../auth/AuthContext'
+import { fetchPenaltySummary, fetchPenaltyVendors, formatPenaltyAmount } from '../../api/penalty'
 
 const CalendarIcon = ico('fluent:calendar-32-filled')
 const PinIcon = ico('fluent:location-24-filled')
@@ -11,6 +13,8 @@ const PersonIcon = ico('fluent:person-24-filled')
 const PhoneIcon = ico('fluent:call-24-filled')
 const MailIcon = ico('fluent:mail-24-filled')
 const RoleIcon = ico('fluent:hat-graduation-24-filled')
+
+const STP_CREATED_ON = '08/15/2026, 9.00 PM'
 
 function Stamp({ label, value }) {
   return (
@@ -40,7 +44,19 @@ function SiteField({ label, value }) {
   )
 }
 
-function DetailsPanel({ stp }) {
+function DetailsPanel({
+  stp,
+  vendorName,
+  prefixId,
+}: {
+  stp: {
+    inCharge: { name: string; phone: string; email: string; role: string }
+    vendor: { name: string; prefixId: string }
+    site: { state: string; city: string; zip: string; lat: string; lng: string }
+  }
+  vendorName?: string | null
+  prefixId?: string | null
+}) {
   const { inCharge, vendor, site } = stp
 
   return (
@@ -59,8 +75,8 @@ function DetailsPanel({ stp }) {
         <div>
           <h3 className="text-[13.5px] font-semibold leading-5 text-brand">Vendor Details</h3>
           <div className="mt-[12px] space-y-[12px]">
-            <SiteField label="Vendor" value={vendor.name} />
-            <SiteField label="Prefix ID" value={vendor.prefixId} />
+            <SiteField label="Vendor" value={vendorName || vendor.name || '—'} />
+            <SiteField label="Prefix ID" value={prefixId || vendor.prefixId || '—'} />
           </div>
         </div>
       </div>
@@ -79,8 +95,82 @@ function DetailsPanel({ stp }) {
   )
 }
 
-export default function StpHeaderCard({ stp, showPenalty = true }) {
+export default function StpHeaderCard({
+  stp,
+  plantCode,
+  showPenalty = true,
+}: {
+  stp: {
+    name: string
+    status: string
+    address: string
+    penalty: { amount: string; reason?: string }
+    inCharge: { name: string; phone: string; email: string; role: string }
+    vendor: { name: string; prefixId: string }
+    site: { state: string; city: string; zip: string; lat: string; lng: string }
+  }
+  plantCode?: string
+  showPenalty?: boolean
+}) {
   const [showDetails, setShowDetails] = useState(false)
+  const [penaltyAmount, setPenaltyAmount] = useState<string | null>(null)
+  const [penaltyLoading, setPenaltyLoading] = useState(false)
+  const [vendorName, setVendorName] = useState<string | null>(null)
+  const { lastLoginAt } = useAuth()
+
+  useEffect(() => {
+    if (!plantCode) {
+      setVendorName(null)
+      return undefined
+    }
+
+    let cancelled = false
+    const code = plantCode
+    setVendorName(null)
+
+    async function loadVendor() {
+      const vendors = await fetchPenaltyVendors(code)
+      if (cancelled) return
+      setVendorName(vendors[0]?.vendor_name ?? null)
+    }
+
+    loadVendor()
+    return () => {
+      cancelled = true
+    }
+  }, [plantCode])
+
+  useEffect(() => {
+    if (!showPenalty || !plantCode) {
+      setPenaltyAmount(null)
+      setPenaltyLoading(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const code = plantCode
+    setPenaltyLoading(true)
+    setPenaltyAmount(null)
+
+    async function loadPenalty() {
+      const summary = await fetchPenaltySummary(code)
+      if (cancelled) return
+      // Always prefer API value (including ₹0) over mock STP amounts.
+      setPenaltyAmount(summary ? formatPenaltyAmount(summary.totalAssessedAmount) : '—')
+      setPenaltyLoading(false)
+    }
+
+    loadPenalty()
+    return () => {
+      cancelled = true
+    }
+  }, [plantCode, showPenalty])
+
+  const displayPenalty = plantCode
+    ? penaltyLoading
+      ? '…'
+      : (penaltyAmount ?? '—')
+    : stp.penalty.amount
 
   return (
     <Card className="bg-gradient-to-r from-[#FFFFFF] to-[#DFF5FE] p-[15px]">
@@ -97,8 +187,8 @@ export default function StpHeaderCard({ stp, showPenalty = true }) {
           </p>
 
           <div className="mt-[9px] flex flex-wrap items-center gap-x-[22px] gap-y-[6px]">
-            <Stamp label="Created on" value={stp.createdOn} />
-            <Stamp label="Last seen" value={stp.lastSeen} />
+            <Stamp label="Created on" value={STP_CREATED_ON} />
+            <Stamp label="Last seen" value={lastLoginAt ?? '—'} />
           </div>
 
           <button
@@ -120,19 +210,16 @@ export default function StpHeaderCard({ stp, showPenalty = true }) {
               </span>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium leading-4 text-ink">Total Penalty</p>
-                <p className="mt-[4px] text-[16px] font-bold leading-5 text-[#DC2626]">{stp.penalty.amount}</p>
+                <p className="mt-[4px] text-[16px] font-bold leading-5 text-[#DC2626]">{displayPenalty}</p>
               </div>
-            </div>
-            <div className="mt-[10px] flex justify-end">
-              <span className="rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
-                Across all location
-              </span>
             </div>
           </div>
         )}
       </div>
 
-      {showDetails && <DetailsPanel stp={stp} />}
+      {showDetails && (
+        <DetailsPanel stp={stp} vendorName={vendorName} prefixId={plantCode ?? stp.vendor.prefixId} />
+      )}
     </Card>
   )
 }

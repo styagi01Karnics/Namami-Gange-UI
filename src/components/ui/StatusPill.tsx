@@ -16,6 +16,7 @@ export type StatusTone = keyof typeof TONES
 export const statusTone = (status: string): StatusTone =>
   ({
     Online: 'ok',
+    Live: 'ok',
     Recovered: 'ok',
     Successful: 'ok',
     Invited: 'warn',

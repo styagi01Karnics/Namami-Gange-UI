@@ -4,15 +4,26 @@ import { cctvSummary } from '../../data/mockData'
 const CameraIcon = ico('fluent:camera-20-filled')
 const CameraOffIcon = ico('fluent:camera-off-20-filled')
 const MaintenanceIcon = ico('fluent:square-32-filled')
+const RecordIcon = ico('fluent:video-20-filled')
+const NotRecordIcon = ico('fluent:video-off-20-filled')
 
 const TONES = {
   ok: { bg: 'bg-ok-soft', chip: 'bg-ok', text: 'text-ok', icon: CameraIcon },
   danger: { bg: 'bg-danger-soft', chip: 'bg-danger', text: 'text-danger', icon: CameraOffIcon },
-  warn: { bg: 'bg-warn-soft', chip: 'bg-warn', text: 'text-warn', icon: MaintenanceIcon },
+  warn: { bg: 'bg-warn-soft', chip: 'bg-warn', text: 'text-warn', icon: NotRecordIcon },
+  record: { bg: 'bg-brand-soft', chip: 'bg-brand', text: 'text-brand', icon: RecordIcon },
+  maintenance: { bg: 'bg-warn-soft', chip: 'bg-warn', text: 'text-warn', icon: MaintenanceIcon },
 }
 
-function MiniStat({ item, className = '' }) {
-  const tone = TONES[item.tone]
+type SummaryItem = {
+  key: string
+  label: string
+  value: number | string
+  tone: keyof typeof TONES | string
+}
+
+function MiniStat({ item, className = '' }: { item: SummaryItem; className?: string }) {
+  const tone = TONES[item.tone] ?? TONES.warn
   const Icon = tone.icon
 
   return (
@@ -26,8 +37,16 @@ function MiniStat({ item, className = '' }) {
   )
 }
 
-export default function CameraSummaryCard() {
-  const [online, offline, maintenance] = cctvSummary.breakdown
+export default function CameraSummaryCard({
+  total = cctvSummary.total,
+  scopeLabel = cctvSummary.scopeLabel,
+  breakdown = cctvSummary.breakdown,
+}: {
+  total?: number
+  scopeLabel?: string
+  breakdown?: SummaryItem[]
+}) {
+  const [first, second, ...rest] = breakdown
 
   return (
     <section className="flex h-full flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
@@ -37,22 +56,23 @@ export default function CameraSummaryCard() {
         </span>
         <div className="min-w-0">
           <p className="text-[14px] font-semibold leading-5 text-ink-soft">Total Cameras</p>
-          <p className="text-[20px] font-bold leading-7 text-ink">{cctvSummary.total}</p>
+          <p className="text-[20px] font-bold leading-7 text-ink">{total}</p>
         </div>
       </div>
 
-      {/* Indented to sit under the label rather than the icon. */}
       <div className="mt-[9px] pl-[53px]">
         <span className="inline-flex rounded-full bg-[#EEF6FD] px-[9px] py-[4px] text-[12px] font-medium leading-4 text-[#0768D2]">
-          {cctvSummary.scopeLabel}
+          {scopeLabel}
         </span>
       </div>
 
       <div className="mt-[14px] grid flex-1 grid-cols-2 gap-[13px]">
-        <MiniStat item={online} />
-        <MiniStat item={offline} />
+        {first && <MiniStat item={first} />}
+        {second && <MiniStat item={second} />}
       </div>
-      <MiniStat item={maintenance} className="mt-[13px] flex-1" />
+      {rest.map((item) => (
+        <MiniStat key={item.key} item={item} className="mt-[13px] flex-1" />
+      ))}
     </section>
   )
 }

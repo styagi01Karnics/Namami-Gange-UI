@@ -41,10 +41,10 @@ export default function CameraLightbox({ camera, siteName, onClose }) {
           </button>
         </div>
 
-        <div className="relative mt-[13px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#CBD9E5]">
+        <div className="relative mt-[13px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
           <CameraStill camera={camera} sceneId={`lightbox-${camera.key}`} />
 
-          {camera.timecode && (
+          {camera.timecode && !camera.streamUrl && (
             <span className="absolute bottom-[12px] right-[12px] inline-flex items-center gap-[5px] rounded-full bg-white/90 px-[9px] py-[4px] text-[12px] font-medium leading-4 text-ink">
               <span className="h-[5px] w-[5px] rounded-full bg-danger" />
               {camera.timecode}

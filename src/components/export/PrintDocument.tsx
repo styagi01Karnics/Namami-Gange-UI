@@ -14,6 +14,7 @@ const CalendarIcon = ico('fluent:calendar-32-filled')
  */
 export default function PrintDocument({
   title,
+  fileName = null,
   badge = null,
   badgeTone = 'brand',
   address = null,
@@ -31,13 +32,20 @@ export default function PrintDocument({
   useEffect(() => {
     let finished = false
     let fallbackId = 0
+    const previousTitle = document.title
 
     const finish = () => {
       if (finished) return
       finished = true
       window.clearTimeout(fallbackId)
       window.removeEventListener('afterprint', finish)
+      document.title = previousTitle
       onDoneRef.current?.()
+    }
+
+    // Browser "Save as PDF" often uses document.title as the suggested filename.
+    if (fileName) {
+      document.title = String(fileName).replace(/\.pdf$/i, '')
     }
 
     // Wait for the portal paint before opening the print dialog.
@@ -52,8 +60,9 @@ export default function PrintDocument({
       window.clearTimeout(startId)
       window.clearTimeout(fallbackId)
       window.removeEventListener('afterprint', finish)
+      document.title = previousTitle
     }
-  }, [])
+  }, [fileName])
 
   if (!target || !columns?.length) return null
 
@@ -99,15 +108,16 @@ export default function PrintDocument({
         )}
       </div>
 
-      <table className="mt-[20px] w-full border-collapse">
+      <table className="mt-[20px] w-full border-collapse border border-[#B8C9DC]">
         <thead>
-          <tr className="bg-canvas">
+          <tr>
             {columns.map((c) => (
               <th
                 key={c.key}
-                className={`border-b border-line px-[12px] py-[11px] text-[11.5px] font-semibold leading-4 text-ink-soft ${
+                className={`border border-[#B8C9DC] bg-[#E6F4FE] px-[12px] py-[11px] text-[11.5px] font-bold leading-4 text-[#1F2A37] ${
                   c.align === 'right' ? 'text-right' : 'text-left'
                 }`}
+                style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
               >
                 {c.label}
               </th>
@@ -116,11 +126,11 @@ export default function PrintDocument({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.id ?? i} className="break-inside-avoid border-b border-line">
+            <tr key={row.id ?? i} className="break-inside-avoid">
               {columns.map((c) => (
                 <td
                   key={c.key}
-                  className={`px-[12px] py-[12px] align-middle text-[11.5px] leading-4 text-ink ${
+                  className={`border border-[#B8C9DC] px-[12px] py-[12px] align-middle text-[11.5px] leading-4 text-[#1F2A37] ${
                     c.align === 'right' ? 'text-right' : ''
                   }`}
                 >

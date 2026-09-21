@@ -54,7 +54,7 @@ function StatCard({ item }: { item: StatCardItem }) {
 
   return (
     <div className="rounded-[12px] border border-line bg-white p-[14px] shadow-card">
-      <div className="flex items-center gap-[10px]">
+      <div className="flex items-start gap-[10px]">
         <span className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[11px] ${tone.box}`}>
           <Icon size={22} strokeWidth={2.2} className={tone.glyph} />
         </span>
@@ -62,14 +62,13 @@ function StatCard({ item }: { item: StatCardItem }) {
         <div className="min-w-0">
           <p className="text-[13px] font-medium leading-4 text-ink-soft">{item.label}</p>
           <p className={`mt-[5px] text-[19px] font-bold leading-6 ${tone.value}`}>{item.value}</p>
+          {item.note && (
+            <span className="mt-[8px] inline-flex rounded-full bg-[#EEF6FD] px-[10px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
+              {item.note}
+            </span>
+          )}
         </div>
       </div>
-
-      {item.note && (
-        <span className="mt-[12px] inline-flex rounded-full bg-[#EEF6FD] px-[8px] py-[4px] text-[11.5px] font-medium leading-4 text-[#0768D2]">
-          {item.note}
-        </span>
-      )}
     </div>
   )
 }

@@ -1,15 +1,50 @@
+import { useEffect, useState } from 'react'
 import { ico } from '../ui/Ico'
 import StreamHeader from './StreamHeader'
 import ParamTile from './ParamTile'
-import { stpRealtime, stpStreams } from '../../data/mockData'
+import { stpStreams } from '../../data/mockData'
+import {
+  fetchStpLive,
+  getFallbackRealtime,
+  type LiveRealtimeData,
+} from '../../api/stpLive'
 
 const ClockIcon = ico('fluent:clock-32-filled')
 
-export default function RealtimeParametersPanel() {
+export default function RealtimeParametersPanel({
+  plantCode,
+  refreshTick = 0,
+}: {
+  plantCode?: string
+  refreshTick?: number
+}) {
+  const [realtime, setRealtime] = useState<LiveRealtimeData>(() => getFallbackRealtime())
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!plantCode || refreshTick < 1) return undefined
+
+    let cancelled = false
+
+    async function loadLive() {
+      // Avoid full-panel flicker on background polls.
+      if (refreshTick === 1) setLoading(true)
+      const next = await fetchStpLive(plantCode)
+      if (cancelled) return
+      if (next) setRealtime(next)
+      setLoading(false)
+    }
+
+    loadLive()
+    return () => {
+      cancelled = true
+    }
+  }, [plantCode, refreshTick])
+
   return (
     <div className="grid grid-cols-2 gap-[14px]">
       {stpStreams.map((stream) => {
-        const data = stpRealtime[stream.key]
+        const data = realtime[stream.key]
 
         return (
           <div key={stream.key} className="rounded-[12px] border border-line bg-[#F7FAFF] p-[14px]">
@@ -20,7 +55,7 @@ export default function RealtimeParametersPanel() {
                 }`}
               >
                 <ClockIcon size={15} />
-                {stpRealtime.at}
+                {loading && !data.at ? 'Loading...' : data.at}
               </span>
             </StreamHeader>
 
