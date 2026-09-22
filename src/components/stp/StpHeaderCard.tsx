@@ -4,8 +4,14 @@ import { Icon } from '@iconify/react'
 import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
 import StatusPill, { statusTone } from '../ui/StatusPill'
+import { toPenaltyRangeFromLabel } from '../ui/DateRangeField'
 import { useAuth } from '../../auth/AuthContext'
-import { fetchPenaltySummary, fetchPenaltyVendors, formatPenaltyAmount } from '../../api/penalty'
+import {
+  defaultOccurrencesRange,
+  fetchPenaltySummary,
+  fetchPenaltyVendors,
+  formatPenaltyAmount,
+} from '../../api/penalty'
 
 const CalendarIcon = ico('fluent:calendar-32-filled')
 const PinIcon = ico('fluent:location-24-filled')
@@ -99,6 +105,7 @@ export default function StpHeaderCard({
   stp,
   plantCode,
   showPenalty = true,
+  dateRangeLabel,
 }: {
   stp: {
     name: string
@@ -111,6 +118,8 @@ export default function StpHeaderCard({
   }
   plantCode?: string
   showPenalty?: boolean
+  /** Same From–To label as Compliance tab so Total Penalty matches assessed amount. */
+  dateRangeLabel?: string
 }) {
   const [showDetails, setShowDetails] = useState(false)
   const [penaltyAmount, setPenaltyAmount] = useState<string | null>(null)
@@ -153,9 +162,11 @@ export default function StpHeaderCard({
     setPenaltyAmount(null)
 
     async function loadPenalty() {
-      const summary = await fetchPenaltySummary(code)
+      const selectedRange = dateRangeLabel ? toPenaltyRangeFromLabel(dateRangeLabel) : null
+      // Match Compliance tab: calendar day bounds, else shared default window.
+      const apiRange = selectedRange ?? defaultOccurrencesRange()
+      const summary = await fetchPenaltySummary(code, apiRange)
       if (cancelled) return
-      // Always prefer API value (including ₹0) over mock STP amounts.
       setPenaltyAmount(summary ? formatPenaltyAmount(summary.totalAssessedAmount) : '—')
       setPenaltyLoading(false)
     }
@@ -164,7 +175,7 @@ export default function StpHeaderCard({
     return () => {
       cancelled = true
     }
-  }, [plantCode, showPenalty])
+  }, [plantCode, showPenalty, dateRangeLabel])
 
   const displayPenalty = plantCode
     ? penaltyLoading
