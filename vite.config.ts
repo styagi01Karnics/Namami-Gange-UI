@@ -17,6 +17,18 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_DASHBOARD_API_BASE_URL || 'http://45.195.229.15:18087',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/dashboard-api/, '/api'),
+          // Keep MQTT SSE streams open (no proxy idle timeout / buffering).
+          timeout: 0,
+          proxyTimeout: 0,
+          configure: (proxy) => {
+            proxy.on('proxyRes', (proxyRes, _req, res) => {
+              const contentType = String(proxyRes.headers['content-type'] ?? '')
+              if (contentType.includes('text/event-stream')) {
+                res.setHeader('Cache-Control', 'no-cache, no-transform')
+                res.setHeader('X-Accel-Buffering', 'no')
+              }
+            })
+          },
         },
         '/penalty-api': {
           target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:18088',

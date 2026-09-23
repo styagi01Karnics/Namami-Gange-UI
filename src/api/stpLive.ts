@@ -34,8 +34,9 @@ const PARAM_DEFS = [
     note: 'Ideal: 0 – 10',
     min: 0,
     max: 10,
-    inletKeys: ['bod_inlet'],
-    outletKeys: ['bod_outlet'],
+    // MQTT 68mld uses bod__inlet; REST live uses bod_inlet / bod_outlet.
+    inletKeys: ['bod_inlet', 'bod__inlet'],
+    outletKeys: ['bod_outlet', 'bod__outlet'],
   },
   {
     key: 'ph',
@@ -45,16 +46,16 @@ const PARAM_DEFS = [
     note: 'Ideal: 5.5 - 9',
     min: 5.5,
     max: 9,
-    inletKeys: ['ph_inlet'],
-    outletKeys: ['ph_outlet'],
+    inletKeys: ['ph_inlet', 'ph__inlet'],
+    outletKeys: ['ph_outlet', 'ph__outlet'],
   },
   {
     key: 'totalizer',
     label: 'Totalizer',
     icon: 'totalizer',
     unit: 'm³',
-    inletKeys: ['inlet_totalizer', 'cm_inlet'],
-    outletKeys: ['outlet_totalizer', 'cm_outlet'],
+    inletKeys: ['inlet_totalizer', 'cm_inlet', 'cm__inlet'],
+    outletKeys: ['outlet_totalizer', 'cm_outlet', 'cm__outlet'],
   },
   {
     key: 'tss',
@@ -64,8 +65,8 @@ const PARAM_DEFS = [
     note: 'Ideal: 0 – 20',
     min: 0,
     max: 20,
-    inletKeys: ['tss_inlet'],
-    outletKeys: ['tss_outlet'],
+    inletKeys: ['tss_inlet', 'tss__inlet'],
+    outletKeys: ['tss_outlet', 'tss__outlet'],
   },
   {
     key: 'cod',
@@ -75,8 +76,8 @@ const PARAM_DEFS = [
     note: 'Ideal: 0 – 50',
     min: 0,
     max: 50,
-    inletKeys: ['cod_inlet'],
-    outletKeys: ['cod_outlet'],
+    inletKeys: ['cod_inlet', 'cod__inlet'],
+    outletKeys: ['cod_outlet', 'cod__outlet'],
   },
   {
     key: 'no3n',
@@ -86,8 +87,8 @@ const PARAM_DEFS = [
     note: 'Ideal: 0 – 10',
     min: 0,
     max: 10,
-    inletKeys: ['tna_inlet', 'no3n_inlet', 'no3_inlet'],
-    outletKeys: ['tna_outlet', 'no3n_outlet', 'no3_outlet'],
+    inletKeys: ['tna_inlet', 'tna__inlet', 'no3n_inlet', 'no3_inlet'],
+    outletKeys: ['tna_outlet', 'tna__outlet', 'no3n_outlet', 'no3_outlet'],
   },
 ] as const
 
@@ -197,6 +198,39 @@ export function mapRecordToReading(side: 'inlet' | 'outlet', record: LiveReading
   return buildStream(side, [record], timestamp)
 }
 
+/** Parse gateway `raw_payload` (string JSON or object) into extra reading fields. */
+function parseRawPayload(record: LiveReading | null | undefined): {
+  flat?: LiveReading
+  inlet?: LiveReading
+  outlet?: LiveReading
+} {
+  const raw = record?.raw_payload
+  if (raw == null) return {}
+
+  let parsed: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      return {}
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') return {}
+
+  const obj = parsed as LiveReading & { inlet?: LiveReading; outlet?: LiveReading; data?: LiveReading }
+  if (obj.inlet || obj.outlet) {
+    return { inlet: obj.inlet, outlet: obj.outlet, flat: obj }
+  }
+  if (obj.data && typeof obj.data === 'object') {
+    const nested = obj.data as LiveReading & { inlet?: LiveReading; outlet?: LiveReading }
+    if (nested.inlet || nested.outlet) {
+      return { inlet: nested.inlet, outlet: nested.outlet, flat: nested }
+    }
+    return { flat: nested }
+  }
+  return { flat: obj }
+}
+
 export function mapLivePayloadToRealtime(payload: unknown): LiveRealtimeData | null {
   const data = (payload as { data?: LiveReading })?.data ?? payload
   if (!data || typeof data !== 'object') return null
@@ -207,13 +241,179 @@ export function mapLivePayloadToRealtime(payload: unknown): LiveRealtimeData | n
     outlet?: LiveReading
   }
 
-  const influentAt = formatChangedAt(pickReadingTime(record.inlet, record.main))
-  const effluentAt = formatChangedAt(pickReadingTime(record.outlet, record.main))
+  // MQTT events may send a flat reading (same shape as `main`) instead of nested sides.
+  const flat =
+    !record.main && !record.inlet && !record.outlet ? (data as LiveReading) : null
+  const main = record.main ?? flat
+  const inlet = record.inlet
+  const outlet = record.outlet
+  const fromMainRaw = parseRawPayload(main)
+  const fromInletRaw = parseRawPayload(inlet)
+  const fromOutletRaw = parseRawPayload(outlet)
+
+  const influentAt = formatChangedAt(
+    pickReadingTime(inlet, main, fromInletRaw.inlet, fromMainRaw.inlet, fromMainRaw.flat),
+  )
+  const effluentAt = formatChangedAt(
+    pickReadingTime(outlet, main, fromOutletRaw.outlet, fromMainRaw.outlet, fromMainRaw.flat),
+  )
 
   return {
     at: influentAt !== '—' ? influentAt : effluentAt,
-    influent: buildStream('inlet', [record.inlet, record.main], influentAt),
-    effluent: buildStream('outlet', [record.outlet, record.main], effluentAt),
+    influent: buildStream(
+      'inlet',
+      [inlet, fromInletRaw.inlet, fromInletRaw.flat, main, fromMainRaw.inlet, fromMainRaw.flat],
+      influentAt,
+    ),
+    effluent: buildStream(
+      'outlet',
+      [outlet, fromOutletRaw.outlet, fromOutletRaw.flat, main, fromMainRaw.outlet, fromMainRaw.flat],
+      effluentAt,
+    ),
+  }
+}
+
+/**
+ * Keep previous non-empty readings when a later MQTT/REST frame only fills one side
+ * (68 MLD publishes separate slave packets for inlet vs outlet).
+ */
+export function mergeRealtimeReadings(
+  previous: LiveRealtimeData,
+  next: LiveRealtimeData,
+): LiveRealtimeData {
+  const pickValue = (incoming: string, existing: string) =>
+    incoming && incoming !== '—' ? incoming : existing
+
+  const mergeStream = (existing: LiveStreamData, incoming: LiveStreamData): LiveStreamData => ({
+    at: pickValue(incoming.at, existing.at),
+    flow: {
+      value: pickValue(incoming.flow.value, existing.flow.value),
+      unit: incoming.flow.unit || existing.flow.unit,
+    },
+    params: incoming.params.map((param, index) => {
+      const prior = existing.params[index]
+      if (!prior) return param
+      return {
+        ...param,
+        value: pickValue(param.value, prior.value),
+        tone: param.value && param.value !== '—' ? param.tone : prior.tone,
+        note: param.note ?? prior.note,
+      }
+    }),
+  })
+
+  return {
+    at: pickValue(next.at, previous.at),
+    influent: mergeStream(previous.influent, next.influent),
+    effluent: mergeStream(previous.effluent, next.effluent),
+  }
+}
+
+/**
+ * MQTT SSE live stream is enabled ONLY for 68 MLD Jagjeetpur.
+ * URL: http://45.195.229.15:18087/api/mqtt/68mldjag/live
+ * Other STPs continue to use REST /dashboard/{plantCode}/live.
+ */
+export const MQTT_LIVE_PLANT_CODE = '68mldjag'
+
+export function usesMqttLiveStream(plantCode?: string) {
+  return plantCode === MQTT_LIVE_PLANT_CODE
+}
+
+/** Absolute MQTT SSE URL → http://45.195.229.15:18087/api/mqtt/68mldjag/live */
+export function mqttLiveUrl() {
+  const base = String(import.meta.env.VITE_DASHBOARD_API_BASE_URL ?? '').replace(/\/$/, '')
+  if (/^https?:\/\//i.test(base)) {
+    return `${base}/api/mqtt/${MQTT_LIVE_PLANT_CODE}/live`
+  }
+  // Deployed builds without absolute base use the nginx /dashboard-api proxy.
+  return `${DASHBOARD_API}/mqtt/${MQTT_LIVE_PLANT_CODE}/live`
+}
+
+/**
+ * MQTT SSE event shape:
+ * { topic, receivedAt, data: { inlet: {...}, outlet: {...}, signal, ... } }
+ */
+function mapMqttLiveEvent(live: unknown): LiveRealtimeData | null {
+  if (!live || typeof live !== 'object') return null
+
+  const envelope = live as {
+    topic?: unknown
+    data?: {
+      inlet?: LiveReading
+      outlet?: LiveReading
+      main?: LiveReading
+    } & LiveReading
+    receivedAt?: unknown
+  }
+
+  // Prefer nested inlet/outlet from MQTT payload; fall back to generic mapper.
+  const mapped =
+    envelope.data && (envelope.data.inlet || envelope.data.outlet)
+      ? mapLivePayloadToRealtime({ data: envelope.data })
+      : mapLivePayloadToRealtime(envelope.data != null ? { data: envelope.data } : live)
+
+  if (!mapped) return null
+
+  // MQTT readings omit reading_time — stamp both columns with receivedAt.
+  const receivedAt = formatChangedAt(envelope.receivedAt)
+  if (receivedAt === '—') return mapped
+
+  return {
+    at: receivedAt,
+    influent: { ...mapped.influent, at: receivedAt },
+    effluent: { ...mapped.effluent, at: receivedAt },
+  }
+}
+
+/**
+ * Subscribe to 68 MLD MQTT SSE only.
+ * No-ops (and returns a no-op cleanup) for any other plant code.
+ */
+export function subscribeMqttLive(
+  plantCode: string,
+  onMessage: (realtime: LiveRealtimeData) => void,
+  onError?: (event: Event) => void,
+): () => void {
+  if (plantCode !== MQTT_LIVE_PLANT_CODE) {
+    return () => undefined
+  }
+
+  const source = new EventSource(mqttLiveUrl())
+
+  const handleFrame = (event: MessageEvent) => {
+    const raw = String(event.data ?? '').trim()
+    if (!raw || raw.startsWith(':')) return
+
+    try {
+      const live = JSON.parse(raw) as unknown
+      const mapped = mapMqttLiveEvent(live)
+      if (mapped) onMessage(mapped)
+    } catch {
+      // Ignore keepalives / non-JSON frames.
+    }
+  }
+
+  // Default + common named SSE event types used by MQTT gateways.
+  source.onmessage = handleFrame
+  source.addEventListener('message', handleFrame)
+  source.addEventListener('live', handleFrame)
+  source.addEventListener('update', handleFrame)
+  source.addEventListener('reading', handleFrame)
+  source.addEventListener('mqtt', handleFrame)
+
+  source.onerror = (event) => {
+    onError?.(event)
+  }
+
+  return () => {
+    source.onmessage = null
+    source.removeEventListener('message', handleFrame)
+    source.removeEventListener('live', handleFrame)
+    source.removeEventListener('update', handleFrame)
+    source.removeEventListener('reading', handleFrame)
+    source.removeEventListener('mqtt', handleFrame)
+    source.close()
   }
 }
 
