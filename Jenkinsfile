@@ -15,7 +15,6 @@ pipeline {
 
         timestamps()
 
-        // Do not allow two builds of the same branch job
         disableConcurrentBuilds()
     }
 
@@ -66,23 +65,11 @@ pipeline {
                 script {
 
                     def shortCommit = sh(
-                        script: "git rev-parse --short=7 HEAD",
+                        script: 'git rev-parse --short=7 HEAD',
                         returnStdout: true
                     ).trim()
 
-                    def branchName = sh(
-                        script: "git rev-parse --abbrev-ref HEAD",
-                        returnStdout: true
-                    ).trim()
-
-                    /*
-                     * Docker-safe and globally unique enough:
-                     *
-                     * BUILD_NUMBER + commit SHA
-                     *
-                     * Example:
-                     * 15-a81f92c
-                     */
+                    def branchName = env.BRANCH_NAME ?: 'unknown'
 
                     env.GIT_SHORT_COMMIT = shortCommit
 
@@ -92,9 +79,6 @@ pipeline {
 
                     env.IMAGE_TAG = "${BUILD_NUMBER}-${shortCommit}"
 
-                    // Deployment ordering marker.
-                    // Used on the application server so an older build
-                    // cannot replace a newer deployment.
                     env.DEPLOY_EPOCH = "${System.currentTimeMillis()}"
                 }
 
@@ -104,15 +88,11 @@ pipeline {
                     echo "=========================================="
 
                     echo "Branch:"
-                    git branch --show-current || true
+                    echo "$BRANCH_NAME_SAFE"
 
                     echo ""
                     echo "Commit:"
                     git log -1 --oneline || true
-
-                    echo ""
-                    echo "Branch Name:"
-                    echo "$BRANCH_NAME_SAFE"
 
                     echo ""
                     echo "Commit SHA:"
@@ -135,7 +115,7 @@ pipeline {
 
 
         // =========================================================
-        // BUILD REACT FRONTEND
+        // BUILD FRONTEND
         // =========================================================
 
         stage('Build Frontend') {
@@ -149,36 +129,24 @@ pipeline {
                     echo "BUILD REACT FRONTEND"
                     echo "=========================================="
 
-                    echo "Installing dependencies..."
-
                     npm ci
 
-                    echo ""
-                    echo "Building React application..."
-
                     npm run build
-
-                    echo ""
-                    echo "React build completed successfully."
 
                     echo ""
                     echo "Checking generated build files..."
 
                     if [ -d "build" ]; then
-
                         echo "React build directory found: build/"
                         du -sh build
 
                     elif [ -d "dist" ]; then
-
                         echo "Vite build directory found: dist/"
                         du -sh dist
 
                     else
-
                         echo "ERROR: Neither build/ nor dist/ directory exists."
                         exit 1
-
                     fi
                 '''
             }
@@ -186,7 +154,7 @@ pipeline {
 
 
         // =========================================================
-        // SONARQUBE ANALYSIS
+        // SONARQUBE
         // =========================================================
 
         stage('SonarQube Analysis') {
@@ -275,13 +243,11 @@ pipeline {
                         -t "$IMAGE" \
                         .
 
-                    echo ""
-                    echo "Docker image created successfully."
-
                     docker image inspect "$IMAGE" > /dev/null
 
                     echo ""
-                    echo "Created image:"
+                    echo "Docker image created successfully."
+
                     docker images "$DOCKER_ORG/$PROJECT_NAME"
                 '''
             }
@@ -317,22 +283,6 @@ pipeline {
 
         // =========================================================
         // DEPLOY APPLICATION
-        //
-        // Important:
-        //
-        // All branches use the SAME:
-        //
-        // container name:
-        // namami-gange-ui
-        //
-        // port:
-        // 18085
-        //
-        // Therefore only one branch can be active.
-        //
-        // A remote flock prevents simultaneous deployments.
-        // DEPLOY_EPOCH prevents an older build from replacing
-        // a deployment that was already made by a newer build.
         // =========================================================
 
         stage('Deploy Application') {
@@ -365,156 +315,86 @@ pipeline {
                         echo "Deployment ID:"
                         echo "$DEPLOY_EPOCH"
 
+                        echo ""
+                        echo "Preparing application directory..."
+
                         sshpass -p "$SSH_PASSWORD" ssh \
                             -o StrictHostKeyChecking=no \
                             "$SSH_USERNAME@$DEPLOY_SERVER" \
                             "mkdir -p '$DEPLOY_PATH'"
 
+
                         echo ""
-                        echo "Starting remote deployment lock..."
+                        echo "Pulling image..."
 
                         sshpass -p "$SSH_PASSWORD" ssh \
                             -o StrictHostKeyChecking=no \
                             "$SSH_USERNAME@$DEPLOY_SERVER" \
-                            "bash -s" <<REMOTE_SCRIPT
-set -e
-
-DEPLOY_PATH='${DEPLOY_PATH}'
-IMAGE='${IMAGE}'
-IMAGE_TAG='${IMAGE_TAG}'
-APP_PORT='${APP_PORT}'
-DEPLOY_EPOCH='${DEPLOY_EPOCH}'
-BRANCH_NAME='${BRANCH_NAME_SAFE}'
-
-LOCK_FILE='/tmp/namami-gange-ui-deploy.lock'
-DEPLOYMENT_FILE="\$DEPLOY_PATH/.deployment_epoch"
-
-(
-    flock -x 200
-
-    echo "=========================================="
-    echo "REMOTE DEPLOYMENT"
-    echo "=========================================="
-
-    echo "Branch:"
-    echo "\$BRANCH_NAME"
-
-    echo "Image:"
-    echo "\$IMAGE"
-
-    echo "Deployment ID:"
-    echo "\$DEPLOY_EPOCH"
-
-    echo ""
-    echo "Checking previous deployment..."
-
-    if [ -f "\$DEPLOYMENT_FILE" ]; then
-
-        PREVIOUS_EPOCH=\$(cat "\$DEPLOYMENT_FILE" 2>/dev/null || echo "0")
-
-        echo "Previous deployment ID:"
-        echo "\$PREVIOUS_EPOCH"
-
-        if [ "\$DEPLOY_EPOCH" -le "\$PREVIOUS_EPOCH" ]; then
-
-            echo ""
-            echo "This build is older than the current deployment."
-            echo "Skipping deployment."
-
-            exit 0
-        fi
-
-    else
-
-        echo "No previous deployment found."
-
-    fi
+                            "docker pull '$IMAGE'"
 
 
-    echo ""
-    echo "Pulling new image..."
+                        echo ""
+                        echo "Starting deployment..."
 
-    docker pull "\$IMAGE"
-
-
-    echo ""
-    echo "Stopping currently running Namami-Gange UI..."
-
-    docker stop namami-gange-ui 2>/dev/null || true
-
-
-    echo ""
-    echo "Removing currently running container..."
-
-    docker rm namami-gange-ui 2>/dev/null || true
-
-
-    echo ""
-    echo "Creating deployment directory..."
-
-    mkdir -p "\$DEPLOY_PATH"
-
-
-    echo ""
-    echo "Creating docker-compose.yml..."
-
-    cat > "\$DEPLOY_PATH/docker-compose.yml" <<COMPOSE
+                        sshpass -p "$SSH_PASSWORD" ssh \
+                            -o StrictHostKeyChecking=no \
+                            "$SSH_USERNAME@$DEPLOY_SERVER" \
+                            "flock -x /tmp/namami-gange-ui-deploy.lock -c ' \
+                                set -e; \
+                                \
+                                DEPLOY_FILE=\"${DEPLOY_PATH}/.deployment_epoch\"; \
+                                \
+                                if [ -f \"\\$DEPLOY_FILE\" ]; then \
+                                    PREVIOUS_EPOCH=\\$(cat \"\\$DEPLOY_FILE\" 2>/dev/null || echo 0); \
+                                    \
+                                    echo \"Previous deployment ID: \\$PREVIOUS_EPOCH\"; \
+                                    echo \"Current deployment ID: ${DEPLOY_EPOCH}\"; \
+                                    \
+                                    if [ \"${DEPLOY_EPOCH}\" -le \"\\$PREVIOUS_EPOCH\" ]; then \
+                                        echo \"Older deployment detected. Skipping.\"; \
+                                        exit 0; \
+                                    fi; \
+                                fi; \
+                                \
+                                echo \"Stopping existing container...\"; \
+                                docker stop namami-gange-ui 2>/dev/null || true; \
+                                \
+                                echo \"Removing existing container...\"; \
+                                docker rm namami-gange-ui 2>/dev/null || true; \
+                                \
+                                echo \"Writing docker-compose.yml...\"; \
+                                cat > \"${DEPLOY_PATH}/docker-compose.yml\" <<COMPOSE
 services:
-
   namami-gange-ui:
-
-    image: \$IMAGE
-
+    image: ${IMAGE}
     container_name: namami-gange-ui
-
     restart: unless-stopped
-
     ports:
-      - "\$APP_PORT:80"
-
+      - \"${APP_PORT}:80\"
     extra_hosts:
-      - "host.docker.internal:host-gateway"
-
+      - \"host.docker.internal:host-gateway\"
 COMPOSE
+                                \
+                                echo \"Writing deployment metadata...\"; \
+                                printf \"%s\\\\n\" \"${IMAGE_TAG}\" > \"${DEPLOY_PATH}/.env\"; \
+                                printf \"%s\\\\n\" \"${DEPLOY_EPOCH}\" > \"\\$DEPLOY_FILE\"; \
+                                \
+                                cd \"${DEPLOY_PATH}\"; \
+                                \
+                                echo \"Starting new container...\"; \
+                                docker compose up -d --force-recreate; \
+                                \
+                                echo \"Deployment completed.\" \
+                            '"
 
+                        echo ""
+                        echo "Application status:"
 
-    echo ""
-    echo "Creating .env..."
-
-    cat > "\$DEPLOY_PATH/.env" <<ENV
-IMAGE_TAG=\$IMAGE_TAG
-DEPLOY_BRANCH=\$BRANCH_NAME
-DEPLOY_EPOCH=\$DEPLOY_EPOCH
-ENV
-
-
-    echo ""
-    echo "Starting new application..."
-
-    cd "\$DEPLOY_PATH"
-
-    docker compose up -d --force-recreate
-
-
-    echo ""
-    echo "Saving deployment marker..."
-
-    echo "\$DEPLOY_EPOCH" > "\$DEPLOYMENT_FILE"
-
-
-    echo ""
-    echo "Current application container:"
-
-    docker ps \
-        --filter "name=namami-gange-ui" \
-        --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
-
-
-    echo ""
-    echo "Deployment completed."
-
-) 200>"\$LOCK_FILE"
-REMOTE_SCRIPT
+                        sshpass -p "$SSH_PASSWORD" ssh \
+                            -o StrictHostKeyChecking=no \
+                            "$SSH_USERNAME@$DEPLOY_SERVER" \
+                            "docker ps --filter name=namami-gange-ui"
+                    '''
                 }
             }
         }
@@ -543,8 +423,6 @@ REMOTE_SCRIPT
                         echo "HEALTH CHECK"
                         echo "=========================================="
 
-                        echo "Waiting for application to start..."
-
                         sleep 10
 
                         echo ""
@@ -553,9 +431,7 @@ REMOTE_SCRIPT
                         sshpass -p "$SSH_PASSWORD" ssh \
                             -o StrictHostKeyChecking=no \
                             "$SSH_USERNAME@$DEPLOY_SERVER" \
-                            "docker ps \
-                             --filter name=namami-gange-ui \
-                             --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'"
+                            "docker ps --filter name=namami-gange-ui"
 
 
                         echo ""
@@ -578,9 +454,8 @@ REMOTE_SCRIPT
 
 
         // =========================================================
-        // JENKINS / DEVOPS SERVER CLEANUP
-        //
-        // Keep ONLY the current image.
+        // JENKINS SERVER CLEANUP
+        // Keep current image only
         // =========================================================
 
         stage('Jenkins Docker Cleanup') {
@@ -600,11 +475,7 @@ REMOTE_SCRIPT
                     echo "Current image:"
                     echo "$REPO:$CURRENT"
 
-                    echo ""
-                    echo "Images before cleanup:"
-
                     docker images "$REPO"
-
 
                     docker images "$REPO" \
                         --format '{{.Repository}}:{{.Tag}}' |
@@ -617,12 +488,12 @@ REMOTE_SCRIPT
 
                         if [ "$TAG" = "$CURRENT" ]; then
 
-                            echo "Keeping current image:"
+                            echo "Keeping:"
                             echo "$IMAGE"
 
                         else
 
-                            echo "Removing old Jenkins image:"
+                            echo "Removing:"
                             echo "$IMAGE"
 
                             docker rmi "$IMAGE" || true
@@ -631,12 +502,10 @@ REMOTE_SCRIPT
 
                     done
 
-
                     echo ""
                     echo "Removing dangling images..."
 
                     docker image prune -f || true
-
 
                     echo ""
                     echo "Images after cleanup:"
@@ -649,15 +518,7 @@ REMOTE_SCRIPT
 
         // =========================================================
         // APPLICATION SERVER CLEANUP
-        //
-        // Keep latest 3 images:
-        //
-        // CURRENT
-        // PREVIOUS 1
-        // PREVIOUS 2
-        //
-        // Cleanup is based on image creation time.
-        // Running image is NEVER deleted.
+        // Keep current + previous 2
         // =========================================================
 
         stage('Application Server Docker Cleanup') {
@@ -682,110 +543,65 @@ REMOTE_SCRIPT
                         sshpass -p "$SSH_PASSWORD" ssh \
                             -o StrictHostKeyChecking=no \
                             "$SSH_USERNAME@$DEPLOY_SERVER" \
-                            "bash -s" <<REMOTE_CLEANUP
-set +e
-
-REPO='${DOCKER_ORG}/${PROJECT_NAME}'
-
-echo "Repository:"
-echo "\$REPO"
-
-echo ""
-echo "Images before cleanup:"
-
-docker images "\$REPO"
-
-
-echo ""
-echo "Selecting latest 3 images..."
-
-KEEP_FILE="/tmp/namami-gange-ui-keep.txt"
-
-docker images "\$REPO" \
-    --format '{{.CreatedAt}}|{{.Tag}}' |
-grep -v '|<none>' |
-sort -r |
-head -3 |
-cut -d'|' -f2 |
-sort -u > "\$KEEP_FILE"
-
-
-echo ""
-echo "Images/tags to keep:"
-
-cat "\$KEEP_FILE"
-
-
-echo ""
-echo "Cleaning old images..."
-
-
-docker images "\$REPO" \
-    --format '{{.Repository}}:{{.Tag}}' |
-while read IMAGE
-do
-
-    [ -z "\$IMAGE" ] && continue
-
-    TAG="\${IMAGE##*:}"
-
-
-    if grep -Fxq "\$TAG" "\$KEEP_FILE"; then
-
-        echo "Keeping:"
-        echo "\$IMAGE"
-
-        continue
-
-    fi
-
-
-    # Never remove an image currently used by a running container.
-
-    if docker ps \
-        --format '{{.Image}}' |
-        grep -Fxq "\$IMAGE"; then
-
-        echo "Skipping running image:"
-        echo "\$IMAGE"
-
-        continue
-
-    fi
-
-
-    echo "Removing old image:"
-    echo "\$IMAGE"
-
-    docker rmi "\$IMAGE" || true
-
-done
-
-
-echo ""
-echo "Removing dangling images..."
-
-docker image prune -f || true
-
-
-echo ""
-echo "Images after cleanup:"
-
-docker images "\$REPO"
-
-
-rm -f "\$KEEP_FILE"
-
-REMOTE_CLEANUP
+                            "REPO='${DOCKER_ORG}/${PROJECT_NAME}'; \
+                             KEEP_FILE='/tmp/namami-gange-ui-keep.txt'; \
+                             \
+                             echo 'Images before cleanup:'; \
+                             docker images \"\\$REPO\"; \
+                             \
+                             echo ''; \
+                             echo 'Selecting latest 3 images...'; \
+                             \
+                             docker images \"\\$REPO\" \
+                               --format '{{.ID}}|{{.CreatedAt}}|{{.Tag}}' \
+                               | sort -t'|' -k2,2r \
+                               | head -3 \
+                               | cut -d'|' -f3 \
+                               | sort -u > \"\\$KEEP_FILE\"; \
+                             \
+                             echo ''; \
+                             echo 'Keeping tags:'; \
+                             cat \"\\$KEEP_FILE\"; \
+                             \
+                             echo ''; \
+                             echo 'Cleaning old images...'; \
+                             \
+                             docker images \"\\$REPO\" \
+                               --format '{{.Repository}}:{{.Tag}}' \
+                               | while read IMAGE; do \
+                                   [ -z \"\\$IMAGE\" ] && continue; \
+                                   TAG=\"\\${IMAGE##*:}\"; \
+                                   \
+                                   if grep -Fxq \"\\$TAG\" \"\\$KEEP_FILE\"; then \
+                                       echo \"Keeping: \\$IMAGE\"; \
+                                   else \
+                                       if docker ps --format '{{.Image}}' | grep -Fxq \"\\$IMAGE\"; then \
+                                           echo \"Skipping running image: \\$IMAGE\"; \
+                                       else \
+                                           echo \"Removing: \\$IMAGE\"; \
+                                           docker rmi \"\\$IMAGE\" || true; \
+                                       fi; \
+                                   fi; \
+                               done; \
+                             \
+                             echo ''; \
+                             echo 'Removing dangling images...'; \
+                             docker image prune -f || true; \
+                             \
+                             echo ''; \
+                             echo 'Images after cleanup:'; \
+                             docker images \"\\$REPO\"; \
+                             \
+                             rm -f \"\\$KEEP_FILE\""
                 }
             }
         }
     }
 
 
-    // =============================================================
-    // POST ACTIONS
-    // =============================================================
+    // =========================================================
+    // POST
+    // =========================================================
 
     post {
 
@@ -801,12 +617,16 @@ REMOTE_CLEANUP
             Build   : ${BUILD_NUMBER}
             Commit  : ${GIT_SHORT_COMMIT}
 
-            Image   : ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
+            Image:
+            ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
 
-            Server  : ${DEPLOY_SERVER}
-            Port    : ${APP_PORT}
+            Server:
+            ${DEPLOY_SERVER}
 
-            Latest branch deployment is active.
+            Port:
+            ${APP_PORT}
+
+            Current branch deployment is active.
 
             Jenkins server:
             Current image retained.
