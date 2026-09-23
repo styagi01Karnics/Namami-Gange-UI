@@ -94,13 +94,13 @@ pipeline {
                     }
 
                     /*
-                     * Docker image tag format:
+                     * Docker image tag:
                      *
                      * branch-build
                      *
                      * Example:
                      *
-                     * feat-ui-changes-typescript-18-sep-4
+                     * feat-ui-changes-typescript-18-sep-9
                      */
 
                     def imageTag = "${branchNameSafe}-${env.BUILD_NUMBER}"
@@ -108,8 +108,8 @@ pipeline {
                     /*
                      * Deployment epoch.
                      *
-                     * Used on application server to prevent an older
-                     * build from overwriting a newer deployment.
+                     * Prevents an older build from overwriting
+                     * a newer deployment.
                      */
 
                     def deployEpoch = "${System.currentTimeMillis()}"
@@ -173,8 +173,11 @@ pipeline {
         // ==========================================================
 
         stage('SonarQube Analysis') {
+
             steps {
+
                 withSonarQubeEnv('SonarQube') {
+
                     sh '''
                         "${SONAR_HOME}/bin/sonar-scanner" \
                             -Dsonar.projectKey=namami-gange-ui \
@@ -186,7 +189,7 @@ pipeline {
                 }
             }
         }
-        
+
         // ==========================================================
         // DOCKER LOGIN
         // ==========================================================
@@ -247,8 +250,9 @@ pipeline {
                     docker image inspect "$IMAGE" >/dev/null
 
                     echo "Image verified:"
-                    docker images "$DOCKER_ORG/$PROJECT_NAME" --format \
-                        'table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}'
+
+                    docker images "$DOCKER_ORG/$PROJECT_NAME" \
+                        --format 'table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}'
                 '''
             }
         }
@@ -258,7 +262,9 @@ pipeline {
         // ==========================================================
 
         stage('Push Docker Image') {
+
             steps {
+
                 withCredentials([
                     usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS}",
@@ -266,11 +272,12 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
+
                     sh '''
                         set -e
-        
+
                         IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
-        
+
                         echo "=========================================="
                         echo "DOCKER PUSH"
                         echo "=========================================="
@@ -278,24 +285,25 @@ pipeline {
                         echo "Repository  : ${DOCKER_ORG}/${PROJECT_NAME}"
                         echo "Image       : ${IMAGE}"
                         echo "=========================================="
-        
+
                         echo "${DOCKER_PASSWORD}" | docker login \
                             --username "${DOCKER_USERNAME}" \
                             --password-stdin
-        
+
                         docker push "${IMAGE}"
-        
+
                         echo "Docker image pushed successfully."
-        
+
                         docker image inspect "${IMAGE}" >/dev/null
-        
+
                         echo "Push verification successful."
+
                         echo "=========================================="
                     '''
                 }
             }
         }
-        
+
         // ==========================================================
         // PREPARE REMOTE DEPLOYMENT SCRIPT
         // ==========================================================
@@ -373,6 +381,8 @@ echo "Pulling Docker image..."
 
 docker pull "$IMAGE"
 
+echo "Docker image pulled successfully."
+
 echo "Stopping current container if running..."
 
 docker stop "$CONTAINER_NAME" 2>/dev/null || true
@@ -380,6 +390,8 @@ docker stop "$CONTAINER_NAME" 2>/dev/null || true
 echo "Removing current container..."
 
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+echo "Creating deployment Compose file..."
 
 cat > "${DEPLOY_PATH}/docker-compose.yml" <<EOF
 services:
@@ -395,6 +407,9 @@ services:
     ports:
       - "${APP_PORT}:80"
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     labels:
       com.karnics.project: "namami-gange-ui"
       com.karnics.branch: "${DEPLOY_BRANCH}"
@@ -403,6 +418,18 @@ services:
       com.karnics.image-tag: "${IMAGE_TAG}"
       com.karnics.deploy-epoch: "${DEPLOY_EPOCH}"
 EOF
+
+echo "Generated docker-compose.yml:"
+
+cat "${DEPLOY_PATH}/docker-compose.yml"
+
+echo "Validating Compose configuration..."
+
+cd "$DEPLOY_PATH"
+
+docker compose config >/dev/null
+
+echo "Compose configuration valid."
 
 cat > "${DEPLOY_PATH}/.env" <<EOF
 IMAGE=${IMAGE}
@@ -415,34 +442,112 @@ EOF
 
 echo "Starting new container..."
 
-cd "$DEPLOY_PATH"
-
 docker compose up -d --force-recreate
 
-echo "Waiting for container..."
+echo "Container created."
 
-sleep 5
+echo "Waiting for container to become healthy/running..."
 
-if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
+CONTAINER_RUNNING="false"
 
-    echo "ERROR: Container failed to start."
+for i in $(seq 1 12)
+do
 
-    docker ps -a --filter "name=$CONTAINER_NAME"
+    STATUS=$(docker inspect \
+        --format '{{.State.Status}}' \
+        "$CONTAINER_NAME" 2>/dev/null || echo "missing")
 
-    docker logs "$CONTAINER_NAME" --tail 100 2>/dev/null || true
+    RUNNING=$(docker inspect \
+        --format '{{.State.Running}}' \
+        "$CONTAINER_NAME" 2>/dev/null || echo "false")
+
+    echo "Attempt $i/12 - Status: $STATUS - Running: $RUNNING"
+
+    if [ "$STATUS" = "running" ] && [ "$RUNNING" = "true" ]; then
+        CONTAINER_RUNNING="true"
+        break
+    fi
+
+    if [ "$STATUS" = "exited" ] || [ "$STATUS" = "dead" ]; then
+        echo "Container entered failed state: $STATUS"
+        break
+    fi
+
+    sleep 5
+
+done
+
+if [ "$CONTAINER_RUNNING" != "true" ]; then
+
+    echo "=========================================="
+    echo "ERROR: CONTAINER FAILED TO START"
+    echo "=========================================="
+
+    echo ""
+    echo "Container status:"
+
+    docker ps -a \
+        --filter "name=$CONTAINER_NAME" \
+        --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'
+
+    echo ""
+    echo "Container ExtraHosts:"
+
+    docker inspect "$CONTAINER_NAME" \
+        --format '{{json .HostConfig.ExtraHosts}}' \
+        2>/dev/null || true
+
+    echo ""
+    echo "Container logs:"
+
+    docker logs "$CONTAINER_NAME" --tail 100 \
+        2>/dev/null || true
+
+    echo ""
+    echo "=========================================="
 
     exit 1
 fi
+
+echo "Container is running."
+
+echo ""
+echo "Verifying host.docker.internal mapping..."
+
+EXTRA_HOSTS=$(docker inspect "$CONTAINER_NAME" \
+    --format '{{json .HostConfig.ExtraHosts}}' \
+    2>/dev/null || echo "[]")
+
+echo "ExtraHosts: $EXTRA_HOSTS"
+
+if ! echo "$EXTRA_HOSTS" | grep -q "host.docker.internal:host-gateway"; then
+
+    echo "ERROR: host.docker.internal mapping is missing."
+
+    docker logs "$CONTAINER_NAME" --tail 100 \
+        2>/dev/null || true
+
+    exit 1
+fi
+
+echo "host.docker.internal mapping verified."
+
+echo ""
+echo "Verifying container process..."
+
+docker ps \
+    --filter "name=$CONTAINER_NAME" \
+    --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'
+
+echo ""
+
+echo "Writing deployment epoch..."
 
 echo "$DEPLOY_EPOCH" > "$EPOCH_FILE"
 
 echo "=========================================="
 echo "DEPLOYMENT SUCCESSFUL"
 echo "=========================================="
-
-docker ps \
-    --filter "name=$CONTAINER_NAME" \
-    --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
 
 echo ""
 echo "Branch:"
@@ -458,6 +563,16 @@ echo ""
 echo "Build:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{index .Config.Labels "com.karnics.build"}}'
+
+echo ""
+echo "Image:"
+docker inspect "$CONTAINER_NAME" \
+    --format '{{.Config.Image}}'
+
+echo ""
+echo "ExtraHosts:"
+docker inspect "$CONTAINER_NAME" \
+    --format '{{json .HostConfig.ExtraHosts}}'
 
 echo "=========================================="
 '''
@@ -526,30 +641,44 @@ echo "=========================================="
 
             steps {
 
-                sh '''
-                    set -e
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${SSH_CREDENTIALS}",
+                        usernameVariable: 'SSH_USER',
+                        passwordVariable: 'SSH_PASSWORD'
+                    )
+                ]) {
 
-                    echo "Waiting for application..."
+                    sh '''
+                        set -e
 
-                    sleep 10
+                        echo "Waiting for application..."
 
-                    echo "Checking container..."
+                        sleep 5
 
-                    docker ps \
-                        --filter "name=namami-gange-ui"
+                        echo "Checking application container on app server..."
 
-                    echo "Checking application..."
+                        sshpass -p "$SSH_PASSWORD" ssh \
+                            -o StrictHostKeyChecking=no \
+                            "$SSH_USER@$APP_SERVER" \
+                            "docker ps \
+                            --filter 'name=namami-gange-ui' \
+                            --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'"
 
-                    curl \
-                        --fail \
-                        --max-time 15 \
-                        "http://${APP_SERVER}:${APP_PORT}/"
+                        echo ""
+                        echo "Checking application..."
 
-                    echo ""
-                    echo "=========================================="
-                    echo "APPLICATION HEALTH CHECK PASSED"
-                    echo "=========================================="
-                '''
+                        curl \
+                            --fail \
+                            --max-time 15 \
+                            "http://${APP_SERVER}:${APP_PORT}/"
+
+                        echo ""
+                        echo "=========================================="
+                        echo "APPLICATION HEALTH CHECK PASSED"
+                        echo "=========================================="
+                    '''
+                }
             }
         }
 
@@ -585,10 +714,15 @@ echo "=========================================="
                     do
 
                         if [ "$IMAGE" = "$CURRENT_IMAGE" ]; then
+
                             echo "KEEP: $IMAGE"
+
                         else
+
                             echo "REMOVE: $IMAGE"
+
                             docker rmi -f "$IMAGE" 2>/dev/null || true
+
                         fi
 
                     done
