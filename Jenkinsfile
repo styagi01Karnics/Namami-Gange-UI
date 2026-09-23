@@ -1,4 +1,3 @@
-```groovy
 pipeline {
 
     agent any
@@ -947,4 +946,3 @@ rm -f "$KEEP_FILE"
         }
     }
 }
-```
