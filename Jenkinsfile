@@ -189,7 +189,7 @@ pipeline {
                         "${SONAR_HOME}/bin/sonar-scanner" \
                             -Dsonar.projectKey=namami-gange-ui \
                             -Dsonar.projectName=namami-gange-ui \
-                            -Dsonar.organization=YOUR_SONAR_ORGANIZATION \
+                            -Dsonar.organization=YOUR_ACTUAL_ORGANIZATION_KEY \
                             -Dsonar.token="$SONAR_TOKEN" \
                             -Dsonar.sources=. \
                             -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
