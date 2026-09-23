@@ -258,58 +258,47 @@ pipeline {
         // PUSH DOCKER IMAGE
         // ==========================================================
 
+        
         stage('Push Docker Image') {
-
             steps {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS}",
-                        usernameVariable: 'DOCKER_USER',
+                        usernameVariable: 'DOCKER_USERNAME',
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
                     sh '''
                         set -e
-
+        
                         IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
-
+        
                         echo "=========================================="
                         echo "DOCKER PUSH"
                         echo "=========================================="
-                        echo "Docker user : $DOCKER_USER"
-                        echo "Repository  : $DOCKER_ORG/$PROJECT_NAME"
-                        echo "Image       : $IMAGE"
+                        echo "Docker user : ${DOCKER_USERNAME}"
+                        echo "Repository  : ${DOCKER_ORG}/${PROJECT_NAME}"
+                        echo "Image       : ${IMAGE}"
                         echo "=========================================="
-
-                        /*
-                         * Re-login immediately before push.
-                         * This avoids stale/expired Docker credentials.
-                         */
-
-                        echo "$DOCKER_PASSWORD" | docker login \
-                            --username "$DOCKER_USER" \
+        
+                        echo "${DOCKER_PASSWORD}" | docker login \
+                            --username "${DOCKER_USERNAME}" \
                             --password-stdin
-
-                        /*
-                         * Verify that the exact image exists locally.
-                         */
-
-                        docker image inspect "$IMAGE" >/dev/null
-
-                        echo "Pushing image..."
-
-                        docker push "$IMAGE"
-
-                        echo "=========================================="
-                        echo "DOCKER PUSH SUCCESSFUL"
+        
+                        docker push "${IMAGE}"
+        
+                        echo "Docker image pushed successfully."
+        
+                        docker image inspect "${IMAGE}" >/dev/null
+        
+                        echo "Push verification successful."
                         echo "=========================================="
                     '''
                 }
             }
         }
 
+        
         // ==========================================================
         // PREPARE REMOTE DEPLOYMENT SCRIPT
         // ==========================================================
