@@ -175,17 +175,27 @@ pipeline {
         stage('SonarQube Analysis') {
 
             steps {
-
-                sh '''
-                    set -e
-
-                    "${SONAR_HOME}/bin/sonar-scanner" \
-                        -Dsonar.projectKey=namami-gange-ui \
-                        -Dsonar.projectName=namami-gange-ui \
-                        -Dsonar.sources=. \
-                        -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
-                        -Dsonar.sourceEncoding=UTF-8
-                '''
+        
+                withCredentials([
+                    string(
+                        credentialsId: 'sonar-token',
+                        variable: 'SONAR_TOKEN'
+                    )
+                ]) {
+        
+                    sh '''
+                        set -e
+        
+                        "${SONAR_HOME}/bin/sonar-scanner" \
+                            -Dsonar.projectKey=namami-gange-ui \
+                            -Dsonar.projectName=namami-gange-ui \
+                            -Dsonar.organization=YOUR_SONAR_ORGANIZATION \
+                            -Dsonar.token="$SONAR_TOKEN" \
+                            -Dsonar.sources=. \
+                            -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
+                            -Dsonar.sourceEncoding=UTF-8
+                    '''
+                }
             }
         }
 
