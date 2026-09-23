@@ -173,24 +173,12 @@ pipeline {
         // ==========================================================
 
         stage('SonarQube Analysis') {
-
             steps {
-        
-                withCredentials([
-                    string(
-                        credentialsId: 'sonar-token',
-                        variable: 'SONAR_TOKEN'
-                    )
-                ]) {
-        
+                withSonarQubeEnv('SonarQube') {
                     sh '''
-                        set -e
-        
                         "${SONAR_HOME}/bin/sonar-scanner" \
                             -Dsonar.projectKey=namami-gange-ui \
                             -Dsonar.projectName=namami-gange-ui \
-                            -Dsonar.organization=YOUR_ACTUAL_ORGANIZATION_KEY \
-                            -Dsonar.token="$SONAR_TOKEN" \
                             -Dsonar.sources=. \
                             -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
                             -Dsonar.sourceEncoding=UTF-8
