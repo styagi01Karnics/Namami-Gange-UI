@@ -6,10 +6,6 @@ import { stpStreams } from '../../data/mockData'
 import {
   fetchStpLive,
   getFallbackRealtime,
-  mergeRealtimeReadings,
-  MQTT_LIVE_PLANT_CODE,
-  subscribeMqttLive,
-  usesMqttLiveStream,
   type LiveRealtimeData,
 } from '../../api/stpLive'
 
@@ -24,47 +20,12 @@ export default function RealtimeParametersPanel({
 }) {
   const [realtime, setRealtime] = useState<LiveRealtimeData>(() => getFallbackRealtime())
   const [loading, setLoading] = useState(false)
-  const is68MldMqtt = usesMqttLiveStream(plantCode)
 
-  // ONLY 68mldjag → MQTT SSE http://45.195.229.15:18087/api/mqtt/68mldjag/live
+  // All STPs (including 68mldjag) → REST /api/dashboard/{plantCode}/live
   useEffect(() => {
-    if (!is68MldMqtt || plantCode !== MQTT_LIVE_PLANT_CODE) return undefined
+    if (!plantCode || refreshTick < 1) return undefined
 
     let cancelled = false
-    setLoading(true)
-
-    // Seed from REST live so the panel isn't empty while waiting for the next MQTT push.
-    fetchStpLive(MQTT_LIVE_PLANT_CODE).then((next) => {
-      if (cancelled || !next) return
-      setRealtime((prev) => mergeRealtimeReadings(prev, next))
-      setLoading(false)
-    })
-
-    const unsubscribe = subscribeMqttLive(
-      MQTT_LIVE_PLANT_CODE,
-      (next) => {
-        if (cancelled) return
-        // Merge so inlet-only / outlet-only MQTT slave packets don't wipe each other.
-        setRealtime((prev) => mergeRealtimeReadings(prev, next))
-        setLoading(false)
-      },
-      () => {
-        if (!cancelled) setLoading(false)
-      },
-    )
-
-    return () => {
-      cancelled = true
-      unsubscribe()
-    }
-  }, [is68MldMqtt, plantCode])
-
-  // All other STPs → REST /dashboard/{plantCode}/live (never MQTT)
-  useEffect(() => {
-    if (!plantCode || is68MldMqtt || refreshTick < 1) return undefined
-
-    let cancelled = false
-    setRealtime(getFallbackRealtime())
 
     async function loadLive() {
       if (refreshTick === 1) setLoading(true)
@@ -78,7 +39,7 @@ export default function RealtimeParametersPanel({
     return () => {
       cancelled = true
     }
-  }, [plantCode, refreshTick, is68MldMqtt])
+  }, [plantCode, refreshTick])
 
   return (
     <div className="grid grid-cols-2 gap-[14px]">
