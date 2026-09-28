@@ -66,7 +66,7 @@ export default function Select({
       {open && (
         <ul
           role="listbox"
-          className={`scroll-thin absolute z-50 max-h-[180px] w-full min-w-[180px] overflow-y-auto rounded-[10px] border border-line bg-white py-[5px] shadow-pop ${
+          className={`scroll-thin absolute z-50 max-h-[min(60vh,320px)] w-full min-w-[180px] overflow-y-auto rounded-[10px] border border-line bg-white py-[5px] shadow-pop ${
             dropUp ? 'bottom-full mb-[6px]' : 'mt-[6px]'
           } ${align === 'right' ? 'right-0' : 'left-0'}`}
         >

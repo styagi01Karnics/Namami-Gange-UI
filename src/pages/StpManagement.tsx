@@ -56,9 +56,11 @@ export default function StpManagement() {
 
     async function loadPlants() {
       const plants = await fetchDashboardPlants()
-      if (cancelled || plants.length === 0) return
+      if (cancelled) return
 
-      const next = toPlantOptions(plants)
+      const next = plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
+      if (next.length === 0) return
+
       setPlantOptions(next)
       setPlantCode((current) => (next.some((option) => option.id === current) ? current : next[0].id))
     }

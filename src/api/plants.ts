@@ -28,13 +28,13 @@ export type PlantOption = {
 
 /** Used before `/dashboard/plants` loads (and if that call fails). */
 export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
-  { id: '68mldjag', label: '68 MLD STP Jagjeetpur, Haridwar', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
-  { id: '68mldkargi', label: '68 MLD STP Kargi, Dehradun', plantCode: '68mldkargi', stpId: 'kargi-68' },
-  { id: '18mldjag', label: '18 MLD STP Jagjeetpur, Haridwar', plantCode: '18mldjag', stpId: 'sarai-18' },
-  { id: '33mldsali', label: '33 MLD STP Saliar, Roorkee', plantCode: '33mldsali', stpId: 'saliar-33' },
-  { id: '14mldsarai', label: '14 MLD STP Sarai, Haridwar', plantCode: '14mldsarai', stpId: 'sarai-14' },
-  { id: '20mldmothorowala', label: '20 MLD STP Mothorowala, Dehradun', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
-  { id: '20mldmoth_2', label: '20 MLD STP Mothorowala 2, Dehradun', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
+  { id: '68mldjag', label: '68 MLD Jagjeetpur', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
+  { id: '68mldkargi', label: '68 MLD Kargi', plantCode: '68mldkargi', stpId: 'kargi-68' },
+  { id: '18mldjag', label: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'sarai-18' },
+  { id: '33mldsali', label: '33 MLD Saliar', plantCode: '33mldsali', stpId: 'saliar-33' },
+  { id: '14mldsarai', label: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14' },
+  { id: '20mldmothorowala', label: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
+  { id: '20mldmoth_2', label: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
 ]
 
 export const ALL_STP_FILTER_OPTION = { id: 'all', label: "All STP's" } as const
@@ -56,12 +56,7 @@ export function toFilterPlantOptions(
 }
 
 function sortPlants(plants: DashboardPlant[]) {
-  return [...plants].sort((a, b) => {
-    const a68 = /68\s*mld/i.test(a.plantName) ? 0 : 1
-    const b68 = /68\s*mld/i.test(b.plantName) ? 0 : 1
-    if (a68 !== b68) return a68 - b68
-    return a.plantName.localeCompare(b.plantName)
-  })
+  return [...plants].sort((a, b) => a.plantName.localeCompare(b.plantName, undefined, { numeric: true }))
 }
 
 function matchStpId(plant: DashboardPlant) {
@@ -76,13 +71,23 @@ function matchStpId(plant: DashboardPlant) {
   return match?.[0] ?? plant.plantCode
 }
 
+/** One dropdown option per API plant — label is `plantName` from /dashboard/plants. */
 export function toPlantOptions(plants: DashboardPlant[]): PlantOption[] {
-  return sortPlants(plants).map((plant) => ({
-    id: plant.plantCode,
-    label: plant.plantName,
-    plantCode: plant.plantCode,
-    stpId: matchStpId(plant),
-  }))
+  const seen = new Set<string>()
+
+  return sortPlants(plants)
+    .filter((plant) => Boolean(plant?.plantCode && plant?.plantName))
+    .filter((plant) => {
+      if (seen.has(plant.plantCode)) return false
+      seen.add(plant.plantCode)
+      return true
+    })
+    .map((plant) => ({
+      id: plant.plantCode,
+      label: String(plant.plantName).trim(),
+      plantCode: plant.plantCode,
+      stpId: matchStpId(plant),
+    }))
 }
 
 export function resolveStpDetail(option: PlantOption | undefined) {
