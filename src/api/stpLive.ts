@@ -152,7 +152,7 @@ function buildStream(
     if (source && typeof source === 'object') Object.assign(merged, source)
   }
 
-  // 68/14 MLD use inlet_flow; 18/33 MLD use flow_inlet.
+  // 68/14 MLD use inlet_flow; Kargi / Mothorowala / 18/33 MLD use flow_inlet.
   const flowKeys =
     side === 'inlet' ? (['inlet_flow', 'flow_inlet'] as const) : (['outlet_flow', 'flow_outlet'] as const)
   const flow = pickNumber(merged, flowKeys)

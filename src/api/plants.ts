@@ -11,9 +11,12 @@ export type DashboardPlant = {
 /** Maps API plant codes to existing mock STP detail keys used by CCTV and headers. */
 const PLANT_CODE_TO_STP_ID: Record<string, string> = {
   '68mldjag': 'jagjeetpur-68',
+  '68mldkargi': 'kargi-68',
   '18mldjag': 'sarai-18',
   '33mldsali': 'saliar-33',
   '14mldsarai': 'sarai-14',
+  '20mldmothorowala': 'mothorowala-20',
+  '20mldmoth_2': 'mothorowala-20-2',
 }
 
 export type PlantOption = {
@@ -26,9 +29,12 @@ export type PlantOption = {
 /** Used before `/dashboard/plants` loads (and if that call fails). */
 export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
   { id: '68mldjag', label: '68 MLD STP Jagjeetpur, Haridwar', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
+  { id: '68mldkargi', label: '68 MLD STP Kargi, Dehradun', plantCode: '68mldkargi', stpId: 'kargi-68' },
   { id: '18mldjag', label: '18 MLD STP Jagjeetpur, Haridwar', plantCode: '18mldjag', stpId: 'sarai-18' },
   { id: '33mldsali', label: '33 MLD STP Saliar, Roorkee', plantCode: '33mldsali', stpId: 'saliar-33' },
   { id: '14mldsarai', label: '14 MLD STP Sarai, Haridwar', plantCode: '14mldsarai', stpId: 'sarai-14' },
+  { id: '20mldmothorowala', label: '20 MLD STP Mothorowala, Dehradun', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
+  { id: '20mldmoth_2', label: '20 MLD STP Mothorowala 2, Dehradun', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
 ]
 
 export const ALL_STP_FILTER_OPTION = { id: 'all', label: "All STP's" } as const
