@@ -26,6 +26,26 @@ const LIVE_STREAM_OVERRIDES: Record<string, string> = {
   'PLANT001:2': 'https://stream.karnics.com/site/PLANT001/camera/2/',
 }
 
+/** 68 MLD live streams — also used for 18 MLD Jagjeetpur until its own cameras are online. */
+const STP_68MLD_CAMERAS: CctvCamera[] = [
+  {
+    id: 1,
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'PLANT001',
+    streamUrl: LIVE_STREAM_OVERRIDES['PLANT001:1'],
+  },
+  {
+    id: 2,
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'PLANT001',
+    streamUrl: LIVE_STREAM_OVERRIDES['PLANT001:2'],
+  },
+]
+
 const STP_14MLD_CAMERAS: CctvCamera[] = [
   {
     id: 'sarai-14-cam-1',
@@ -84,6 +104,10 @@ export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCam
 export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   if (stpId === 'sarai-14') {
     return STP_14MLD_CAMERAS
+  }
+  // 18 MLD Jagjeetpur reuses the 68 MLD PLANT001 stream URLs.
+  if (stpId === 'sarai-18' || stpId === '18mldjag') {
+    return STP_68MLD_CAMERAS
   }
   return null
 }
@@ -230,7 +254,7 @@ export async function loadLiveCamerasByStp(
 
   for (const option of plantOptions) {
     const siteStpId = option.stpId || option.id
-    const configured = getCamerasForStp(siteStpId)
+    const configured = getCamerasForStp(siteStpId) ?? getCamerasForStp(option.plantCode)
     if (configured) {
       next[siteStpId] = toSiteCameras(siteStpId, configured)
       continue
