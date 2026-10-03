@@ -25,9 +25,8 @@ import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
 import {
   FALLBACK_PLANT_OPTIONS,
-  fetchDashboardPlants,
+  loadPlantPickerOptions,
   resolveStpDetail,
-  toPlantOptions,
 } from '../api/plants'
 import { useSharedRefreshTick } from '../hooks/useSharedRefreshTick'
 
@@ -55,11 +54,8 @@ export default function StpManagement() {
     let cancelled = false
 
     async function loadPlants() {
-      const plants = await fetchDashboardPlants()
-      if (cancelled) return
-
-      const next = plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
-      if (next.length === 0) return
+      const next = await loadPlantPickerOptions()
+      if (cancelled || next.length === 0) return
 
       setPlantOptions(next)
       setPlantCode((current) => (next.some((option) => option.id === current) ? current : next[0].id))

@@ -12,7 +12,7 @@ import {
 } from '../../api/cctv'
 
 /** Shared by the CCTV Monitoring page and the CCTV tab in STP Management. */
-export default function CctvTab({ stpId }: { stpId?: string }) {
+export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCode?: string }) {
   const [cameras, setCameras] = useState<CctvCamera[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -21,7 +21,7 @@ export default function CctvTab({ stpId }: { stpId?: string }) {
     setLoading(true)
 
     try {
-      const configured = getCamerasForStp(stpId)
+      const configured = getCamerasForStp(stpId) ?? getCamerasForStp(plantCode)
       if (configured) {
         setCameras(configured)
         return
@@ -42,7 +42,7 @@ export default function CctvTab({ stpId }: { stpId?: string }) {
 
   useEffect(() => {
     loadCameras()
-  }, [stpId])
+  }, [stpId, plantCode])
 
   const stats = useMemo(() => {
     const total = cameras.length

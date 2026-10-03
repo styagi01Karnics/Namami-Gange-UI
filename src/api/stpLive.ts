@@ -1,6 +1,5 @@
 import { stpRealtime } from '../data/mockData'
-
-const DASHBOARD_API = import.meta.env.VITE_DASHBOARD_API_URL ?? '/dashboard-api'
+import { dashboardResourceUrl } from './plants'
 
 type LiveReading = Record<string, unknown>
 
@@ -277,8 +276,7 @@ export async function fetchStpLive(plantCode: string): Promise<LiveRealtimeData 
   if (!plantCode) return null
 
   try {
-    // e.g. http://45.195.229.15:18087/api/dashboard/68mldjag/live
-    const response = await fetch(`${DASHBOARD_API}/dashboard/${encodeURIComponent(plantCode)}/live`)
+    const response = await fetch(dashboardResourceUrl(plantCode, 'live'))
     if (!response.ok) throw new Error('Failed to load live parameters')
 
     return mapLivePayloadToRealtime(await response.json())

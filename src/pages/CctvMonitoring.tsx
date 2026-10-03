@@ -85,6 +85,7 @@ export default function CctvMonitoring() {
       const mockSite = cctvSites.find((site) => site.stpId === siteStpId)
 
       return {
+        id: option.id,
         stpId: siteStpId,
         name: option.label,
         address: detail.address || mockSite?.address || '—',
@@ -96,14 +97,14 @@ export default function CctvMonitoring() {
   const toggleSite = (id) =>
     setOpenIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
 
-  const allExpanded = sites.length > 0 && sites.every((site) => openIds.includes(site.stpId))
+  const allExpanded = sites.length > 0 && sites.every((site) => openIds.includes(site.id))
 
   const toggleAllSites = () => {
     if (allExpanded) {
       setOpenIds([])
       return
     }
-    setOpenIds(sites.map((site) => site.stpId))
+    setOpenIds(sites.map((site) => site.id))
   }
 
   const selectStp = (id) => {
@@ -142,9 +143,9 @@ export default function CctvMonitoring() {
 
       {sites.map((site) => (
         <CctvSiteCard
-          key={site.stpId}
+          key={site.id}
           site={site}
-          open={openIds.includes(site.stpId)}
+          open={openIds.includes(site.id)}
           onToggle={toggleSite}
           onExpand={(camera) => setExpanded({ camera, siteName: site.name })}
         />

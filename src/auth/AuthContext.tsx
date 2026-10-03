@@ -12,7 +12,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 const STORAGE_KEY = 'ng-auth'
 const LAST_LOGIN_KEY = 'ng-last-login'
 
-const VALID = { username: 'admin', password: 'admin' }
+const VALID = { username: 'admin', password: 'Admin@01' }
 
 function formatLoginStamp(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0')

@@ -1,6 +1,18 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
+/** Vite 8's ProxyServer type does not expose EventEmitter `.on` under tsc. */
+type DashboardProxy = {
+  on: (
+    event: 'proxyRes',
+    listener: (
+      proxyRes: { headers: Record<string, unknown> },
+      req: unknown,
+      res: { setHeader: (name: string, value: string) => void },
+    ) => void,
+  ) => void
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '')
 
@@ -21,7 +33,7 @@ export default defineConfig(({ mode }) => {
           timeout: 0,
           proxyTimeout: 0,
           configure: (proxy) => {
-            proxy.on('proxyRes', (proxyRes, _req, res) => {
+            ;(proxy as unknown as DashboardProxy).on('proxyRes', (proxyRes, _req, res) => {
               const contentType = String(proxyRes.headers['content-type'] ?? '')
               if (contentType.includes('text/event-stream')) {
                 res.setHeader('Cache-Control', 'no-cache, no-transform')

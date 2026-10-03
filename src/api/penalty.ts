@@ -575,7 +575,7 @@ export async function fetchPenaltyOccurrences(
   if (!stpCode) return []
 
   try {
-    // Works for all STP codes: 68mldjag, 18mldjag, 33mldsali, 14mldsarai
+    // Works for any plantCode from /dashboard/plants (68mldjag, 68mldkargi, 20mldmothorowala, …).
     const params = new URLSearchParams({
       stpCode,
       from: range.from,

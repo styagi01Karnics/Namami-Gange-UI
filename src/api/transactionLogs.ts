@@ -1,7 +1,7 @@
 import { mapRecordToReading, pickReadingTime, type LiveStreamData } from './stpLive'
+import { dashboardResourceUrl } from './plants'
 import { streamTransactions } from '../data/mockData'
 
-const DASHBOARD_API = import.meta.env.VITE_DASHBOARD_API_URL ?? '/dashboard-api'
 const DEFAULT_LIMIT = 20
 /** Pull extra rows so we can still fill 20 after deduping by reading_time. */
 const FETCH_LIMIT = 100
@@ -92,9 +92,7 @@ function uniqueByReadingTimeDesc(rows: TransactionRow[], limit = DEFAULT_LIMIT) 
 }
 
 async function fetchStreamRows(plantCode: string, side: 'inlet' | 'outlet', limit = DEFAULT_LIMIT) {
-  const response = await fetch(
-    `${DASHBOARD_API}/dashboard/${encodeURIComponent(plantCode)}/${side}?limit=${FETCH_LIMIT}`,
-  )
+  const response = await fetch(`${dashboardResourceUrl(plantCode, side)}?limit=${FETCH_LIMIT}`)
   if (!response.ok) throw new Error(`Failed to load ${side} transactions`)
 
   const payload = await response.json()

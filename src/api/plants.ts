@@ -47,7 +47,7 @@ export function toFilterPlantOptions(
   return [
     ALL_STP_FILTER_OPTION,
     ...options.map((plant) => ({
-      id: plant.stpId,
+      id: plant.plantCode,
       label: plant.label,
       plantCode: plant.plantCode,
       stpId: plant.stpId,
@@ -137,4 +137,14 @@ export async function fetchDashboardPlants(): Promise<DashboardPlant[]> {
   } catch {
     return []
   }
+}
+
+/** Live / inlet / outlet paths for whichever plantCode was selected from /dashboard/plants. */
+export function dashboardResourceUrl(plantCode: string, resource: 'live' | 'inlet' | 'outlet') {
+  return `${DASHBOARD_API}/dashboard/${encodeURIComponent(plantCode)}/${resource}`
+}
+
+export async function loadPlantPickerOptions(): Promise<PlantOption[]> {
+  const plants = await fetchDashboardPlants()
+  return plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
 }

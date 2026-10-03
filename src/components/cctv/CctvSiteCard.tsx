@@ -18,7 +18,7 @@ export default function CctvSiteCard({ site, open, onToggle, onExpand }) {
           </p>
         </div>
 
-        <IconToggle open={open} onClick={() => onToggle(site.stpId)} label={`Toggle ${site.name}`} />
+        <IconToggle open={open} onClick={() => onToggle(site.id ?? site.stpId)} label={`Toggle ${site.name}`} />
       </div>
 
       {open && (

@@ -8,9 +8,8 @@ import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMe
 import { defaultDateRange, stpDetails } from '../data/mockData'
 import {
   FALLBACK_PLANT_OPTIONS,
-  fetchDashboardPlants,
+  loadPlantPickerOptions,
   resolveStpDetail,
-  toPlantOptions,
 } from '../api/plants'
 
 export default function Compliance() {
@@ -22,10 +21,9 @@ export default function Compliance() {
     let cancelled = false
 
     async function loadPlants() {
-      const plants = await fetchDashboardPlants()
-      if (cancelled || plants.length === 0) return
+      const next = await loadPlantPickerOptions()
+      if (cancelled || next.length === 0) return
 
-      const next = toPlantOptions(plants)
       setPlantOptions(next)
       setPlantCode((current) => (next.some((option) => option.id === current) ? current : next[0].id))
     }
