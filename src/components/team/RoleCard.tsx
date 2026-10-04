@@ -41,11 +41,11 @@ export default function RoleCard({ role, onEdit, onDelete, onViewUsers }: any) {
       <div className="mt-[13px] flex items-center gap-[18px] text-[12.5px] leading-4 text-ink-soft">
         <span className="flex items-center gap-[6px]">
           <TeamIcon size={15} className="text-ink-muted" />
-          {role.users} users
+          {role.users ?? role.userCount ?? 0} users
         </span>
         <span className="flex items-center gap-[6px]">
           <LockIcon size={14} className="text-ink-muted" />
-          {role.permissions} permissions
+          {role.permissions ?? role.permissionCount ?? 0} permissions
         </span>
       </div>
 

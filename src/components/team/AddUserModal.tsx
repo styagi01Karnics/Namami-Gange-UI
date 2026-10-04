@@ -95,8 +95,10 @@ function IconSelect({ icon: Icon, options, value, onChange, placeholder, dropUp 
   )
 }
 
-export default function AddUserModal({ open, onClose, onSubmit }) {
+export default function AddUserModal({ open, onClose, onSubmit, roleNames = teamRoleNames, roles = [] }) {
   const [form, setForm] = useState(EMPTY)
+  const [submitError, setSubmitError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return undefined
@@ -106,7 +108,11 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
   }, [open, onClose])
 
   useEffect(() => {
-    if (!open) setForm(EMPTY)
+    if (!open) {
+      setForm(EMPTY)
+      setSubmitError('')
+      setSaving(false)
+    }
   }, [open])
 
   if (!open) return null
@@ -123,16 +129,29 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
     form.confirm === form.password &&
     form.role
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
-    onSubmit({
-      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
-      phone: `+91 ${phoneDigits}`,
-      email: form.email.trim(),
-      role: form.role,
-      status: form.status,
-    })
-    onClose()
+  const handleSubmit = async () => {
+    if (!canSubmit || saving) return
+    setSaving(true)
+    setSubmitError('')
+    try {
+      const selected = roles.find((role) => role.name === form.role)
+      await onSubmit({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        phone: `+91 ${phoneDigits}`,
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+        roleId: selected?.id,
+        status: form.status,
+      })
+      onClose()
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to create this user.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -264,7 +283,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                 <FieldLabel required>Role</FieldLabel>
                 <IconSelect
                   icon={FieldPersonIcon}
-                  options={teamRoleNames}
+                  options={roleNames}
                   value={form.role}
                   onChange={set('role')}
                   placeholder="Select Role"
@@ -286,11 +305,12 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
         </div>
 
         <div className="mt-[18px] flex items-center justify-end gap-[10px]">
+          {submitError && <p className="mr-auto text-[12.5px] text-danger">{submitError}</p>}
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Create User
+          <Button onClick={handleSubmit} disabled={!canSubmit || saving}>
+            {saving ? 'Creating…' : 'Create User'}
           </Button>
         </div>
       </div>

@@ -47,6 +47,16 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/penalty-api/, '/api'),
         },
+        '/role-api': {
+          target: env.VITE_ROLE_API_BASE_URL || 'http://localhost:8903',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/role-api/, '/api'),
+        },
+        '/user-api': {
+          target: env.VITE_USER_API_BASE_URL || 'http://localhost:8904',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/user-api/, '/api'),
+        },
       },
     },
   }

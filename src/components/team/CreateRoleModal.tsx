@@ -11,7 +11,14 @@ import SupportIcon from '../ui/SupportIcon'
 import TeamIcon from '../ui/TeamIcon'
 import { ico } from '../ui/Ico'
 import { tint } from './teamTheme'
-import { permissionTemplates, rolePermissionModules, roleStatusOptions, teamRoleNames, grantsForRole } from '../../data/mockData'
+import { fetchRoleCatalog, type RoleCatalog, type RoleCatalogModule } from '../../api/roles'
+import {
+  grantsForRole,
+  permissionTemplateGrants,
+  permissionTemplates,
+  rolePermissionModules,
+  roleStatusOptions,
+} from '../../data/mockData'
 
 const MODULE_ICONS = {
   dashboard: DashboardIcon,
@@ -125,9 +132,19 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
   )
 }
 
-export default function CreateRoleModal({ open, onClose, onSubmit, role = null }) {
+const FALLBACK_CATALOG: RoleCatalog = {
+  statuses: roleStatusOptions,
+  permissionPresets: permissionTemplates,
+  modules: rolePermissionModules,
+  presetGrants: permissionTemplateGrants,
+}
+
+export default function CreateRoleModal({ open, onClose, onSubmit, role = null, existingNames = [] }) {
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
+  const [catalog, setCatalog] = useState<RoleCatalog>(FALLBACK_CATALOG)
+  const [submitError, setSubmitError] = useState('')
+  const [saving, setSaving] = useState(false)
   const editing = Boolean(role)
 
   useEffect(() => {
@@ -143,8 +160,14 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
     if (!open) {
       setForm(EMPTY)
       setGranted({})
+      setSubmitError('')
+      setSaving(false)
       return
     }
+
+    fetchRoleCatalog()
+      .then(setCatalog)
+      .catch(() => setCatalog(FALLBACK_CATALOG))
 
     if (role) {
       setForm({
@@ -153,7 +176,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         status: role.status ?? 'Active',
         template: role.template ?? '',
       })
-      setGranted(grantsForRole(role))
+      setGranted(role.granted ?? grantsForRole(role))
       return
     }
 
@@ -166,7 +189,11 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   if (!open) return null
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
-  const canSubmit = form.role && form.description.trim()
+  const roleName = form.role.trim()
+  const nameTaken = existingNames.some(
+    (name) => name.toLowerCase() === roleName.toLowerCase() && name.toLowerCase() !== (role?.name ?? '').toLowerCase(),
+  )
+  const canSubmit = Boolean(roleName) && form.description.trim() && !nameTaken
 
   // Modules without sub-permissions count as a single "module" grant.
   const toggleModule = (module, checked) =>
@@ -184,17 +211,25 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       }
     })
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
-    onSubmit({
-      name: form.role,
-      description: form.description.trim(),
-      status: form.status,
-      permissions: total,
-      granted,
-      template: form.template,
-    })
-    onClose()
+  const handleSubmit = async () => {
+    if (!canSubmit || saving) return
+    setSaving(true)
+    setSubmitError('')
+    try {
+      await onSubmit({
+        name: roleName,
+        description: form.description.trim(),
+        status: form.status,
+        permissions: total,
+        granted,
+        template: form.template,
+      })
+      onClose()
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to save this role.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -232,10 +267,18 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
           <FormSection icon={FileTextIcon} title="Role & Access">
             <div className="space-y-[16px]">
-              <div>
+              <label className="block">
                 <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
-                <Select options={teamRoleNames} value={form.role} onChange={set('role')} placeholder="Select Role" />
-              </div>
+                <input
+                  value={form.role}
+                  onChange={(e) => set('role')(e.target.value)}
+                  placeholder="Enter Role Name"
+                  className="h-[38px] w-full rounded-[9px] border border-line bg-white px-[13px] text-[13px] text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-brand"
+                />
+                {nameTaken && (
+                  <span className="mt-[6px] block text-[12px] leading-4 text-danger">This role name already exists.</span>
+                )}
+              </label>
 
               <label className="block">
                 <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Description *</span>
@@ -251,17 +294,20 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status *</span>
-                  <Select options={roleStatusOptions} value={form.status} onChange={set('status')} />
+                  <Select options={catalog.statuses} value={form.status} onChange={set('status')} />
                 </div>
                 <div>
                   <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
-                    Permission Template
+                    Permission
                   </span>
                   <Select
-                    options={permissionTemplates}
+                    options={catalog.permissionPresets}
                     value={form.template}
-                    onChange={set('template')}
-                    placeholder="Select a template"
+                    onChange={(value) => {
+                      set('template')(value)
+                      setGranted(catalog.presetGrants[value] ?? {})
+                    }}
+                    placeholder="Select permission"
                   />
                 </div>
               </div>
@@ -270,7 +316,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
           <FormSection icon={KeyIcon} title="Module Permissions">
             <div className="space-y-[12px]">
-              {rolePermissionModules.map((module) => (
+              {catalog.modules.map((module: RoleCatalogModule) => (
                 <ModuleRow
                   key={module.id}
                   module={module}
@@ -285,14 +331,20 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
         <div className="flex items-center justify-between gap-[12px] px-[22px] pb-[22px] pt-[18px]">
           <p className="text-[12.5px] leading-4 text-ink-soft">
-            {total} permission{total === 1 ? '' : 's'} selected
+            {submitError ? (
+              <span className="text-danger">{submitError}</span>
+            ) : (
+              <>
+                {total} permission{total === 1 ? '' : 's'} selected
+              </>
+            )}
           </p>
           <div className="flex items-center gap-[10px]">
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={!canSubmit}>
-              {editing ? 'Save Changes' : 'Create Role'}
+            <Button onClick={handleSubmit} disabled={!canSubmit || saving}>
+              {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Role'}
             </Button>
           </div>
         </div>

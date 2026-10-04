@@ -275,6 +275,7 @@ export const stpDetails = {
     lastSeen: '14/04/2026 ,06:05 PM',
     penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
     inCharge: {
+      
       name: 'S. Rawat',
       phone: '+91 98110 77841',
       email: 's.rawat@uttarakhandpeyjal.in',
@@ -2131,6 +2132,27 @@ const allModuleGrants = () =>
   Object.fromEntries(
     rolePermissionModules.map((m) => [m.id, m.permissions.length > 0 ? [...m.permissions] : [m.label]]),
   )
+
+/** Module checkboxes applied when a Permission option is selected. */
+export const permissionTemplateGrants = {
+  'Full Access': allModuleGrants(),
+  'Read Only': {
+    dashboard: ['Dashboard'],
+    cctv: ['Live Camera Feed'],
+    reports: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Compliance'],
+    support: ['View Tickets'],
+  },
+  Operations: {
+    dashboard: ['Dashboard'],
+    stp: ['Manpower', 'Inventory', 'CCTV', 'Remote Calibration', 'Transaction Logs'],
+    cctv: ['Live Camera Feed'],
+    support: ['View Tickets', 'Manage Tickets'],
+  },
+  Reporting: {
+    dashboard: ['Dashboard'],
+    reports: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Compliance'],
+  },
+}
 
 /** Starting grants shown when a stored role is opened in the edit modal. */
 export const roleGrantedPresets = {

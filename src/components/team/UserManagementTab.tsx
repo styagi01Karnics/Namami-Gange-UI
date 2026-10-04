@@ -12,6 +12,7 @@ import AddUserModal from './AddUserModal'
 import ConfirmModal from '../ui/ConfirmModal'
 import { ROLE_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
+import { createUser, deleteUser, fetchUsers, patchUser, type TeamUser } from '../../api/users'
 import { buildTeamUserStats, teamRoleNames, teamUserColumns, teamUsers } from '../../data/mockData'
 
 const PencilIcon = ico('fluent:edit-24-filled')
@@ -23,7 +24,6 @@ const CSV_COLUMNS = teamUserColumns
   .filter((c) => c.key !== 'actions')
   .map((c) => ({ key: c.key, label: c.label }))
 
-const ROLE_FILTER = ['All Roles', ...teamRoleNames]
 const STATUS_FILTER = ['All Status', 'Active', 'Inactive']
 const STATUS_OPTIONS = ['Active', 'Inactive']
 
@@ -74,18 +74,32 @@ function ChipSelect({ value, options, onChange }) {
   )
 }
 
-export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles', onRoleFilterChange }) {
-  const [users, setUsers] = useState(teamUsers)
+export default function UserManagementTab({
+  onExportPdf,
+  roles = [],
+  roleNames = teamRoleNames,
+  roleNamesKey = '',
+  roleFilter = 'All Roles',
+  onRoleFilterChange,
+  onUsersChanged,
+}) {
+  const [users, setUsers] = useState<TeamUser[]>(teamUsers)
+  const [live, setLive] = useState(false)
   const [role, setRole] = useState(roleFilter)
   const [status, setStatus] = useState('All Status')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [draft, setDraft] = useState({ role: '', status: '' })
+  const [draft, setDraft] = useState({ role: '', roleId: '', status: '' })
   const [pendingDelete, setPendingDelete] = useState(null)
+  const [actionError, setActionError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   const selectedRole = onRoleFilterChange ? roleFilter : role
   const setSelectedRole = onRoleFilterChange ?? setRole
-  const roleOptions = ROLE_FILTER.includes(selectedRole) ? ROLE_FILTER : [...ROLE_FILTER, selectedRole]
+  const roleFilterOptions = ['All Roles', ...roleNames]
+  const roleOptions = roleFilterOptions.includes(selectedRole)
+    ? roleFilterOptions
+    : [...roleFilterOptions, selectedRole]
 
   const rows = useMemo(
     () =>
@@ -98,29 +112,106 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
   )
 
   // Cards count the whole directory, not just the rows left by the filters.
-  const stats = useMemo(() => buildTeamUserStats(users, teamRoleNames.length), [users])
+  const stats = useMemo(() => buildTeamUserStats(users, roleNames.length), [users, roleNames.length])
 
-  const addUser = (user) =>
-    setUsers((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        userId: `#${1231468 + prev.length}`,
-        lastLogin: '—',
-        ...user,
-      },
-      ...prev,
-    ])
-
-  const removeUser = (id) => setUsers((prev) => prev.filter((u) => u.id !== id))
-
-  const startEdit = (row) => {
-    setEditingId(row.id)
-    setDraft({ role: row.role, status: row.status })
+  const refreshUsers = async () => {
+    const next = await fetchUsers()
+    setUsers(next)
+    setLive(true)
+    return next
   }
 
-  const saveEdit = () => {
-    setUsers((prev) => prev.map((u) => (u.id === editingId ? { ...u, role: draft.role, status: draft.status } : u)))
-    setEditingId(null)
+  useEffect(() => {
+    let cancelled = false
+    fetchUsers()
+      .then((next) => {
+        if (cancelled) return
+        setUsers(next)
+        setLive(true)
+      })
+      .catch(() => {
+        /* Keep mock users if user-service is offline. */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // After a role rename, refresh the user list so denormalized role names stay aligned.
+  useEffect(() => {
+    if (!live || !roleNamesKey) return
+    let cancelled = false
+    fetchUsers()
+      .then((next) => {
+        if (!cancelled) setUsers(next)
+      })
+      .catch(() => {
+        /* Ignore refresh failures; existing rows remain. */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [roleNamesKey, live])
+
+  const roleIdFor = (roleName) => roles.find((item) => item.name === roleName)?.id ?? ''
+
+  const addUser = async (user) => {
+    setActionError('')
+    try {
+      await createUser({
+        ...user,
+        roleId: user.roleId || roleIdFor(user.role),
+      })
+      await refreshUsers()
+      onUsersChanged?.()
+    } catch (error) {
+      if (live) throw error
+      // Offline fallback when the initial load never reached user-service.
+      setUsers((prev) => [
+        {
+          id: `u-${Date.now()}`,
+          userId: `#${1231468 + prev.length}`,
+          lastLogin: '—',
+          ...user,
+        },
+        ...prev,
+      ])
+    }
+  }
+
+  const startEdit = (row) => {
+    setActionError('')
+    setEditingId(row.id)
+    setDraft({ role: row.role, roleId: row.roleId || roleIdFor(row.role), status: row.status })
+  }
+
+  const saveEdit = async () => {
+    if (busy || !editingId) return
+    setBusy(true)
+    setActionError('')
+    try {
+      await patchUser(editingId, {
+        role: draft.role,
+        roleId: draft.roleId || roleIdFor(draft.role),
+        status: draft.status,
+      })
+      await refreshUsers()
+      onUsersChanged?.()
+      setEditingId(null)
+    } catch (error) {
+      if (!live) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === editingId ? { ...u, role: draft.role, roleId: draft.roleId, status: draft.status } : u,
+          ),
+        )
+        setEditingId(null)
+      } else {
+        setActionError(error instanceof Error ? error.message : 'Unable to update this user.')
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   const renderCell = (row, col) => {
@@ -138,7 +229,13 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
 
     if (col.key === 'role') {
       if (editingId === row.id) {
-        return <ChipSelect value={draft.role} options={teamRoleNames} onChange={(role) => setDraft((d) => ({ ...d, role }))} />
+        return (
+          <ChipSelect
+            value={draft.role}
+            options={roleNames}
+            onChange={(nextRole) => setDraft((d) => ({ ...d, role: nextRole, roleId: roleIdFor(nextRole) }))}
+          />
+        )
       }
       return <StatusPill tone={ROLE_TONE[row.role] ?? 'slate'}>{row.role}</StatusPill>
     }
@@ -146,7 +243,11 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
     if (col.key === 'status') {
       if (editingId === row.id) {
         return (
-          <ChipSelect value={draft.status} options={STATUS_OPTIONS} onChange={(status) => setDraft((d) => ({ ...d, status }))} />
+          <ChipSelect
+            value={draft.status}
+            options={STATUS_OPTIONS}
+            onChange={(nextStatus) => setDraft((d) => ({ ...d, status: nextStatus }))}
+          />
         )
       }
       return <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>
@@ -158,16 +259,18 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
           <button
             type="button"
             onClick={() => setPendingDelete(row)}
+            disabled={busy}
             aria-label={`Remove ${row.name}`}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#F6C9CB] text-danger transition-colors hover:bg-danger-soft"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#F6C9CB] text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
           >
             <TrashIcon size={15} />
           </button>
           <button
             type="button"
             onClick={() => (editingId === row.id ? saveEdit() : startEdit(row))}
+            disabled={busy}
             aria-label={editingId === row.id ? `Save ${row.name}` : `Edit ${row.name}`}
-            className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] transition-colors ${
+            className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] transition-colors disabled:opacity-50 ${
               editingId === row.id
                 ? 'bg-brand text-white hover:bg-[#1259C7]'
                 : 'border border-[#BFD8F8] text-brand hover:bg-brand-soft'
@@ -187,12 +290,18 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
       <TeamSectionHeader
         tab="User Management"
         right={
-          <Button onClick={() => setModalOpen(true)}>
+          <Button onClick={() => setModalOpen(true)} disabled={busy}>
             Add User
             <PlusIcon size={16} />
           </Button>
         }
       />
+
+      {actionError && (
+        <p className="rounded-[10px] border border-[#F6C9CB] bg-danger-soft px-[14px] py-[10px] text-[13px] text-danger">
+          {actionError}
+        </p>
+      )}
 
       <StatCardsRow items={stats} columns={4} gap={14} />
 
@@ -226,16 +335,40 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         emptyMessage="No users match your filters."
       />
 
-      <AddUserModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={addUser} />
+      <AddUserModal
+        open={modalOpen}
+        roles={roles}
+        roleNames={roleNames}
+        onClose={() => setModalOpen(false)}
+        onSubmit={addUser}
+      />
       <ConfirmModal
         open={Boolean(pendingDelete)}
         title="Delete User"
         message={`Are you sure you want to delete ${pendingDelete?.name}? This cannot be undone.`}
         onClose={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete.id === editingId) setEditingId(null)
-          removeUser(pendingDelete.id)
-          setPendingDelete(null)
+        onConfirm={async () => {
+          if (!pendingDelete || busy) return
+          setBusy(true)
+          setActionError('')
+          try {
+            await deleteUser(pendingDelete.id)
+            await refreshUsers()
+            onUsersChanged?.()
+            if (pendingDelete.id === editingId) setEditingId(null)
+            setPendingDelete(null)
+          } catch (error) {
+            if (!live) {
+              setUsers((prev) => prev.filter((u) => u.id !== pendingDelete.id))
+              if (pendingDelete.id === editingId) setEditingId(null)
+              setPendingDelete(null)
+            } else {
+              setActionError(error instanceof Error ? error.message : 'Unable to delete this user.')
+              setPendingDelete(null)
+            }
+          } finally {
+            setBusy(false)
+          }
         }}
       />
     </div>
