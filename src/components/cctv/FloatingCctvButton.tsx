@@ -14,7 +14,7 @@ export default function FloatingCctvButton() {
   const drag = useRef({ active: false, startY: 0, startTop: 0 })
 
   useEffect(() => {
-    const onResize = () => setTop((prev) => clamp(prev, 72, window.innerHeight - 175))
+    const onResize = () => setTop((prev) => clamp(prev, 72, window.innerHeight - 120))
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
@@ -27,7 +27,7 @@ export default function FloatingCctvButton() {
   const onGripMove = (e) => {
     if (!drag.current.active) return
     const delta = e.clientY - drag.current.startY
-    setTop(clamp(drag.current.startTop + delta, 72, window.innerHeight - 175))
+    setTop(clamp(drag.current.startTop + delta, 72, window.innerHeight - 120))
   }
 
   const onGripUp = (e) => {
@@ -43,7 +43,7 @@ export default function FloatingCctvButton() {
   return (
     <div
       style={{ top: `${top}px` }}
-      className="fixed right-[12px] z-[45] flex w-[72px] flex-col items-center rounded-[16px] border border-[#8BB8E8] bg-[#CBE3F9] px-[10px] py-[14px] shadow-card"
+      className="fixed right-[12px] z-[45] flex w-[64px] flex-col items-center rounded-[14px] border border-[#8BB8E8] bg-[#CBE3F9] px-[8px] py-[8px] shadow-card"
     >
       <button
         type="button"
@@ -51,11 +51,11 @@ export default function FloatingCctvButton() {
         onPointerDown={onGripDown}
         onPointerMove={onGripMove}
         onPointerUp={onGripUp}
-        className="flex h-[32px] w-full cursor-grab touch-none items-center justify-center text-[#7B8FA3] active:cursor-grabbing"
+        className="flex h-[22px] w-full cursor-grab touch-none items-center justify-center text-[#7B8FA3] active:cursor-grabbing"
       >
-        <span className="grid grid-cols-2 gap-[5px]">
+        <span className="grid grid-cols-2 gap-[4px]">
           {Array.from({ length: 6 }).map((_, i) => (
-            <span key={i} className="h-[4px] w-[4px] rounded-full bg-current" />
+            <span key={i} className="h-[3px] w-[3px] rounded-full bg-current" />
           ))}
         </span>
       </button>
@@ -63,10 +63,10 @@ export default function FloatingCctvButton() {
       <Link
         to="/cctv-monitoring"
         aria-label="Open Live Camera Feed"
-        className="mb-[20px] mt-[20px] flex w-full items-center justify-center transition-opacity hover:opacity-90"
+        className="mt-[6px] flex w-full items-center justify-center transition-opacity hover:opacity-90"
       >
-        <span className="flex h-[46px] w-[46px] items-center justify-center rounded-[13px] bg-navy">
-          <CctvIcon size={27} className="text-white" />
+        <span className="flex h-[40px] w-[40px] items-center justify-center rounded-[11px] bg-navy">
+          <CctvIcon size={22} className="text-white" />
         </span>
       </Link>
     </div>

@@ -61,7 +61,10 @@ export default function RealtimeParametersPanel({
 
               <div className="mt-[12px] grid grid-cols-3 gap-[10px]">
                 {data.params.map((p) => (
-                  <ParamTile key={p.key} param={p} />
+                  <ParamTile
+                    key={p.key}
+                    param={stream.key === 'influent' ? { ...p, tone: 'ok' } : p}
+                  />
                 ))}
               </div>
             </div>
