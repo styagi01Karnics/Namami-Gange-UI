@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import Avatar from '../ui/Avatar'
 import DataTable from '../ui/DataTable'
 import Select from '../ui/Select'
-import StatCardsRow from '../ui/StatCardsRow'
+import SoftStatCardsRow from '../ui/SoftStatCard'
 import StatusPill from '../ui/StatusPill'
 import TeamSectionHeader from './TeamSectionHeader'
 import { ACTION_TONE } from './teamTheme'
@@ -84,7 +84,7 @@ export default function AuditLogsTab({ onExportPdf }) {
     <div className="flex flex-col gap-[16px]">
       <TeamSectionHeader tab="Audit Logs" />
 
-      <StatCardsRow items={auditLogStats} columns={4} gap={14} />
+      <SoftStatCardsRow items={auditLogStats} columns={4} gap={14} />
 
       <DataTable
         columns={auditLogColumns}

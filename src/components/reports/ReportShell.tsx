@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Select from '../ui/Select'
-import DateRangeField from '../ui/DateRangeField'
 import SectionTabs from '../stp/SectionTabs'
 import { ExportMetaProvider } from '../export/exportMeta'
 import { REPORT_TABS } from '../../routes'
@@ -89,7 +88,6 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
         <div className="flex flex-col gap-[16px] pb-[22px]">
           <div className="flex items-center justify-end gap-[16px]">
             <Select options={stpOptions} value={stpId} onChange={setStpId} className="w-[33%]" align="right" />
-            <DateRangeField value={range} onChange={setRange} className="w-[28%]" />
           </div>
 
           <SectionTabs tabs={TAB_LABELS} active={active} onChange={openTab} />

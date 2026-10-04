@@ -1,11 +1,15 @@
-import ReportShell from '../../components/reports/ReportShell'
+import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportTable from '../../components/reports/ReportTable'
-import StatCardsRow from '../../components/ui/StatCardsRow'
+import SoftStatCardsRow from '../../components/ui/SoftStatCard'
 import StatusPill, { statusTone } from '../../components/ui/StatusPill'
+import TabSectionHeader from '../../components/stp/TabSectionHeader'
+import DateRangeField from '../../components/ui/DateRangeField'
 import { DownloadAction, StpLink } from '../../components/reports/cells'
 import { contractsReportColumns, contractsReportRows, contractsSummary } from '../../data/mockData'
 
-export default function ContractsReport() {
+function ContractsReportBody() {
+  const { range, setRange } = useReportFilters()
+
   const renderCell = (row: any, col: any, { exportRow }: { exportRow?: () => void } = {}) => {
     switch (col.key) {
       case 'id':
@@ -33,8 +37,14 @@ export default function ContractsReport() {
   }
 
   return (
-    <ReportShell>
-      <StatCardsRow items={contractsSummary} />
+    <>
+      <TabSectionHeader
+        tab="Contracts"
+        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
+      />
+
+      <SoftStatCardsRow items={contractsSummary} columns={4} gap={16} />
+
       <ReportTable
         columns={contractsReportColumns}
         rows={contractsReportRows}
@@ -48,6 +58,14 @@ export default function ContractsReport() {
           col.key === 'duration' ? `${row.startDate} - ${row.endDate}` : undefined
         }
       />
+    </>
+  )
+}
+
+export default function ContractsReport() {
+  return (
+    <ReportShell>
+      <ContractsReportBody />
     </ReportShell>
   )
 }

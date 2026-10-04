@@ -123,9 +123,13 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
 
         {isOffline && feed.image && <div className="absolute inset-0 bg-white/45" />}
 
-        <span className="pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex max-w-[calc(100%-5.5rem)] items-center gap-[6px] rounded-full bg-white/95 px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-ink shadow-card opacity-0 transition-opacity group-hover:opacity-100">
+        <span
+          className={`pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex max-w-[calc(100%-5.5rem)] items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 shadow-card ${
+            isOffline ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok'
+          }`}
+        >
           <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${STATUS_DOT[feed.status] ?? 'bg-danger'}`} />
-          <span className="truncate">{feed.status}</span>
+          <span className="truncate">{isOffline ? 'Non-Active' : 'Live'}</span>
         </span>
 
         {showStream && (
@@ -160,16 +164,15 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
       </div>
 
       <dl
-        className={`mt-[14px] divide-y divide-line ${
+        className={`mt-[14px] space-y-[8px] ${
           divider ? 'border-l border-line pl-[16px]' : 'pr-[16px]'
         }`}
       >
         {[
           ['Camera ID:', feed.id],
           ['Location:', feed.location],
-          ['Last seen:', feed.lastSeen],
         ].map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-[10px] py-[10px]">
+          <div key={label} className="flex items-center justify-between gap-[10px]">
             <dt className="text-[13px] leading-[18px] text-ink-soft">{label}</dt>
             <dd className="text-right text-[13px] font-semibold leading-[18px] text-ink">{value}</dd>
           </div>

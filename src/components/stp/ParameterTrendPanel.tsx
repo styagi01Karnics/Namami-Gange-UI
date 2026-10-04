@@ -31,7 +31,7 @@ function StreamTrends({ stream }) {
 
   return (
     <div className="rounded-[12px] border border-line bg-[#F7FAFF] p-[14px]">
-      <StreamHeader stream={stream}>
+      <StreamHeader stream={stream} variant="inline">
         <div className="flex shrink-0 items-center gap-[10px]">
           <LivePill />
           <RangeTabs value={range} onChange={setRange} />

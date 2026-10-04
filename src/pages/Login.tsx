@@ -54,14 +54,15 @@ function AuthField({ icon: Icon, type = 'text', value, onChange, placeholder, tr
 }
 
 const LOGIN_ROLES = [
-  { id: 'vendor', label: 'Vendor Login' },
+  { id: 'user', label: 'User Login' },
   { id: 'admin', label: 'Admin Login' },
+  { id: 'vendor', label: 'Vendor Login' },
 ]
 
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [loginRole, setLoginRole] = useState('admin')
+  const [loginRole, setLoginRole] = useState('user')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
@@ -128,7 +129,7 @@ export default function Login() {
           <div
             role="group"
             aria-label="Login type"
-            className="mt-3 grid grid-cols-2 gap-2 rounded-[12px] bg-[#DFEFFF] p-[5px] [@media(min-height:820px)]:mt-5 [@media(min-height:820px)]:gap-[10px] [@media(min-height:820px)]:p-[6px]"
+            className="mt-3 grid grid-cols-3 gap-2 rounded-[12px] bg-[#DFEFFF] p-[5px] [@media(min-height:820px)]:mt-5 [@media(min-height:820px)]:gap-[10px] [@media(min-height:820px)]:p-[6px]"
           >
             {LOGIN_ROLES.map((role) => {
               const selected = loginRole === role.id

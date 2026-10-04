@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import StatCardsRow from '../ui/StatCardsRow'
+import SoftStatCardsRow from '../ui/SoftStatCard'
 import ViolationsTable from './ViolationsTable'
 import { toPenaltyRangeFromLabel } from '../ui/DateRangeField'
 import { complianceSummary, violations as mockViolations } from '../../data/mockData'
@@ -117,7 +117,7 @@ export default function ComplianceTab({
 
   return (
     <div className="space-y-[16px]">
-      <StatCardsRow items={summary} columns={3} />
+      <SoftStatCardsRow items={summary} columns={3} gap={16} />
       <ViolationsTable
         key={plantCode || 'mock'}
         rows={rows}

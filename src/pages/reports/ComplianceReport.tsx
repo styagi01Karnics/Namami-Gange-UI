@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ComplianceTab from '../../components/compliance/ComplianceTab'
-import StatCardsRow from '../../components/ui/StatCardsRow'
+import SoftStatCardsRow from '../../components/ui/SoftStatCard'
 import ViolationsTable from '../../components/compliance/ViolationsTable'
-import { toPenaltyRangeFromLabel } from '../../components/ui/DateRangeField'
+import TabSectionHeader from '../../components/stp/TabSectionHeader'
+import DateRangeField, { toPenaltyRangeFromLabel } from '../../components/ui/DateRangeField'
 import { complianceSummary } from '../../data/mockData'
 import {
   fetchPenaltyOccurrences,
@@ -18,29 +19,33 @@ import {
 } from '../../api/plants'
 
 function ComplianceReportBody() {
-  const { stpId, plantCode, plantLabel, stpOptions, range } = useReportFilters()
-
-  // Individual STP → same component + APIs as STP Management → Compliance.
-  if (plantCode) {
-    return (
-      <ComplianceTab
-        key={`${plantCode}:${range}`}
-        plantCode={plantCode}
-        showDetails={false}
-        showStpColumn
-        exportLabel={plantLabel || plantCode}
-        dateRangeLabel={range}
-      />
-    )
-  }
+  const { stpId, plantCode, plantLabel, stpOptions, range, setRange } = useReportFilters()
 
   return (
-    <ComplianceReportAllStps
-      plantLabel={plantLabel ?? ALL_STP_FILTER_OPTION.label}
-      stpOptions={stpOptions}
-      stpId={stpId}
-      dateRangeLabel={range}
-    />
+    <>
+      <TabSectionHeader
+        tab="Compliance"
+        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
+      />
+
+      {plantCode ? (
+        <ComplianceTab
+          key={`${plantCode}:${range}`}
+          plantCode={plantCode}
+          showDetails={false}
+          showStpColumn
+          exportLabel={plantLabel || plantCode}
+          dateRangeLabel={range}
+        />
+      ) : (
+        <ComplianceReportAllStps
+          plantLabel={plantLabel ?? ALL_STP_FILTER_OPTION.label}
+          stpOptions={stpOptions}
+          stpId={stpId}
+          dateRangeLabel={range}
+        />
+      )}
+    </>
   )
 }
 
@@ -81,7 +86,6 @@ function ComplianceReportAllStps({
       const dashboardPlants = await fetchDashboardPlants()
       const plantNameByCode = toPlantNameByCode(dashboardPlants)
       const selectedRange = toPenaltyRangeFromLabel(dateRangeLabel)
-      // Always prefer calendar selection for /penalty/summary (00:00:00 → 23:59:59).
       const apiRange = selectedRange ?? undefined
 
       const results = await Promise.all(
@@ -92,7 +96,6 @@ function ComplianceReportAllStps({
               plantNameByCode,
               plantName: plantNameByCode[code] ?? plant.label,
             }),
-            // /api/penalty/summary?stpCode&from&to — from/to from calendar.
             fetchPenaltySummary(code, apiRange),
           ])
           return {
@@ -123,27 +126,26 @@ function ComplianceReportAllStps({
     }, 0)
 
     return complianceSummary.map((item) => {
-      const withNote = { ...item, note: 'Across all locations' }
-      if (item.key === 'violations') return { ...withNote, value: String(rows.length) }
+      if (item.key === 'violations') return { ...item, value: String(rows.length) }
       if (item.key === 'penalty') {
         return {
-          ...withNote,
+          ...item,
           value: `₹${totalPenalty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`,
         }
       }
       if (item.key === 'payable') {
         return {
-          ...withNote,
+          ...item,
           value: totalAssessedAmount == null ? '—' : formatPenaltyAmount(totalAssessedAmount),
         }
       }
-      return withNote
+      return item
     })
   }, [rows, totalAssessedAmount])
 
   return (
     <div className="space-y-[16px]">
-      <StatCardsRow items={summary} columns={3} />
+      <SoftStatCardsRow items={summary} columns={3} gap={16} />
       <ViolationsTable
         key="all-stps"
         rows={rows}

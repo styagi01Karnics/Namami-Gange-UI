@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import DateRangeField from '../components/ui/DateRangeField'
-import StatCardsRow from '../components/ui/StatCardsRow'
+import SoftStatCardsRow from '../components/ui/SoftStatCard'
 import AdminTicketDetailPanel from '../components/support/AdminTicketDetailPanel'
 import AdminTicketTable from '../components/support/AdminTicketTable'
 import {
@@ -45,7 +45,7 @@ export default function SupportTicketsAdmin() {
         <DateRangeField value={range} onChange={setRange} className="w-[280px]" />
       </div>
 
-      <StatCardsRow items={stats} columns={5} gap={14} size="comfortable" />
+      <SoftStatCardsRow items={stats} columns={5} gap={14} />
 
       <AdminTicketTable
         columns={adminTicketColumns}

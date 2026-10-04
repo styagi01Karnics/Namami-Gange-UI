@@ -1,41 +1,65 @@
-import TotalStpCard from '../components/cards/TotalStpCard'
-import OverallComplianceCard from '../components/cards/OverallComplianceCard'
-import ManpowerCard from '../components/cards/ManpowerCard'
-import FlowCard from '../components/cards/FlowCard'
-import TotalInventoryCard from '../components/cards/TotalInventoryCard'
-import InletOutletChart from '../components/cards/InletOutletChart'
+import { useEffect, useMemo, useState } from 'react'
+import GreetingCard from '../components/cards/GreetingCard'
+import StpCountCards from '../components/cards/StpCountCards'
+import StpPerformanceCard from '../components/cards/StpPerformanceCard'
+import StpCapacityCard from '../components/cards/StpCapacityCard'
 import CriticalStpCard from '../components/cards/CriticalStpCard'
-import Filters from '../layout/Filters'
-import { inletFlow, outletFlow } from '../data/mockData'
+import { stpSummary } from '../data/mockData'
+import { fetchDashboardPlants } from '../api/plants'
 
 export default function Dashboard() {
+  const [plantCount, setPlantCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPlants() {
+      const plants = await fetchDashboardPlants()
+      if (cancelled || plants.length === 0) return
+      setPlantCount(plants.length)
+    }
+
+    loadPlants()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const counts = useMemo(() => {
+    // /dashboard/plants returns the plant list only (no online/offline flags yet).
+    // When it loads, mirror prior behavior: count them as active; otherwise use mock totals.
+    if (plantCount != null) {
+      return { total: plantCount, active: plantCount, nonActive: 0 }
+    }
+    return {
+      total: stpSummary.total,
+      active: stpSummary.active,
+      nonActive: stpSummary.nonActive,
+    }
+  }, [plantCount])
+
   return (
-    <>
-      <Filters />
+    <div className="flex flex-col gap-[15px] pb-[22px]">
+      <GreetingCard />
 
-      <div className="flex items-stretch gap-[15px] pb-[22px]">
-        {/* main column */}
-        <div className="flex min-w-0 flex-1 flex-col gap-[15px]">
-          <div className="grid grid-cols-[1.4fr_1fr] gap-[15px]">
-            <TotalStpCard />
-            <OverallComplianceCard />
+      {/* Left: 3 count cards + bar chart | Right: capacity (same total height) */}
+      <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-stretch gap-[15px]">
+        <div className="flex min-h-0 flex-col gap-[12px]">
+          <StpCountCards total={counts.total} active={counts.active} nonActive={counts.nonActive} />
+          <div className="min-h-0 flex-1">
+            <StpPerformanceCard
+              activePercent={stpSummary.activePercent}
+              nonActivePercent={stpSummary.nonActivePercent}
+              activeDelta={stpSummary.activeDelta}
+              nonActiveDelta={stpSummary.nonActiveDelta}
+            />
           </div>
-
-          <div className="grid grid-cols-2 gap-[15px]">
-            <FlowCard data={inletFlow} variant="inlet" />
-            <FlowCard data={outletFlow} variant="outlet" />
-          </div>
-
-          <InletOutletChart />
         </div>
 
-        {/* right rail */}
-        <div className="flex w-[364px] shrink-0 flex-col gap-[15px]">
-          <ManpowerCard />
-          <TotalInventoryCard />
-          <CriticalStpCard />
-        </div>
+        <StpCapacityCard />
       </div>
-    </>
+
+      <CriticalStpCard />
+    </div>
   )
 }

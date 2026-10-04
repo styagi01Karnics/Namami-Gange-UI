@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ico } from '../components/ui/Ico'
 import Button from '../components/ui/Button'
 import DateRangeField from '../components/ui/DateRangeField'
-import StatCardsRow from '../components/ui/StatCardsRow'
+import SoftStatCardsRow from '../components/ui/SoftStatCard'
 import RaiseTicketModal from '../components/support/RaiseTicketModal'
 import SupportTicketTable from '../components/support/SupportTicketTable'
 import TicketDetailPanel from '../components/support/TicketDetailPanel'
@@ -71,7 +71,7 @@ export default function SupportTickets() {
         </Button>
       </div>
 
-      <StatCardsRow items={stats} columns={5} gap={14} size="comfortable" />
+      <SoftStatCardsRow items={stats} columns={5} gap={14} />
 
       <SupportTicketTable
         columns={supportTicketColumns}

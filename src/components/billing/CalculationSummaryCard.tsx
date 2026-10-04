@@ -43,7 +43,7 @@ export default function CalculationSummaryCard() {
           </div>
 
           <div className="flex min-w-0 flex-1 items-center gap-[10px]">
-            <CheckIcon size={22} className="shrink-0 text-ok" />
+            <CheckIcon size={42} className="shrink-0 text-ok" />
             <div>
               <p className="text-[12.5px] font-medium leading-4 text-ink-soft">Payment Status</p>
               <p className="mt-[6px] inline-flex items-center rounded-full bg-ok-soft px-[11px] py-[3px] text-[11.5px] font-semibold leading-4 text-ok">

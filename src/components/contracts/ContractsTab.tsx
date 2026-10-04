@@ -1,4 +1,4 @@
-import StatCardsRow from '../ui/StatCardsRow'
+import SoftStatCardsRow from '../ui/SoftStatCard'
 import ContractsTable from './ContractsTable'
 import { contractsSummary } from '../../data/mockData'
 
@@ -6,7 +6,7 @@ import { contractsSummary } from '../../data/mockData'
 export default function ContractsTab() {
   return (
     <div className="space-y-[16px]">
-      <StatCardsRow items={contractsSummary} />
+      <SoftStatCardsRow items={contractsSummary} columns={4} gap={16} />
       <ContractsTable />
     </div>
   )

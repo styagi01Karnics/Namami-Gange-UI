@@ -5,21 +5,23 @@ import SearchInput from '../ui/SearchInput'
 import Select from '../ui/Select'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { useTableExport } from '../export/useTableExport'
-import { chemicalInventory, chemicalStatusFilterMap } from '../../data/mockData'
+import { chemicalStatusFilterMap, equipmentInventory } from '../../data/mockData'
 
-const STATUS_OPTIONS = chemicalInventory.filters.map((f) => ({
-  id: f,
-  label: f === 'All' ? 'All Status' : f,
-}))
+const STATUS_OPTIONS = [
+  { id: 'All', label: 'All Status' },
+  { id: 'Adequate', label: 'Adequate' },
+  { id: 'Low Stock', label: 'Low Stock' },
+  { id: 'Out of Stock', label: 'Out of Stock' },
+]
 
-export default function ChemicalInventoryCard({ open = true, onToggle }) {
+export default function EquipmentInventoryCard({ open = true, onToggle }) {
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
   const { exportPdf, exportCsv, printNode } = useTableExport({
-    title: 'Chemical Inventory Status',
-    fileName: 'chemical-inventory',
-    columns: chemicalInventory.columns,
+    title: 'Equipment Status',
+    fileName: 'equipment-inventory',
+    columns: equipmentInventory.columns,
   })
 
   const toggleSort = (key) =>
@@ -29,7 +31,7 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
     const wanted = chemicalStatusFilterMap[filter]
     const q = query.trim().toLowerCase()
 
-    const list = chemicalInventory.rows.filter((r) => {
+    const list = equipmentInventory.rows.filter((r) => {
       const matchesStatus = !wanted || r.status === wanted
       const matchesQuery = !q || [r.name, r.category, r.status].some((f) => f.toLowerCase().includes(q))
       return matchesStatus && matchesQuery
@@ -45,19 +47,14 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
   return (
     <section className="flex h-0 min-h-full min-w-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
       <div className="flex items-center justify-between gap-[12px] p-[15px]">
-        <h3 className="text-[15px] font-semibold leading-5 text-ink">Chemical Status</h3>
+        <h3 className="text-[15px] font-semibold leading-5 text-ink">Equipment Status</h3>
       </div>
 
       {open && (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex flex-wrap items-center justify-end gap-[12px] px-[15px] pb-[15px]">
             <SearchInput value={query} onChange={setQuery} className="w-[220px]" />
-            <Select
-              options={STATUS_OPTIONS}
-              value={filter}
-              onChange={setFilter}
-              className="w-[140px]"
-            />
+            <Select options={STATUS_OPTIONS} value={filter} onChange={setFilter} className="w-[140px]" />
             <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
             <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
           </div>
@@ -66,14 +63,14 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
           <div className="scroll-thin min-h-0 flex-1 overflow-auto">
             <table className="w-full min-w-[560px] table-fixed border-collapse">
               <colgroup>
-                {chemicalInventory.columns.map((c) => (
+                {equipmentInventory.columns.map((c) => (
                   <col key={c.key} style={{ width: c.width }} />
                 ))}
               </colgroup>
 
               <thead>
                 <tr className="border-y border-line bg-canvas">
-                  {chemicalInventory.columns.map((c) => (
+                  {equipmentInventory.columns.map((c) => (
                     <th
                       key={c.key}
                       className="px-[16px] py-[15px] text-left text-[13px] font-semibold leading-4 text-ink-soft"
@@ -107,7 +104,6 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
                     <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.category}</td>
                     <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.currentQty}</td>
                     <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.requiredQty}</td>
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.daysLeft}</td>
                     <td className="px-[16px] py-[18px]">
                       <StatusPill tone={statusTone(r.status)}>{r.status}</StatusPill>
                     </td>
@@ -117,10 +113,10 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
                 {rows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={chemicalInventory.columns.length}
+                      colSpan={equipmentInventory.columns.length}
                       className="px-[16px] py-[44px] text-center text-[13px] text-ink-muted"
                     >
-                      No chemicals match this filter.
+                      No equipment match this filter.
                     </td>
                   </tr>
                 )}

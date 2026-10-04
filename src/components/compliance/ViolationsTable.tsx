@@ -4,7 +4,7 @@ import { ico } from '../ui/Ico'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
 import Select from '../ui/Select'
-import GroupedTabs from '../ui/GroupedTabs'
+import PillTabs from '../ui/PillTabs'
 import { useTableExport } from '../export/useTableExport'
 import ViolationDetailPanel from './ViolationDetailPanel'
 import {
@@ -206,7 +206,7 @@ export default function ViolationsTable({
   return (
     <div className="rounded-[12px] border border-line bg-white shadow-card">
       <div className="flex flex-wrap items-center gap-[12px] p-[15px]">
-        <GroupedTabs tabs={complianceTypes} active={type} onChange={setType} />
+        <PillTabs tabs={complianceTypes} active={type} onChange={setType} />
         <div className="ml-auto flex flex-wrap items-center justify-end gap-[12px]">
           <SearchInput value={query} onChange={setQuery} className="w-[268px]" />
           <Select

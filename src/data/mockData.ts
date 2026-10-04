@@ -45,15 +45,63 @@ export const stpOptions = [
    2. DASHBOARD
    ========================================================================== */
 
+export const dashboardGreeting = {
+  subtitle: "Check Today's STP performance and Operational Status",
+}
+
 export const stpSummary = {
-  total: 48,
+  total: 77,
+  active: 68,
+  nonActive: 12,
+  activePercent: 88,
+  nonActivePercent: 12,
+  activeDelta: '8%',
+  nonActiveDelta: '20%',
   breakdown: [
-    { key: 'operational', label: 'Online', value: 35, tone: 'ok' },
-    { key: 'nonOperational', label: 'Offline', value: 4, tone: 'slate' },
-    { key: 'maintenance', label: 'Delay', value: 6, tone: 'warn' },
-    { key: 'critical', label: 'Critical', value: 4, tone: 'danger' },
+    { key: 'operational', label: 'Online', value: 68, tone: 'ok' },
+    { key: 'nonOperational', label: 'Offline', value: 12, tone: 'slate' },
+    { key: 'maintenance', label: 'Delay', value: 0, tone: 'warn' },
+    { key: 'critical', label: 'Critical', value: 0, tone: 'danger' },
   ],
 }
+
+export const stpCapacity = {
+  total: 469,
+  unit: 'MLD',
+  used: 430.98,
+  notUsed: 38.02,
+}
+
+/** Rows shown in the Non-Active STP's modal (opened from the dashboard count). */
+export const nonActiveStpRows = [
+  {
+    id: 'sarai-14',
+    name: '14 MLD STP, Sarai',
+    href: '/stp-management',
+    lastActiveDate: '15/02/2026',
+    lastActiveTime: '10:45 AM',
+    reason: 'Power Supply Interrupted or Communication Lost',
+    vendor: 'ABC Infra Pvt. Ltd',
+  },
+  {
+    id: 'jagjeetpur-68',
+    name: '68 MLD STP, Sarai, Haridwar',
+    href: '/stp-management',
+    lastActiveDate: '15/02/2026',
+    lastActiveTime: '10:45 AM',
+    reason: 'Network Disconnected',
+    vendor: 'ABC Infra Pvt. Ltd',
+  },
+  {
+    id: 'lakkar-ghat-26',
+    name: '26 MLD STP Lakkar Ghat',
+    href: '/stp-management',
+    lastActiveDate: '15/02/2026',
+    lastActiveTime: '10:45 AM',
+    reason: 'Network Disconnected',
+    vendor: 'ABC Infra Pvt. Ltd',
+  },
+]
 
 export const compliance = {
   percent: 92.4,
@@ -131,20 +179,88 @@ export const flowTrendTicks = ['1 May', '2 May', '3 May', '4 May', '5 May', '6 M
 export const flowTrendRanges = ['Weekly', 'Daily', 'Monthly']
 
 export const criticalStps = {
-  tabs: ['Parameter Breach', 'Equipment Failure'],
+  tabs: ['Parameter Breach', 'Equipment Failure'] as const,
   'Parameter Breach': [
-    { name: 'pH', stps: 12, delta: '>13.3%' },
-    { name: 'BOD', stps: 10, delta: '>23.3%' },
-    { name: 'COD', stps: 8, delta: '>16.0%' },
-    { name: 'TSS', stps: 12, delta: '>15.2%' },
-    { name: 'Ammonia', stps: 6, delta: '>9.4%' },
+    {
+      id: 'sarai-14',
+      name: '14 MLD STP, Sarai, Haridwar',
+      href: '/stp-management',
+      category: 'Parameter Breach',
+      breachLabel: '3 Parameter Breached',
+      parameters: [
+        { key: 'ph', label: 'pH', delta: '13.3%' },
+        { key: 'bod', label: 'BOD', delta: '13.3%' },
+        { key: 'cod', label: 'COD', delta: '13.3%' },
+      ],
+    },
+    {
+      id: 'lakkar-ghat-26',
+      name: '26 MLD STP, Lakkar Ghat, Rishikesh',
+      href: '/stp-management',
+      category: 'Parameter Breach',
+      breachLabel: '3 Parameter Breached',
+      parameters: [
+        { key: 'ph', label: 'pH', delta: '13.3%' },
+        { key: 'bod', label: 'BOD', delta: '13.3%' },
+        { key: 'cod', label: 'COD', delta: '13.3%' },
+      ],
+    },
+    {
+      id: 'jagjeetpur-68',
+      name: '68 MLD STP, Jagjeetpur, Haridwar',
+      href: '/stp-management',
+      category: 'Parameter Breach',
+      breachLabel: '2 Parameter Breached',
+      parameters: [
+        { key: 'bod', label: 'BOD', delta: '18.1%' },
+        { key: 'cod', label: 'COD', delta: '11.2%' },
+      ],
+    },
+    {
+      id: 'kargi-68',
+      name: '68 MLD STP, Kargi, Dehradun',
+      href: '/stp-management',
+      category: 'Parameter Breach',
+      breachLabel: '3 Parameter Breached',
+      parameters: [
+        { key: 'ph', label: 'pH', delta: '9.4%' },
+        { key: 'bod', label: 'BOD', delta: '15.2%' },
+        { key: 'tss', label: 'TSS', delta: '12.6%' },
+      ],
+    },
   ],
   'Equipment Failure': [
-    { name: 'Blower', stps: 9, delta: '>18.1%' },
-    { name: 'Aerator', stps: 7, delta: '>12.6%' },
-    { name: 'Pump', stps: 6, delta: '>11.2%' },
-    { name: 'Flow Meter', stps: 5, delta: '>8.7%' },
-    { name: 'Dosing Unit', stps: 3, delta: '>4.5%' },
+    {
+      id: 'mothorowala-20',
+      name: '20 MLD STP, Mothorowala, Dehradun',
+      href: '/stp-management',
+      category: 'Equipment Failure',
+      breachLabel: '2 Equipment Failed',
+      parameters: [
+        { key: 'blower', label: 'Blower', delta: '18.1%' },
+        { key: 'pump', label: 'Pump', delta: '11.2%' },
+      ],
+    },
+    {
+      id: 'kankhal-27',
+      name: '27 MLD STP, Kankhal, Haridwar',
+      href: '/stp-management',
+      category: 'Equipment Failure',
+      breachLabel: '3 Equipment Failed',
+      parameters: [
+        { key: 'aerator', label: 'Aerator', delta: '12.6%' },
+        { key: 'flow', label: 'Flow Meter', delta: '8.7%' },
+        { key: 'dosing', label: 'Dosing', delta: '4.5%' },
+      ],
+    },
+    {
+      id: 'bhagwanpur-5',
+      name: '5 MLD STP, Bhagwanpur, Haridwar',
+      href: '/stp-management',
+      category: 'Equipment Failure',
+      breachLabel: '1 Equipment Failed',
+      parameters: [{ key: 'blower', label: 'Blower', delta: '9.4%' }],
+    },
   ],
 }
 
@@ -322,8 +438,22 @@ export const stpDetails = {
  * and "Parameter Trend Analysis" panels.
  */
 export const stpStreams = [
-  { key: 'influent', title: 'Influent', subtitle: 'Incoming (Raw Water)', tone: 'brand', icon: 'in' },
-  { key: 'effluent', title: 'Effluent', subtitle: 'Treated (Outgoing Water)', tone: 'ok', icon: 'out' },
+  {
+    key: 'influent',
+    title: 'Influent',
+    subtitle: 'Sewer Water',
+    barTitle: 'Influent (Sewer Water)',
+    tone: 'brand',
+    icon: 'in',
+  },
+  {
+    key: 'effluent',
+    title: 'Effluent',
+    subtitle: 'Treated Water',
+    barTitle: 'Effluent (Treated Water)',
+    tone: 'ok',
+    icon: 'out',
+  },
 ]
 
 /** "Realtime Parameter Values" accordion — one flow headline + 6 tiles per stream. */
@@ -393,7 +523,6 @@ export const stpSectionTabs = [
   'Manpower',
   'Inventory',
   'CCTV',
-  'Remote Calibration',
   'Transaction Logs',
   'Contracts',
   'Compliance',
@@ -511,8 +640,8 @@ export const stpManpower = {
   // drives both the gauge segments and the legend
   breakdown: [
     { key: 'present', label: 'Present', value: 82, percent: '83.33%', color: '#2E9E5B' },
-    { key: 'absent', label: 'Absent', value: 8, percent: '10%', color: '#F5B417' },
-    { key: 'leave', label: 'On leave', value: 5, percent: '6.67%', color: '#E5484D' },
+    { key: 'absent', label: 'Absent', value: 8, percent: '10%', color: '#E5484D' },
+    { key: 'leave', label: 'On Leave', value: 8, percent: '10%', color: '#EE9B2C' },
   ],
 }
 
@@ -581,10 +710,10 @@ export const departmentManpower = [
    ========================================================================== */
 
 export const contractsSummary = [
-  { key: 'total', label: 'Total Contracts', value: '26', note: 'Across all locations', icon: 'file', tone: 'brand' },
-  { key: 'active', label: 'Active Contracts', value: '26', note: 'Across all locations', icon: 'check', tone: 'ok' },
-  { key: 'inactive', label: 'Inactive Contracts', value: '26', note: 'Across all locations', icon: 'cross', tone: 'danger' },
-  { key: 'value', label: 'Total Contract Value', value: '₹1,24,500', note: 'Across all locations', icon: 'money', tone: 'warn' },
+  { key: 'total', label: 'Total Contracts', value: '98', tone: 'brand' as const },
+  { key: 'active', label: 'Active Contracts', value: '82', tone: 'ok' as const },
+  { key: 'inactive', label: 'Non-Active Contracts', value: '8', tone: 'danger' as const },
+  { key: 'value', label: 'Total Contract Value', value: '₹1,24,500', tone: 'warn' as const },
 ]
 
 export const contractColumns = [
@@ -679,7 +808,7 @@ export const contracts = [
     id: 'CN-003',
     name: 'Sludge Handling Upgrade',
     vendor: 'Nirmal Infratech Pvt. Ltd.',
-    status: 'Inactive',
+    status: 'Non-Active',
     startDate: '12 Jan 2025',
     endDate: '11 Jan 2026',
     description: 'Upgrade of sludge handling infrastructure',
@@ -751,7 +880,7 @@ export const contracts = [
     id: 'CN-005',
     name: 'Chemical Supply — Annual',
     vendor: 'Bharat Chem Distributors',
-    status: 'Inactive',
+    status: 'Non-Active',
     startDate: '20 Feb 2025',
     endDate: '19 Feb 2026',
     description: 'Annual chemical supply for treatment operations',
@@ -825,9 +954,9 @@ export const contracts = [
    ========================================================================== */
 
 export const complianceSummary = [
-  { key: 'violations', label: 'Total Violations', value: '10', icon: 'triangleAlert', tone: 'brand' },
-  { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', icon: 'money', tone: 'warn' },
-  { key: 'payable', label: 'Total Amount to Pay', value: '26', icon: 'money', tone: 'danger' },
+  { key: 'violations', label: 'Total Violations', value: '10', tone: 'brand' as const },
+  { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', tone: 'warn' as const },
+  { key: 'payable', label: 'Total Amount to Pay', value: '₹45,000', tone: 'ok' as const },
 ]
 
 export const complianceTypes = ['Parameter Breach', 'Equipment Failure']
@@ -1219,17 +1348,47 @@ export const inventorySummary = {
   scopeLabel: 'Across all location',
   breakdown: [
     { key: 'adequate', label: 'Adequate', value: 82, percent: '83.33%', color: '#2E9E5B' },
-    { key: 'low', label: 'Low', value: 8, percent: '10%', color: '#F5B417' },
-    { key: 'out', label: 'Out of Stock', value: 5, percent: '6.67%', color: '#E5484D' },
+    { key: 'low', label: 'Low Stock', value: 8, percent: '10%', color: '#EE9B2C' },
+    { key: 'out', label: 'Out of Stock', value: 8, percent: '10%', color: '#E5484D' },
   ],
 }
 
 export const inventoryStats = [
   { key: 'value', label: 'Total Inventory Value', value: '₹7,000', note: 'Across all locations', icon: 'money', tone: 'warn' },
-  { key: 'required', label: 'Required inventory', value: '730 L', note: 'Across all locations', icon: 'boxOut', tone: 'brand' },
-  { key: 'consumption', label: 'Total Consumption', value: '1230 L', note: 'Across all locations', icon: 'boxes', tone: 'okQuiet' },
-  { key: 'daysLeft', label: 'Days of inventory left', value: '18', note: 'Across all locations', icon: 'timer', tone: 'dangerQuiet' },
+  { key: 'required', label: 'Required Chemical', value: '70L', note: 'Across all locations', icon: 'boxOut', tone: 'brand' },
+  { key: 'consumption', label: 'Total Consumption', value: '100L', note: 'Across all locations', icon: 'boxes', tone: 'okQuiet' },
+  { key: 'daysLeft', label: 'Days of Inventory Left', value: '18', note: 'Across all locations', icon: 'timer', tone: 'dangerQuiet' },
 ]
+
+export const equipmentSummary = {
+  label: 'Total Equipment',
+  total: 98,
+  breakdown: [
+    { key: 'adequate', label: 'Adequate', value: 82, percent: '83.33%', color: '#2E9E5B' },
+    { key: 'low', label: 'Low Stock', value: 8, percent: '10%', color: '#EE9B2C' },
+    { key: 'out', label: 'Out of Stock', value: 8, percent: '10%', color: '#E5484D' },
+  ],
+}
+
+export const equipmentInventory = {
+  filters: ['All Status', 'Adequate', 'Low Stock', 'Out of Stock'],
+  columns: [
+    { key: 'name', label: 'Equipment Name', width: '28%' },
+    { key: 'category', label: 'Category', width: '20%', sortable: true },
+    { key: 'currentQty', label: 'Current Qty', width: '16%' },
+    { key: 'requiredQty', label: 'Required Qty', width: '16%' },
+    { key: 'status', label: 'Status', width: '20%', sortable: true },
+  ],
+  rows: [
+    { name: 'Alum Dosing Pump', category: 'Coagulant', currentQty: '12', requiredQty: '10', status: 'Adequate' },
+    { name: 'Chlorinator Unit', category: 'Disinfectant', currentQty: '4', requiredQty: '6', status: 'Low Stock' },
+    { name: 'Polymer Mixer', category: 'Polymers', currentQty: '-', requiredQty: '2', status: 'Out of Stock' },
+    { name: 'pH Sensor Probe', category: 'pH Adjusters', currentQty: '18', requiredQty: '12', status: 'Adequate' },
+    { name: 'Spare Diffuser', category: 'Others', currentQty: '3', requiredQty: '8', status: 'Low Stock' },
+    { name: 'Sludge Pump Seal', category: 'Others', currentQty: '-', requiredQty: '4', status: 'Out of Stock' },
+    { name: 'Flow Meter Kit', category: 'Others', currentQty: '9', requiredQty: '6', status: 'Adequate' },
+  ],
+}
 
 export const chemicalInventory = {
   filters: ['All', 'Adequate', 'Low Stock', 'Out of Stock'],
@@ -1328,10 +1487,38 @@ export const complianceReportRows = [
 /* ---- Manpower report ---------------------------------------------------- */
 
 export const manpowerReportStats = [
-  { key: 'total', label: 'Total Manpower', value: '1,248 Employees', note: "Across all STP's", icon: 'user', tone: 'brand' },
-  { key: 'present', label: 'Avg. Present / Day', value: '1,086', note: '87% attendance', icon: 'userCheck', tone: 'okQuiet' },
-  { key: 'required', label: 'Avg. Required / Day', value: '1,154', note: "Across all STP's", icon: 'userClock', tone: 'dangerQuiet' },
-  { key: 'shortage', label: 'Manpower Shortage', value: '68', note: '5.9% below requirement', icon: 'userAlert', tone: 'warnQuiet' },
+  {
+    key: 'total',
+    label: 'Total Manpower',
+    value: '1,248',
+    note: "Across all STP's",
+    noteAsPill: false,
+    tone: 'brand' as const,
+  },
+  {
+    key: 'present',
+    label: 'Average Present / Day',
+    value: '1,086',
+    note: '87% attendance',
+    noteAsPill: true,
+    tone: 'ok' as const,
+  },
+  {
+    key: 'required',
+    label: 'Average Required / Day',
+    value: '1,154',
+    note: "Across all STP's",
+    noteAsPill: false,
+    tone: 'warn' as const,
+  },
+  {
+    key: 'shortage',
+    label: 'Manpower Shortage',
+    value: '68',
+    note: '5.9% below requirement',
+    noteAsPill: true,
+    tone: 'danger' as const,
+  },
 ]
 
 export const manpowerTrend = {
@@ -1383,18 +1570,40 @@ export const manpowerReportRows = [
 /* ---- CCTV report -------------------------------------------------------- */
 
 export const cctvReportStats = [
-  { key: 'total', label: 'Total Cameras', value: '576', note: 'Across all states', icon: 'camera', tone: 'brand' },
-  { key: 'operational', label: 'Avg. Operational Cameras', value: '542 / day', note: '94.1%', icon: 'cameraOn', tone: 'ok' },
-  { key: 'offline', label: 'Offline Camera', value: '47', note: 'Affected STP: 8 / 24', icon: 'cameraOff', tone: 'danger' },
-  { key: 'maintenance', label: 'Under maintenance', value: '10', note: "Across all affected STP's", icon: 'maintenance', tone: 'warn' },
+  {
+    key: 'total',
+    label: 'Total Cameras',
+    value: '576',
+    note: 'Affected STP: 8 / 24',
+    noteAsPill: true,
+    tone: 'brand' as const,
+  },
+  {
+    key: 'operational',
+    label: 'Avg. Operational Cameras',
+    value: '542 / day',
+    note: '94.1%',
+    noteAsPill: true,
+    tone: 'ok' as const,
+  },
+  {
+    key: 'offline',
+    label: 'Non-Active Camera',
+    value: '47',
+    note: 'Affected STP: 8 / 24',
+    noteAsPill: true,
+    tone: 'danger' as const,
+  },
 ]
 
 export const cctvReportColumns = [
-  { key: 'stp', label: 'STP', width: '28%', sortable: true },
-  { key: 'cameraId', label: 'Camera ID', width: '14%' },
-  { key: 'status', label: 'Status', width: '16%' },
-  { key: 'availability', label: 'Recording Availability', width: '22%' },
-  { key: 'storage', label: 'Storage Status', width: '20%' },
+  { key: 'stp', label: 'STP', width: '22%', sortable: true },
+  { key: 'cameraId', label: 'Camera ID', width: '12%' },
+  { key: 'availability', label: 'Recording Availability', width: '16%' },
+  { key: 'interruptions', label: 'Interruptions', width: '12%' },
+  { key: 'downtime', label: 'Total Downtime', width: '14%' },
+  { key: 'timestamp', label: 'Timestamp', width: '14%' },
+  { key: 'storage', label: 'Storage Status', width: '10%' },
 ]
 
 export const cctvReportRows = [
@@ -1788,18 +1997,13 @@ export const supportTicketRows = [
 /** Summary cards above the table — counted off the rows so they stay in step. */
 export const buildSupportTicketStats = (rows) => {
   const count = (status) => rows.filter((r) => r.status === status).length
-  const share = (n) => (rows.length === 0 ? '0%' : `${((n / rows.length) * 100).toFixed(1)}%`)
-  const open = count('Open')
-  const progress = count('In Progress')
-  const closed = count('Closed')
-  const action = count('Action Required')
 
   return [
-    { key: 'total', label: 'Total Tickets', value: rows.length, note: 'Across all location', icon: 'ticket', tone: 'brand' },
-    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticket', tone: 'dangerQuiet' },
-    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'ticket', tone: 'warnQuiet' },
-    { key: 'closed', label: 'Closed', value: closed, note: share(closed), icon: 'ticket', tone: 'okQuiet' },
-    { key: 'action', label: 'Action Required', value: action, note: 'Out of In progress', icon: 'clock', tone: 'warnQuiet' },
+    { key: 'total', label: 'Total Tickets', value: rows.length, tone: 'brand' as const },
+    { key: 'open', label: 'Open Tickets', value: count('Open'), tone: 'ok' as const },
+    { key: 'progress', label: 'In Progress', value: count('In Progress'), tone: 'warn' as const },
+    { key: 'closed', label: 'Closed Tickets', value: count('Closed'), tone: 'danger' as const },
+    { key: 'action', label: 'Action Required', value: count('Action Required'), tone: 'violet' as const },
   ]
 }
 
@@ -1845,17 +2049,13 @@ export const adminTicketRows = [
 /** Summary cards above the admin table — the notes carry each share of the total. */
 export const buildAdminTicketStats = (rows) => {
   const count = (status) => rows.filter((r) => r.status === status).length
-  const share = (n) => (rows.length === 0 ? '0%' : `${((n / rows.length) * 100).toFixed(1)}%`)
-  const open = count('Open')
-  const progress = count('In Progress')
-  const closed = count('Closed')
 
   return [
-    { key: 'total', label: 'Total Tickets', value: rows.length, note: "Across all STP's", icon: 'ticket', tone: 'brand' },
-    { key: 'open', label: 'Open Tickets', value: open, note: share(open), icon: 'ticket', tone: 'okQuiet' },
-    { key: 'progress', label: 'In Progress', value: progress, note: share(progress), icon: 'ticket', tone: 'warnQuiet' },
-    { key: 'closed', label: 'Closed Tickets', value: closed, note: share(closed), icon: 'ticket', tone: 'dangerQuiet' },
-    { key: 'action', label: 'Action Required', value: count('Pending'), note: 'Out of In progress', icon: 'clock', tone: 'violetQuiet' },
+    { key: 'total', label: 'Total Tickets', value: rows.length, tone: 'brand' as const },
+    { key: 'open', label: 'Open Tickets', value: count('Open'), tone: 'ok' as const },
+    { key: 'progress', label: 'In Progress', value: count('In Progress'), tone: 'warn' as const },
+    { key: 'closed', label: 'Closed Tickets', value: count('Closed'), tone: 'danger' as const },
+    { key: 'action', label: 'Action Required', value: count('Pending'), tone: 'violet' as const },
   ]
 }
 
@@ -2029,10 +2229,10 @@ export const buildTeamUserStats = (rows, roleCount) => {
   const inactive = count('Inactive')
 
   return [
-    { key: 'total', label: 'Total Users', value: rows.length, note: "Across all STP's", icon: 'peopleTeam', tone: 'brand' },
-    { key: 'active', label: 'Active Users', value: active, note: share(active), icon: 'peopleTeam', tone: 'okQuiet' },
-    { key: 'inactive', label: 'Inactive Users', value: inactive, note: share(inactive), icon: 'peopleTeam', tone: 'dangerQuiet' },
-    { key: 'roles', label: 'Roles', value: roleCount, note: 'System Roles', icon: 'personRibbon', tone: 'violetQuiet' },
+    { key: 'total', label: 'Total Users', value: rows.length, note: "Across all STP's", tone: 'brand' as const },
+    { key: 'active', label: 'Active Users', value: active, note: share(active), tone: 'ok' as const },
+    { key: 'inactive', label: 'Non-Active Users', value: inactive, note: share(inactive), tone: 'danger' as const },
+    { key: 'roles', label: 'Roles', value: roleCount, note: 'System Roles', tone: 'violet' as const },
   ]
 }
 
@@ -2292,10 +2492,10 @@ export const auditLogs = [
 ]
 
 export const auditLogStats = [
-  { key: 'activities', label: 'Total Activities', value: '1,248', note: '12% vs last month', icon: 'history', tone: 'brand' },
-  { key: 'users', label: 'User Changes', value: '420', note: '8% vs last month', icon: 'peopleTeam', tone: 'okQuiet' },
-  { key: 'roles', label: 'Role Changes', value: '186', note: '5% vs last month', icon: 'personRibbon', tone: 'violetQuiet' },
-  { key: 'status', label: 'Status Changes', value: '8', note: '18 % vs last month', icon: 'settings', tone: 'warnQuiet' },
+  { key: 'activities', label: 'Total Activities', value: '1,248', note: '12% vs last month', tone: 'brand' as const },
+  { key: 'users', label: 'User Changes', value: '420', note: '8% vs last month', tone: 'ok' as const },
+  { key: 'roles', label: 'Roles', value: '3', note: '5% vs last month', tone: 'violet' as const },
+  { key: 'status', label: 'Status Changes', value: '8', note: '18% vs last month', tone: 'warn' as const },
 ]
 
 export type CurrentUser = typeof currentUser

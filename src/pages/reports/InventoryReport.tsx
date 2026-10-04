@@ -1,32 +1,44 @@
 import { useMemo, useState } from 'react'
-import { ico } from '../../components/ui/Ico'
-import ReportShell from '../../components/reports/ReportShell'
+import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportTable from '../../components/reports/ReportTable'
-import StatCardsRow from '../../components/ui/StatCardsRow'
-import GaugeSummaryCard from '../../components/ui/GaugeSummaryCard'
-import Select from '../../components/ui/Select'
+import MetricRingCard from '../../components/ui/MetricRingCard'
+import SoftStatCardsRow, { type SoftStatItem } from '../../components/ui/SoftStatCard'
+import PillTabs from '../../components/ui/PillTabs'
+import TabSectionHeader from '../../components/stp/TabSectionHeader'
+import DateRangeField from '../../components/ui/DateRangeField'
 import { StpLink, Tone } from '../../components/reports/cells'
 import {
+  equipmentSummary,
   inventoryReportColumns,
-  inventoryReportFilterOptions,
   inventoryReportRows,
   inventoryStats,
   inventorySummary,
 } from '../../data/mockData'
 
 const TONED = { closing: 'green', lowStock: 'amber', outOfStock: 'red' }
-const BoxIcon = ico('fluent:box-24-filled')
+const SUB_TABS = ['Chemical', 'Equipment'] as const
 
-export default function InventoryReport() {
-  const [category, setCategory] = useState(inventoryReportFilterOptions[0])
+function inventoryBottomCards(): SoftStatItem[] {
+  return inventoryStats
+    .filter((s) => s.key !== 'value')
+    .map((s) => ({
+      key: s.key,
+      label: s.label,
+      value: s.value,
+      tone: s.key === 'consumption' ? ('ok' as const) : s.key === 'daysLeft' ? ('danger' as const) : ('brand' as const),
+    }))
+}
 
-  const rows = useMemo(
-    () =>
-      category === 'All Inventory'
-        ? inventoryReportRows
-        : inventoryReportRows.filter((r) => r.category === category),
-    [category],
-  )
+function InventoryReportBody() {
+  const { range, setRange } = useReportFilters()
+  const [subTab, setSubTab] = useState<(typeof SUB_TABS)[number]>('Chemical')
+  const isChemical = subTab === 'Chemical'
+  const summary = isChemical ? inventorySummary : equipmentSummary
+  const adequate = summary.breakdown.find((b) => b.key === 'adequate')
+  const low = summary.breakdown.find((b) => b.key === 'low')
+  const out = summary.breakdown.find((b) => b.key === 'out')
+
+  const rows = useMemo(() => inventoryReportRows, [])
 
   const renderCell = (row, col) => {
     if (col.key === 'stp') return <StpLink>{row.stp}</StpLink>
@@ -35,39 +47,63 @@ export default function InventoryReport() {
   }
 
   return (
-    <ReportShell>
-      <div className="grid grid-cols-[0.95fr_1fr] items-stretch gap-[14px] [&>*]:min-w-0">
-        <GaugeSummaryCard
-          className="h-full"
-          icon={BoxIcon}
-          label={inventorySummary.label}
-          total={inventorySummary.total}
-          scopeLabel={inventorySummary.scopeLabel}
-          breakdown={inventorySummary.breakdown}
-          gaugeSize={172}
+    <>
+      <TabSectionHeader
+        tab="Inventory"
+        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
+      />
+
+      <PillTabs
+        tabs={[...SUB_TABS]}
+        active={subTab}
+        onChange={(t) => setSubTab(t as (typeof SUB_TABS)[number])}
+      />
+
+      <div className="grid grid-cols-4 gap-[16px]">
+        <MetricRingCard label={summary.label} value={summary.total} tone="brand" />
+        <MetricRingCard
+          label="Adequate"
+          value={adequate?.value ?? 0}
+          percent={83.33}
+          percentLabel={adequate?.percent ?? '83.33%'}
+          tone="ok"
         />
-        <StatCardsRow className="h-full [&>*]:h-full" items={inventoryStats} columns={2} gap={14} />
+        <MetricRingCard
+          label="Low Stock"
+          value={low?.value ?? 0}
+          percent={10}
+          percentLabel={low?.percent ?? '10%'}
+          tone="orange"
+        />
+        <MetricRingCard
+          label="Out of Stock"
+          value={out?.value ?? 0}
+          percent={10}
+          percentLabel={out?.percent ?? '10%'}
+          tone="danger"
+        />
       </div>
+
+      {isChemical && <SoftStatCardsRow items={inventoryBottomCards()} columns={3} gap={16} />}
 
       <ReportTable
         columns={inventoryReportColumns}
         rows={rows}
         searchKeys={['stp', 'category']}
-        toolbar={
-          <Select
-            options={inventoryReportFilterOptions}
-            value={category}
-            onChange={setCategory}
-            className="w-[210px]"
-            buttonClassName="h-[34px]"
-          />
-        }
         renderCell={renderCell}
         minWidth={1020}
-        emptyMessage={`No ${category} records for this period.`}
+        emptyMessage={`No ${subTab.toLowerCase()} records for this period.`}
         exportTitle="Inventory Report"
         exportFileName="inventory-report"
       />
+    </>
+  )
+}
+
+export default function InventoryReport() {
+  return (
+    <ReportShell>
+      <InventoryReportBody />
     </ReportShell>
   )
 }

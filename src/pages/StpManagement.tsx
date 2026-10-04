@@ -8,7 +8,6 @@ import StpHeaderCard from '../components/stp/StpHeaderCard'
 import AccordionCard from '../components/stp/AccordionCard'
 import LivePill from '../components/stp/LivePill'
 import RealtimeParametersPanel from '../components/stp/RealtimeParametersPanel'
-import ParameterTrendPanel from '../components/stp/ParameterTrendPanel'
 import SectionTabs from '../components/stp/SectionTabs'
 import TabSectionHeader from '../components/stp/TabSectionHeader'
 import TabPlaceholder from '../components/stp/TabPlaceholder'
@@ -106,17 +105,13 @@ export default function StpManagement() {
 
       <StpHeaderCard stp={stp} plantCode={selectedPlant?.plantCode} dateRangeLabel={range} />
 
-      <AccordionCard title="Realtime Parameter Values" badge={<LivePill />}>
+      <AccordionCard title="Realtime Parameter Values" badge={<LivePill />} defaultOpen>
         <RealtimeParametersPanel plantCode={selectedPlant?.plantCode} refreshTick={refreshTick} />
       </AccordionCard>
 
-      <AccordionCard title="Parameter Trend Analysis">
-        <ParameterTrendPanel />
-      </AccordionCard>
+      <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />
 
-      <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[6px]" />
-
-      <Card className="mt-[6px] p-[15px]">
+      <Card className="mt-[2px] border border-[#D7E6F5] p-[15px] shadow-card">
         <TabSectionHeader tab={tab} right={headerControls} />
 
         <div className="mt-[15px]">

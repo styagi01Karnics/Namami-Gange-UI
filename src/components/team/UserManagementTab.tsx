@@ -5,7 +5,7 @@ import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
 import DataTable from '../ui/DataTable'
 import Select from '../ui/Select'
-import StatCardsRow from '../ui/StatCardsRow'
+import SoftStatCardsRow from '../ui/SoftStatCard'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import TeamSectionHeader from './TeamSectionHeader'
 import AddUserModal from './AddUserModal'
@@ -194,7 +194,7 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         }
       />
 
-      <StatCardsRow items={stats} columns={4} gap={14} />
+      <SoftStatCardsRow items={stats} columns={4} gap={14} />
 
       <DataTable
         columns={teamUserColumns}

@@ -32,6 +32,7 @@ export const statusTone = (status: string): StatusTone =>
     Absent: 'danger',
     Offline: 'danger',
     Inactive: 'slate',
+    'Non-Active': 'slate',
     Open: 'danger',
     'In Progress': 'orange',
     'Action Required': 'warn',

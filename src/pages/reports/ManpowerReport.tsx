@@ -1,13 +1,16 @@
-import ReportShell from '../../components/reports/ReportShell'
+import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportTable from '../../components/reports/ReportTable'
-import StatCardsRow from '../../components/ui/StatCardsRow'
-import ManpowerTrendCard from '../../components/reports/ManpowerTrendCard'
+import SoftStatCardsRow from '../../components/ui/SoftStatCard'
+import TabSectionHeader from '../../components/stp/TabSectionHeader'
+import DateRangeField from '../../components/ui/DateRangeField'
 import { Sparkline, StpLink, Tone } from '../../components/reports/cells'
 import { manpowerReportColumns, manpowerReportRows, manpowerReportStats } from '../../data/mockData'
 
 const TONED = { present: 'green', absent: 'red', leave: 'amber' }
 
-export default function ManpowerReport() {
+function ManpowerReportBody() {
+  const { range, setRange } = useReportFilters()
+
   const renderCell = (row, col) => {
     if (col.key === 'stp') return <StpLink>{row.stp}</StpLink>
     if (TONED[col.key]) return <Tone tone={TONED[col.key]}>{row[col.key]}</Tone>
@@ -23,11 +26,13 @@ export default function ManpowerReport() {
   }
 
   return (
-    <ReportShell>
-      <div className="grid grid-cols-2 items-stretch gap-[16px] [&>*]:min-w-0">
-        <StatCardsRow items={manpowerReportStats} columns={2} />
-        <ManpowerTrendCard />
-      </div>
+    <>
+      <TabSectionHeader
+        tab="Manpower"
+        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
+      />
+
+      <SoftStatCardsRow items={manpowerReportStats} columns={4} gap={16} />
 
       <ReportTable
         columns={manpowerReportColumns}
@@ -39,6 +44,14 @@ export default function ManpowerReport() {
         exportTitle="Manpower Report"
         exportFileName="manpower-report"
       />
+    </>
+  )
+}
+
+export default function ManpowerReport() {
+  return (
+    <ReportShell>
+      <ManpowerReportBody />
     </ReportShell>
   )
 }

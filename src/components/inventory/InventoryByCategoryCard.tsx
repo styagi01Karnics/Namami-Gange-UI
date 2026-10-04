@@ -2,12 +2,16 @@ import IconToggle from '../ui/IconToggle'
 import CategoryDonut from './CategoryDonut'
 import { inventoryByCategory } from '../../data/mockData'
 
-export default function InventoryByCategoryCard({ open, onToggle }) {
+export default function InventoryByCategoryCard({
+  open,
+  onToggle,
+  title = 'Inventory by Category',
+}) {
   return (
     <section className="flex min-w-0 flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-semibold leading-5 text-ink">Inventory by Category</h3>
-        <IconToggle open={open} onClick={onToggle} label="Toggle Inventory by Category" />
+        <h3 className="text-[15px] font-semibold leading-5 text-ink">{title}</h3>
+        <IconToggle open={open} onClick={onToggle} label={`Toggle ${title}`} />
       </div>
 
       {open && (

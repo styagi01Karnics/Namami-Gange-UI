@@ -19,42 +19,42 @@ import {
  */
 export const SECTION_THEME = {
   Manpower: {
-    color: '#2563EB',
+    color: '#1668E3',
     icon: ManpowerGlyph,
     blurb: 'Monitor staff strength, attendance, and availability across the STP.',
   },
   Inventory: {
-    color: '#0F766E',
+    color: '#1668E3',
     icon: InventoryGlyph,
     blurb: 'Monitor and manage STP inventory, stock levels, and equipment availability',
   },
   CCTV: {
-    color: '#7C3AED',
+    color: '#1668E3',
     icon: CameraGlyph,
     blurb: 'Monitor CCTV cameras across STPs and track their current operational status.',
   },
   'Remote Calibration': {
-    color: '#EA580C',
+    color: '#1668E3',
     icon: OperatorGlyph,
     blurb: 'Monitor and manage remote calibration activities to ensure accurate STP measurements.',
   },
   'Transaction Logs': {
-    color: '#4F46E5',
+    color: '#1668E3',
     icon: HistoryGlyph,
     blurb: 'Track and review system activities, data updates, and transaction records across STPs',
   },
   Contracts: {
-    color: '#B45309',
+    color: '#1668E3',
     icon: DocumentGlyph,
     blurb: 'Monitor and manage STP contracts, timelines, and contractual obligations.',
   },
   Compliance: {
-    color: '#DC2626',
+    color: '#1668E3',
     icon: WarningGlyph,
     blurb: 'Monitor STP compliance, regulatory requirements, and operational adherence',
   },
   Billing: {
-    color: '#15803D',
+    color: '#1668E3',
     icon: BillingGlyph,
     blurb: 'Track STP billing, payment requests, penalties, and settlement status',
   },

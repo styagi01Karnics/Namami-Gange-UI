@@ -1,7 +1,6 @@
 import BuildingIcon from './components/ui/BuildingIcon'
 import CctvIcon from './components/ui/CctvIcon'
 import DashboardIcon from './components/ui/DashboardIcon'
-import LiveDelayIcon from './components/ui/LiveDelayIcon'
 import ReportsIcon from './components/ui/ReportsIcon'
 import SupportIcon from './components/ui/SupportIcon'
 import TeamIcon from './components/ui/TeamIcon'
@@ -58,10 +57,10 @@ export const REPORT_TABS: ReportTab[] = [
 ]
 
 export const REPORT_ITEMS: MenuItem[] = [
-  // Live Status is hidden until that section is ready.
-  // Uncomment to bring it back — the route and page still exist.
+  // Live Status / Live Delay Offline are hidden until those sections are ready.
+  // Uncomment to bring them back — the routes and pages still exist.
   // { id: 'live', label: 'Live Status', icon: Activity, path: '/live-status' },
-  { id: 'live-delay', label: 'Live Delay Offline', icon: LiveDelayIcon, path: '/live-delay-offline' },
+  // { id: 'live-delay', label: 'Live Delay Offline', icon: LiveDelayIcon, path: '/live-delay-offline' },
   // No sidebar dropdown: the reports are tabs inside the Data Reports page, so
   // the entry lands on the first tab and stays lit for every /reports path.
   {
