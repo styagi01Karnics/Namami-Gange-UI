@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import MetricRingCard from '../ui/MetricRingCard'
-import SoftStatCardsRow, { type SoftStatItem } from '../ui/SoftStatCard'
-import PillTabs from '../ui/PillTabs'
+import { SoftStatCard, type SoftStatItem } from '../ui/SoftStatCard'
 import ChemicalInventoryCard from './ChemicalInventoryCard'
 import EquipmentInventoryCard from './EquipmentInventoryCard'
 import InventoryByCategoryCard from './InventoryByCategoryCard'
+import InventorySubTabs, { type InventorySubTab } from './InventorySubTabs'
 import { equipmentSummary, inventoryStats, inventorySummary } from '../../data/mockData'
-
-const SUB_TABS = ['Chemical', 'Equipments'] as const
 
 function bottomCards(): SoftStatItem[] {
   return inventoryStats
@@ -22,7 +20,7 @@ function bottomCards(): SoftStatItem[] {
 
 /** Shared by the Inventory page and the Inventory tab in STP Management. */
 export default function InventoryTab() {
-  const [subTab, setSubTab] = useState<(typeof SUB_TABS)[number]>('Chemical')
+  const [subTab, setSubTab] = useState<InventorySubTab>('Chemical')
   const [detailsOpen, setDetailsOpen] = useState(true)
   const toggleDetails = () => setDetailsOpen((v) => !v)
 
@@ -34,7 +32,7 @@ export default function InventoryTab() {
 
   return (
     <div className="space-y-[14px]">
-      <PillTabs tabs={[...SUB_TABS]} active={subTab} onChange={(t) => setSubTab(t as (typeof SUB_TABS)[number])} />
+      <InventorySubTabs active={subTab} onChange={setSubTab} />
 
       <div className="grid grid-cols-4 gap-[16px]">
         <MetricRingCard label={summary.label} value={summary.total} tone="brand" />
@@ -61,7 +59,19 @@ export default function InventoryTab() {
         />
       </div>
 
-      {isChemical && <SoftStatCardsRow items={bottomCards()} columns={3} gap={16} />}
+      {/* Same 4-col grid as the row above — 3 cards + empty 4th slot (Figma). */}
+      {isChemical && (
+        <div className="grid grid-cols-4 gap-[16px]">
+          {bottomCards().map((item) => (
+            <SoftStatCard
+              key={item.key}
+              label={item.label}
+              value={item.value}
+              tone={item.tone}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-[2.39fr_1fr] items-stretch gap-[14px] [&>*]:min-w-0">
         {isChemical ? (

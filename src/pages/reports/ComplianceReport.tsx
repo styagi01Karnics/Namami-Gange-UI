@@ -145,7 +145,7 @@ function ComplianceReportAllStps({
 
   return (
     <div className="space-y-[16px]">
-      <SoftStatCardsRow items={summary} columns={3} gap={16} />
+      <SoftStatCardsRow items={summary} columns={3} gap={16} tall />
       <ViolationsTable
         key="all-stps"
         rows={rows}

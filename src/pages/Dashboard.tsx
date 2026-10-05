@@ -43,8 +43,9 @@ export default function Dashboard() {
       <GreetingCard />
 
       {/* Left: 3 count cards + bar chart | Right: capacity (same total height) */}
-      <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-stretch gap-[15px]">
-        <div className="flex min-h-0 flex-col gap-[12px]">
+      {/* Figma: left 624 / right 496 (~1.26:1), row height 402 */}
+      <div className="grid grid-cols-[minmax(0,624fr)_minmax(0,496fr)] items-stretch gap-[16px]">
+        <div className="flex min-h-0 flex-col gap-[16px]">
           <StpCountCards total={counts.total} active={counts.active} nonActive={counts.nonActive} />
           <div className="min-h-0 flex-1">
             <StpPerformanceCard
@@ -56,7 +57,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <StpCapacityCard />
+        <div className="min-h-[402px]">
+          <StpCapacityCard />
+        </div>
       </div>
 
       <CriticalStpCard />

@@ -45,9 +45,9 @@ export default function ContractsTable() {
   }, [query, sort])
 
   return (
-    <div className="rounded-[12px] border border-line bg-white shadow-card">
-      <div className="flex items-center justify-end gap-[14px] p-[15px]">
-        <SearchInput value={query} onChange={setQuery} className="w-[390px]" />
+    <div className="overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
+      <div className="flex items-center justify-end gap-[12px] p-[15px]">
+        <SearchInput value={query} onChange={setQuery} className="w-[350px]" />
         <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
         <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
       </div>
@@ -62,11 +62,11 @@ export default function ContractsTable() {
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-canvas">
+            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {contractColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[18px] py-[15px] text-[13px] font-semibold leading-4 text-ink-soft ${
+                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -74,14 +74,14 @@ export default function ContractsTable() {
                     <button
                       type="button"
                       onClick={() => toggleSort(c.key)}
-                      className="flex items-center gap-[5px] transition-colors hover:text-brand"
+                      className="flex items-center gap-[5px] transition-colors hover:text-[#0768D2]"
                     >
                       {c.label}
                       <ChevronDown
                         size={14}
                         className={`transition-transform ${
                           sort.key === c.key && sort.dir === 'desc' ? 'rotate-180' : ''
-                        } ${sort.key === c.key ? 'text-brand' : ''}`}
+                        } ${sort.key === c.key ? 'text-[#0768D2]' : ''}`}
                       />
                     </button>
                   ) : (
@@ -93,38 +93,60 @@ export default function ContractsTable() {
           </thead>
 
           <tbody>
-            {rows.map((c) => {
+            {rows.map((c, index) => {
               const isOpen = expanded === c.id
               return (
                 <Fragment key={c.id}>
-                  <tr className="border-b border-line">
-                    <td className="px-[18px] py-[16px] text-[13px] leading-[18px] text-ink">{c.sno}</td>
-                    <td className="px-[18px] py-[16px]">
-                      <button type="button" className="text-[13px] font-semibold leading-[18px] text-orange hover:underline">
+                  <tr
+                    className={`border border-[#D8EDFF] ${
+                      index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                    }`}
+                  >
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {c.sno}
+                    </td>
+                    <td className="px-[16px] py-[18px]">
+                      <button
+                        type="button"
+                        className="text-[14px] font-semibold leading-[22px] text-[#ED7831] hover:underline"
+                      >
                         {c.id}
                       </button>
                     </td>
-                    <td className="px-[18px] py-[16px] text-[13px] leading-[18px] text-ink">{c.name}</td>
-                    <td className="px-[18px] py-[16px] text-[13px] leading-[18px] text-ink">{c.vendor}</td>
-                    <td className="px-[18px] py-[16px]">
-                      <StatusPill tone={statusTone(c.status)}>{c.status}</StatusPill>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {c.name}
                     </td>
-                    <td className="px-[18px] py-[16px] text-[13px] leading-[20px] text-ink">
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {c.vendor}
+                    </td>
+                    <td className="px-[16px] py-[18px]">
+                      <StatusPill
+                        tone={statusTone(c.status)}
+                        className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+                      >
+                        {c.status}
+                      </StatusPill>
+                    </td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
                       {c.startDate} -<br />
                       {c.endDate}
                     </td>
-                    <td className="px-[18px] py-[16px] text-right">
+                    <td className="px-[16px] py-[18px] text-right">
                       <div className="inline-flex items-center gap-[8px]">
                         <button
                           type="button"
                           onClick={() => setExpanded(isOpen ? null : c.id)}
                           aria-label={`${isOpen ? 'Hide' : 'Show'} details for ${c.id}`}
                           aria-expanded={isOpen}
-                          className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
+                          className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
                         >
-                          <ChevronDown size={17} strokeWidth={2.1} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown
+                            size={20}
+                            strokeWidth={2}
+                            className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                          />
                         </button>
-                          <button
+                        <button
                           type="button"
                           onClick={() =>
                             exportPdf(
@@ -135,17 +157,17 @@ export default function ContractsTable() {
                             )
                           }
                           aria-label={`Download ${c.id}`}
-                          className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
+                          className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
                         >
-                          <DownloadIcon size={16} />
+                          <DownloadIcon size={20} />
                         </button>
                       </div>
                     </td>
                   </tr>
 
                   {isOpen && (
-                    <tr className="border-b border-line">
-                      <td colSpan={contractColumns.length} className="px-[18px] pb-[18px] pt-[16px]">
+                    <tr className="border border-[#D8EDFF]">
+                      <td colSpan={contractColumns.length} className="px-[16px] pb-[18px] pt-[16px]">
                         <ContractDetailPanel groups={c.detail} description={c.description} />
                       </td>
                     </tr>
@@ -156,7 +178,10 @@ export default function ContractsTable() {
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={contractColumns.length} className="px-[18px] py-[48px] text-center text-[13px] text-ink-muted">
+                <td
+                  colSpan={contractColumns.length}
+                  className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]"
+                >
                   No contracts match &ldquo;{query}&rdquo;.
                 </td>
               </tr>

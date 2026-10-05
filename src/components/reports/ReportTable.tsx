@@ -6,8 +6,7 @@ import { useTableExport } from '../export/useTableExport'
 
 /**
  * Config-driven table used by every Data Reports sub-page.
- * The page owns the data and cell rendering; this owns the chrome,
- * the search box and the sort state.
+ * Styled to match STP Management tables (header, borders, type).
  *
  *  columns    [{ key, label, width, sortable, align }]
  *  rows       already filtered by whatever page-level controls exist
@@ -39,7 +38,7 @@ export default function ReportTable({
   exportTitle,
   exportFileName,
   exportValue,
-  striped = false,
+  striped = true,
 }: any) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
@@ -70,29 +69,29 @@ export default function ReportTable({
 
   return (
     <div
-      className={`overflow-hidden rounded-[12px] border border-line bg-white ${
-        nested ? '' : 'shadow-card'
+      className={`overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80 ${
+        nested ? '' : ''
       }`}
     >
-      <div className="flex flex-wrap items-center gap-[14px] px-[16px] pb-[16px] pt-[16px]">
+      <div className="flex flex-wrap items-center gap-[14px] px-[15px] pb-[16px] pt-[16px]">
         {leading}
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-[14px]">
-        {showSearch && (
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder={searchPlaceholder}
-            className="w-[440px] max-w-full"
-          />
-        )}
-        {toolbar}
-        <ExportButton label="PDF" onClick={() => exportPdf(visible)} />
-        <ExportButton label="CSV" onClick={() => exportCsv(visible)} />
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-[12px]">
+          {showSearch && (
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder={searchPlaceholder}
+              className="w-[350px] max-w-full"
+            />
+          )}
+          {toolbar}
+          <ExportButton label="PDF" onClick={() => exportPdf(visible)} />
+          <ExportButton label="CSV" onClick={() => exportCsv(visible)} />
         </div>
       </div>
       {printNode}
 
-      {filters && <div className="px-[16px] pb-[16px]">{filters}</div>}
+      {filters && <div className="px-[15px] pb-[16px]">{filters}</div>}
 
       <div className="scroll-thin overflow-x-auto">
         <table className="w-full table-fixed border-collapse" style={{ minWidth }}>
@@ -103,11 +102,11 @@ export default function ReportTable({
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-canvas">
+            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[16px] text-[13px] font-semibold leading-4 text-ink-soft ${
+                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -115,14 +114,14 @@ export default function ReportTable({
                     <button
                       type="button"
                       onClick={() => toggleSort(c.key)}
-                      className="flex items-center gap-[5px] transition-colors hover:text-brand"
+                      className="flex items-center gap-[5px] transition-colors hover:text-[#0768D2]"
                     >
                       {c.label}
                       <ChevronDown
                         size={14}
                         className={`transition-transform ${
                           sort.key === c.key && sort.dir === 'desc' ? 'rotate-180' : ''
-                        } ${sort.key === c.key ? 'text-brand' : ''}`}
+                        } ${sort.key === c.key ? 'text-[#0768D2]' : ''}`}
                       />
                     </button>
                   ) : (
@@ -141,11 +140,15 @@ export default function ReportTable({
 
               return (
                 <Fragment key={key}>
-                  <tr className={`border-b border-line last:border-0 ${striped && i % 2 === 1 ? 'bg-[#F8F8F8E5]' : 'bg-white'}`}>
+                  <tr
+                    className={`border border-[#D8EDFF] ${
+                      striped && i % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                    }`}
+                  >
                     {columns.map((c) => (
                       <td
                         key={c.key}
-                        className={`px-[16px] py-[18px] align-middle text-[13px] leading-[18px] text-ink ${
+                        className={`px-[16px] py-[18px] align-middle text-[14px] font-medium leading-[22px] text-[#07121E] ${
                           c.align === 'right' ? 'text-right' : ''
                         }`}
                       >
@@ -155,7 +158,7 @@ export default function ReportTable({
                   </tr>
 
                   {isExpanded && (
-                    <tr className="border-b border-line last:border-0">
+                    <tr className="border border-[#D8EDFF]">
                       <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
                         {renderDetail(row)}
                       </td>
@@ -167,7 +170,10 @@ export default function ReportTable({
 
             {visible.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[13px] text-ink-muted">
+                <td
+                  colSpan={columns.length}
+                  className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]"
+                >
                   {emptyMessage}
                 </td>
               </tr>

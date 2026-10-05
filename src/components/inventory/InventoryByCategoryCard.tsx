@@ -8,9 +8,9 @@ export default function InventoryByCategoryCard({
   title = 'Inventory by Category',
 }) {
   return (
-    <section className="flex min-w-0 flex-col rounded-[12px] border border-line bg-white p-[15px] shadow-card">
+    <section className="flex min-w-0 flex-col rounded-[10px] border border-[#C7DDFB] bg-white/80 p-[16px]">
       <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-semibold leading-5 text-ink">{title}</h3>
+        <h3 className="text-[14px] font-semibold leading-[22px] text-[#07121E]">{title}</h3>
         <IconToggle open={open} onClick={onToggle} label={`Toggle ${title}`} />
       </div>
 
@@ -20,15 +20,15 @@ export default function InventoryByCategoryCard({
             <CategoryDonut data={inventoryByCategory} />
           </div>
 
-          <ul className="mt-[18px] space-y-[13px]">
+          <ul className="mt-[18px] space-y-[14px]">
             {inventoryByCategory.map((c) => (
               <li key={c.key} className="flex items-center">
-                <span className="mr-[9px] h-[9px] w-[9px] shrink-0 rounded-full" style={{ background: c.color }} />
-                <span className="text-[12.5px] font-medium leading-4 text-ink-soft">{c.label}</span>
-                <span className="ml-auto w-[54px] text-right text-[13px] font-semibold leading-4 text-ink">
+                <span className="mr-[5px] h-[10px] w-[10px] shrink-0 rounded-full" style={{ background: c.color }} />
+                <span className="text-[14px] font-semibold leading-normal text-[#565656]">{c.label}</span>
+                <span className="ml-auto w-[54px] text-right text-[14px] font-bold leading-normal text-[#07121E]">
                   {c.value}
                 </span>
-                <span className="ml-[10px] w-[46px] text-right text-[12.5px] font-medium leading-4 text-ink-soft">
+                <span className="ml-[10px] inline-flex h-[20px] min-w-[40px] items-center justify-center rounded-full bg-[#F1F7FF] px-[4px] text-[12px] font-semibold leading-[14px] text-[#0768D2] opacity-80">
                   {c.percent}
                 </span>
               </li>

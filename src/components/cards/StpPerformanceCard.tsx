@@ -21,7 +21,7 @@ function TrackBar({
 
   return (
     <div
-      className="relative h-[153px] w-[80px] overflow-hidden rounded-[12px]"
+      className="relative h-[172px] w-[80px] overflow-hidden rounded-[12px]"
       style={{ background: track }}
     >
       <div
@@ -50,9 +50,9 @@ function SideCopy({
 
   return (
     <div className={`flex flex-col justify-center ${alignClass}`}>
-      <p className="text-[13px] font-semibold leading-4 text-ink">{label}</p>
-      <p className={`mt-[6px] text-[28px] font-bold leading-8 ${toneClass}`}>{percent}%</p>
-      <span className="mt-[8px] inline-flex items-center gap-[4px] rounded-full bg-[#EAF3EC] px-[8px] py-[3px] text-[11.5px] font-semibold text-[#168E3F]">
+      <p className="text-[16px] font-semibold leading-[19px] text-[#07121E]">{label}</p>
+      <p className={`mt-[8px] text-[32px] font-semibold leading-[38px] ${toneClass}`}>{percent}%</p>
+      <span className="mt-[12px] inline-flex h-[20px] items-center gap-[4px] rounded-full bg-[#EAF3EC] px-[4px] text-[12px] font-semibold leading-[14px] text-[#168E3F]">
         <TrendingUp size={12} strokeWidth={2.4} />
         {delta} vs yesterday
       </span>
@@ -67,8 +67,7 @@ export default function StpPerformanceCard({
   nonActiveDelta,
 }: Props) {
   return (
-    <Card className="flex h-full items-center justify-center px-[16px] py-[16px]">
-      {/* One shared gap: text↔bar matches bar↔bar */}
+    <Card className="flex h-full items-center justify-center rounded-[16px] px-[16px] py-[16px]">
       <div className="flex items-center gap-[48px]">
         <SideCopy
           label="Active STP's"

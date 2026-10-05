@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import ExportButton from '../ui/ExportButton'
+import IconToggle from '../ui/IconToggle'
 import SearchInput from '../ui/SearchInput'
 import Select from '../ui/Select'
 import StatusPill, { statusTone } from '../ui/StatusPill'
@@ -43,9 +44,16 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
   }, [filter, query, sort])
 
   return (
-    <section className="flex h-0 min-h-full min-w-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
-      <div className="flex items-center justify-between gap-[12px] p-[15px]">
-        <h3 className="text-[15px] font-semibold leading-5 text-ink">Chemical Status</h3>
+    <section
+      className={`flex min-w-0 flex-col overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80 ${
+        open ? 'h-0 min-h-full' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between gap-[12px] px-[15px] py-[20px]">
+        <h3 className="text-[14px] font-semibold leading-[22px] text-[#07121E]">Chemical Status</h3>
+        {onToggle ? (
+          <IconToggle open={open} onClick={onToggle} label="Toggle Chemical Status" />
+        ) : null}
       </div>
 
       {open && (
@@ -72,24 +80,24 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
               </colgroup>
 
               <thead>
-                <tr className="border-y border-line bg-canvas">
+                <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
                   {chemicalInventory.columns.map((c) => (
                     <th
                       key={c.key}
-                      className="px-[16px] py-[15px] text-left text-[13px] font-semibold leading-4 text-ink-soft"
+                      className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
                     >
                       {c.sortable ? (
                         <button
                           type="button"
                           onClick={() => toggleSort(c.key)}
-                          className="flex items-center gap-[5px] transition-colors hover:text-brand"
+                          className="flex items-center gap-[5px] transition-colors hover:text-[#0768D2]"
                         >
                           {c.label}
                           <ChevronDown
                             size={14}
                             className={`transition-transform ${
                               sort.key === c.key && sort.dir === 'desc' ? 'rotate-180' : ''
-                            } ${sort.key === c.key ? 'text-brand' : ''}`}
+                            } ${sort.key === c.key ? 'text-[#0768D2]' : ''}`}
                           />
                         </button>
                       ) : (
@@ -101,15 +109,23 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
               </thead>
 
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.name} className="border-b border-line last:border-0">
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.name}</td>
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.category}</td>
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.currentQty}</td>
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.requiredQty}</td>
-                    <td className="px-[16px] py-[18px] text-[13px] leading-[18px] text-ink">{r.daysLeft}</td>
+                {rows.map((r, index) => (
+                  <tr
+                    key={r.name}
+                    className={`border border-[#D8EDFF] ${index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'}`}
+                  >
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.name}</td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.category}</td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.currentQty}</td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.requiredQty}</td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.daysLeft}</td>
                     <td className="px-[16px] py-[18px]">
-                      <StatusPill tone={statusTone(r.status)}>{r.status}</StatusPill>
+                      <StatusPill
+                        tone={statusTone(r.status)}
+                        className="h-[32px] min-w-[100px] justify-center px-[8px] text-[14px] leading-4"
+                      >
+                        {r.status}
+                      </StatusPill>
                     </td>
                   </tr>
                 ))}
@@ -118,7 +134,7 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
                   <tr>
                     <td
                       colSpan={chemicalInventory.columns.length}
-                      className="px-[16px] py-[44px] text-center text-[13px] text-ink-muted"
+                      className="px-[16px] py-[44px] text-center text-[14px] text-[#646464]"
                     >
                       No chemicals match this filter.
                     </td>
@@ -129,8 +145,6 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
           </div>
         </div>
       )}
-
-      {onToggle ? null : null}
     </section>
   )
 }

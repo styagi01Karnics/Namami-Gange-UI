@@ -3,30 +3,33 @@ import { ico } from '../ui/Ico'
 const DownloadIcon = ico('fluent:arrow-download-16-filled')
 
 export const TONE = {
-  ink: 'text-ink',
-  green: 'text-ok',
-  red: 'text-danger',
-  amber: 'text-[#C4890B]',
-  orange: 'text-orange',
-  blue: 'text-brand-link',
+  ink: 'text-[#07121E]',
+  green: 'text-[#168E3F]',
+  red: 'text-[#DC2626]',
+  amber: 'text-[#E89802]',
+  orange: 'text-[#ED7831]',
+  blue: 'text-[#0768D2]',
 }
 
 /** STP names are links back to the per-STP section in every report table. */
 export function StpLink({ children }) {
   return (
-    <button type="button" className="text-left text-[13px] font-medium leading-[18px] text-brand-link hover:underline">
+    <button
+      type="button"
+      className="text-left text-[14px] font-medium leading-[22px] text-[#0768D2] underline hover:opacity-90"
+    >
       {children}
     </button>
   )
 }
 
 export function Tone({ tone = 'ink', children }) {
-  return <span className={`text-[13px] font-medium leading-[18px] ${TONE[tone]}`}>{children}</span>
+  return <span className={`text-[14px] font-medium leading-[22px] ${TONE[tone]}`}>{children}</span>
 }
 
 export function TwoLineDate({ date, time }) {
   return (
-    <span className="text-[13px] leading-[19px] text-ink">
+    <span className="text-[14px] font-medium leading-[22px] text-[#07121E]">
       {date} ,<br />
       {time}
     </span>
@@ -39,9 +42,9 @@ export function DownloadAction({ label = 'Download row', onClick }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
+      className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
     >
-      <DownloadIcon size={16} />
+      <DownloadIcon size={20} />
     </button>
   )
 }

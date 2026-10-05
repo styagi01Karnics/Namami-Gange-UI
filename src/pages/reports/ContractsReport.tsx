@@ -14,17 +14,27 @@ function ContractsReportBody() {
     switch (col.key) {
       case 'id':
         return (
-          <button type="button" className="text-[13px] font-semibold leading-[18px] text-orange hover:underline">
+          <button
+            type="button"
+            className="text-[14px] font-semibold leading-[22px] text-[#ED7831] hover:underline"
+          >
             {row.id}
           </button>
         )
       case 'stp':
         return <StpLink>{row.stp}</StpLink>
       case 'status':
-        return <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>
+        return (
+          <StatusPill
+            tone={statusTone(row.status)}
+            className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+          >
+            {row.status}
+          </StatusPill>
+        )
       case 'duration':
         return (
-          <span className="text-[13px] leading-[20px] text-ink">
+          <span className="text-[14px] font-medium leading-[22px] text-[#07121E]">
             {row.startDate} -<br />
             {row.endDate}
           </span>
@@ -43,7 +53,7 @@ function ContractsReportBody() {
         right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
       />
 
-      <SoftStatCardsRow items={contractsSummary} columns={4} gap={16} />
+      <SoftStatCardsRow items={contractsSummary} columns={4} gap={16} tall />
 
       <ReportTable
         columns={contractsReportColumns}

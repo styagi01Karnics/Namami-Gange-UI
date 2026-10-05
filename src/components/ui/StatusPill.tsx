@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 
 const TONES = {
-  ok: 'bg-ok-soft text-ok',
-  warn: 'bg-warn-soft text-[#C4890B]',
-  danger: 'bg-danger-soft text-danger',
+  ok: 'bg-[#EAF3EC] text-[#168E3F]',
+  warn: 'bg-[#FFF3E5] text-[#ED7831]',
+  danger: 'bg-[#F5E7E7] text-[#DC2626]',
   slate: 'bg-slate2-soft text-slate2',
   brand: 'bg-brand-soft text-brand',
-  orange: 'bg-[#FDF0E1] text-orange',
+  orange: 'bg-[#FFF3E5] text-[#ED7831]',
   violet: 'bg-[#F0EBFD] text-[#7A5AF8]',
 } as const
 

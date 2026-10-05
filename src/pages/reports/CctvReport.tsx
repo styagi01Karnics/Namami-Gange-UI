@@ -157,7 +157,7 @@ function CctvReportBody() {
         right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
       />
 
-      <SoftStatCardsRow items={stats} columns={3} gap={16} />
+      <SoftStatCardsRow items={stats} columns={3} gap={16} tall />
 
       <ReportTable
         columns={cctvReportColumns}

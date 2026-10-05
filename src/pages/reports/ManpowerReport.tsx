@@ -18,7 +18,7 @@ function ManpowerReportBody() {
       return (
         <span className="flex items-center gap-[12px]">
           <Sparkline points={row.spark} />
-          <span className="text-[13px] leading-[18px] text-ink">{row.attendance}</span>
+          <span className="text-[14px] font-medium leading-[22px] text-[#07121E]">{row.attendance}</span>
         </span>
       )
     }
@@ -32,7 +32,7 @@ function ManpowerReportBody() {
         right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
       />
 
-      <SoftStatCardsRow items={manpowerReportStats} columns={4} gap={16} />
+      <SoftStatCardsRow items={manpowerReportStats} columns={4} gap={16} tall />
 
       <ReportTable
         columns={manpowerReportColumns}

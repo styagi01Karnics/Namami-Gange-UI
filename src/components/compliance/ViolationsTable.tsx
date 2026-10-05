@@ -204,11 +204,17 @@ export default function ViolationsTable({
   }, [query, type, parameter, sourceRows, source])
 
   return (
-    <div className="rounded-[12px] border border-line bg-white shadow-card">
-      <div className="flex flex-wrap items-center gap-[12px] p-[15px]">
-        <PillTabs tabs={complianceTypes} active={type} onChange={setType} />
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-[12px]">
-          <SearchInput value={query} onChange={setQuery} className="w-[268px]" />
+    <div className="overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
+      <div className="flex flex-col gap-[24px] p-[15px]">
+        <PillTabs
+          variant="segmented"
+          tabs={complianceTypes}
+          active={type}
+          onChange={setType}
+          className="w-[360px]"
+        />
+        <div className="flex items-center justify-end gap-[12px]">
+          <SearchInput value={query} onChange={setQuery} className="w-[350px]" />
           <Select
             options={parameterOptions}
             value={parameter}
@@ -232,11 +238,11 @@ export default function ViolationsTable({
           </colgroup>
 
           <thead className="sticky top-0 z-[1]">
-            <tr className="border-y border-line bg-canvas">
+            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[15px] text-[13px] font-semibold leading-4 text-ink-soft ${
+                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
                     'align' in c && c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -249,22 +255,26 @@ export default function ViolationsTable({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[13px] text-ink-muted">
+                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]">
                   Loading violations…
                 </td>
               </tr>
             )}
 
             {!loading &&
-              rows.map((v) => {
+              rows.map((v, index) => {
                 const rowKey = `${v.stpCode || v.stp || 'stp'}::${v.id}`
                 const isOpen = showDetails && expanded === rowKey
                 return (
                   <Fragment key={rowKey}>
-                    <tr className="border-b border-line">
+                    <tr
+                      className={`border border-[#D8EDFF] ${
+                        index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                      }`}
+                    >
                       {showStpColumn && (
                         <td
-                          className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink"
+                          className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]"
                           title={String(v.stp || '').length > 21 ? String(v.stp) : undefined}
                         >
                           {String(v.stp || '').length > 21
@@ -273,50 +283,60 @@ export default function ViolationsTable({
                         </td>
                       )}
                       <td
-                        className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink"
+                        className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]"
                         title={String(v.id).length > 10 ? String(v.id) : undefined}
                       >
                         {String(v.id).length > 10 ? `${String(v.id).slice(0, 10)}...` : v.id}
                       </td>
-                      <td className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink">{v.type}</td>
-                      <td className="px-[16px] py-[15px]">
-                        <span className="inline-flex rounded-[6px] bg-brand-soft px-[9px] py-[3px] text-[12px] font-semibold leading-4 text-brand">
+                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                        {v.type}
+                      </td>
+                      <td className="px-[16px] py-[18px]">
+                        <span className="inline-flex rounded-[6px] bg-[#EEF6FD] px-[9px] py-[3px] text-[12px] font-semibold leading-4 text-[#0768D2]">
                           {v.parameter}
                         </span>
                         {v.exceedance && v.exceedance !== '—' && (
-                          <span className="mt-[6px] flex w-fit items-center gap-[2px] rounded-[6px] bg-danger-soft px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-danger">
+                          <span className="mt-[6px] flex w-fit items-center gap-[2px] rounded-[6px] bg-[#FDECEC] px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-[#DC2626]">
                             <ArrowOutIcon size={12} />
                             {v.exceedance}
                           </span>
                         )}
                       </td>
-                      <td className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink">{v.location}</td>
-                      <td className="px-[16px] py-[15px]">
-                        <div className="text-[13px] font-medium leading-[18px] text-orange">{v.downtime}</div>
+                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                        {v.location}
+                      </td>
+                      <td className="px-[16px] py-[18px]">
+                        <div className="text-[14px] font-medium leading-[22px] text-[#ED7831]">{v.downtime}</div>
                         {showStpColumn && v.penalty?.total && v.penalty.total !== '—' && (
-                          <span className="mt-[6px] inline-flex rounded-[6px] bg-danger-soft px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-danger">
+                          <span className="mt-[6px] inline-flex rounded-[6px] bg-[#FDECEC] px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-[#DC2626]">
                             Penalty : {v.penalty.total}
                           </span>
                         )}
                       </td>
-                      <td className="px-[16px] py-[15px] text-[13px] leading-[18px] text-ink">{v.detectedOn}</td>
+                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                        {v.detectedOn}
+                      </td>
                       {showDetails && (
-                        <td className="px-[16px] py-[15px] text-right">
+                        <td className="px-[16px] py-[18px] text-right">
                           <button
                             type="button"
                             onClick={() => setExpanded(isOpen ? null : rowKey)}
                             aria-label={`${isOpen ? 'Hide' : 'Show'} details for ${v.id}`}
                             aria-expanded={isOpen}
-                            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-line bg-[#F5F7FA] text-[#5B6B7F] transition-colors hover:border-brand hover:text-brand"
+                            className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
                           >
-                            <ChevronDown size={17} strokeWidth={2.1} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown
+                              size={20}
+                              strokeWidth={2}
+                              className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                            />
                           </button>
                         </td>
                       )}
                     </tr>
 
                     {isOpen && (
-                      <tr className="border-b border-line">
+                      <tr className="border border-[#D8EDFF]">
                         <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
                           <ViolationDetailPanel violation={v} />
                         </td>
@@ -328,7 +348,7 @@ export default function ViolationsTable({
 
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[13px] text-ink-muted">
+                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]">
                   No violations{parameter !== ALL_PARAMETERS ? ` for ${parameter}` : ''} under &ldquo;{type}&rdquo;.
                 </td>
               </tr>

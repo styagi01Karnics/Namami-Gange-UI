@@ -13,20 +13,27 @@ export default function AdminTicketTable({ onOpen, ...props }: any) {
     if (col.key === 'createdOn') {
       return (
         <span className="block">
-          <span className="block text-[13px] leading-[18px] text-ink">{row.createdOn}</span>
-          <span className="mt-[3px] block text-[11.5px] leading-4 text-orange">{row.dueOn}</span>
+          <span className="block text-[14px] font-medium leading-[22px] text-[#07121E]">{row.createdOn}</span>
+          <span className="mt-[3px] block text-[12px] font-medium leading-4 text-[#ED7831]">{row.dueOn}</span>
         </span>
       )
     }
 
     if (col.key === 'priority' || col.key === 'status') {
-      return <StatusPill tone={statusTone(row[col.key])}>{row[col.key]}</StatusPill>
+      return (
+        <StatusPill
+          tone={statusTone(row[col.key])}
+          className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+        >
+          {row[col.key]}
+        </StatusPill>
+      )
     }
 
     if (col.key === 'sla') {
-      if (!row.sla) return <span className="text-ink-muted">—</span>
+      if (!row.sla) return <span className="text-[#646464]">—</span>
       return (
-        <span className="flex items-center gap-[6px] text-[12.5px] font-medium leading-4 text-danger">
+        <span className="flex items-center gap-[6px] text-[14px] font-medium leading-[22px] text-[#DC2626]">
           <TimerIcon size={15} />
           {row.sla}
         </span>
@@ -39,9 +46,9 @@ export default function AdminTicketTable({ onOpen, ...props }: any) {
           type="button"
           onClick={() => onOpen?.(row)}
           aria-label={`Open ${row.id}`}
-          className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
+          className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
         >
-          <EyeIcon size={15} />
+          <EyeIcon size={20} />
         </button>
       )
     }

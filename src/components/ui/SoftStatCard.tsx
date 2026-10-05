@@ -15,40 +15,40 @@ const TONES: Record<
   { value: string; border: string; background: string; note: string; pillBg: string; pillText: string }
 > = {
   brand: {
-    value: 'text-brand',
-    border: '#0768D233',
+    value: 'text-[#0768D2]',
+    border: 'rgba(7, 104, 210, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(7, 104, 210, 0.05) -0.16%, rgba(7, 104, 210, 0) 100%), #FFFFFF',
-    note: 'text-brand',
+      'linear-gradient(116.08deg, rgba(7, 104, 210, 0.05) 0.16%, rgba(7, 104, 210, 0) 100%), #FFFFFF',
+    note: 'text-[#0768D2]',
     pillBg: 'bg-[#EEF6FD]',
     pillText: 'text-[#0768D2]',
   },
   ok: {
-    value: 'text-ok',
-    border: '#168E3F33',
+    value: 'text-[#168E3F]',
+    border: 'rgba(22, 142, 63, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(22, 142, 63, 0.05) -0.16%, rgba(22, 142, 63, 0) 100%), #FFFFFF',
-    note: 'text-ok',
+      'linear-gradient(116.08deg, rgba(22, 142, 63, 0.05) 0.16%, rgba(22, 142, 63, 0) 100%), #FFFFFF',
+    note: 'text-[#168E3F]',
     pillBg: 'bg-[#E8F7EE]',
     pillText: 'text-[#168E3F]',
   },
   warn: {
-    value: 'text-orange',
-    border: '#EE9B2C33',
+    value: 'text-[#E89802]',
+    border: 'rgba(232, 152, 2, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(238, 155, 44, 0.08) -0.16%, rgba(238, 155, 44, 0) 100%), #FFFFFF',
-    note: 'text-orange',
+      'linear-gradient(116.08deg, rgba(232, 152, 2, 0.05) 0.16%, rgba(232, 152, 2, 0) 100%), #FFFFFF',
+    note: 'text-[#E89802]',
     pillBg: 'bg-[#FFF4E5]',
     pillText: 'text-[#D97706]',
   },
   danger: {
-    value: 'text-danger',
-    border: '#C50F1F33',
+    value: 'text-[#DC2626]',
+    border: 'rgba(197, 15, 31, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(220, 38, 38, 0.05) -0.16%, rgba(220, 38, 38, 0) 100%), #FFFFFF',
-    note: 'text-danger',
+      'linear-gradient(116.08deg, rgba(220, 38, 38, 0.05) 0.16%, rgba(220, 38, 38, 0) 100%), #FFFFFF',
+    note: 'text-[#DC2626]',
     pillBg: 'bg-[#FDECEC]',
-    pillText: 'text-[#C50F1F]',
+    pillText: 'text-[#DC2626]',
   },
   violet: {
     value: 'text-[#7A5AF8]',
@@ -67,22 +67,28 @@ export function SoftStatCard({
   tone = 'brand',
   note,
   noteAsPill = true,
+  /** Extra vertical padding — used by Data Reports KPI rows. */
+  tall = false,
 }: {
   label: string
   value: number | string
   tone?: SoftTone
   note?: string
   noteAsPill?: boolean
+  tall?: boolean
 }) {
   const styles = TONES[tone]
+  const roomy = tall || Boolean(note)
 
   return (
     <div
-      className="flex min-h-[128px] flex-col justify-center rounded-[12px] px-[20px] py-[20px]"
+      className={`flex min-w-0 flex-col justify-center rounded-[10px] px-[20px] ${
+        roomy ? 'min-h-[148px] py-[24px]' : 'h-[110px] py-[20px]'
+      }`}
       style={{ background: styles.background, border: `1px solid ${styles.border}` }}
     >
-      <p className="text-[13.5px] font-medium leading-5 text-ink">{label}</p>
-      <p className={`mt-[10px] text-[28px] font-bold leading-8 ${styles.value}`}>{value}</p>
+      <p className="text-[14px] font-semibold leading-normal text-[#07121E]">{label}</p>
+      <p className={`mt-[8px] text-[24px] font-bold leading-[30px] ${styles.value}`}>{value}</p>
       {note ? (
         noteAsPill ? (
           <span
@@ -103,11 +109,13 @@ export default function SoftStatCardsRow({
   columns = 5,
   gap = 14,
   className = '',
+  tall = false,
 }: {
   items: SoftStatItem[]
   columns?: number
   gap?: number
   className?: string
+  tall?: boolean
 }) {
   return (
     <div
@@ -122,6 +130,7 @@ export default function SoftStatCardsRow({
           tone={item.tone}
           note={item.note}
           noteAsPill={item.noteAsPill}
+          tall={tall}
         />
       ))}
     </div>

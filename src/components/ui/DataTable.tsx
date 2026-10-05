@@ -88,27 +88,27 @@ export default function DataTable<T extends DataRow>({
   }
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
+    <div className="overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
       <div
-        className={`flex items-center gap-[14px] px-[16px] pb-[16px] pt-[16px] ${
+        className={`flex items-center gap-[12px] px-[15px] pb-[16px] pt-[16px] ${
           toolbarFill ? '' : filters ? 'flex-wrap justify-between' : 'flex-wrap justify-end'
         }`}
       >
-        <div className={`flex items-center gap-[14px] ${toolbarFill ? 'min-w-0 flex-1' : 'flex-wrap'}`}>
+        <div className={`flex items-center gap-[12px] ${toolbarFill ? 'min-w-0 flex-1' : 'flex-wrap'}`}>
           <SearchInput
             value={query}
             onChange={onSearch}
             placeholder="Search"
             size={toolbarFill ? 'comfortable' : 'default'}
             className={
-              toolbarFill ? 'min-w-0 flex-1' : filters ? 'w-[260px] max-w-full' : 'w-[440px] max-w-full'
+              toolbarFill ? 'min-w-0 flex-1' : filters ? 'w-[260px] max-w-full' : 'w-[350px] max-w-full'
             }
           />
-          {toolbarFill ? <div className="flex min-w-0 flex-1 items-center gap-[14px]">{filters}</div> : filters}
+          {toolbarFill ? <div className="flex min-w-0 flex-1 items-center gap-[12px]">{filters}</div> : filters}
         </div>
 
         {(onExportPdf || onExportCsv) && (
-          <div className="flex shrink-0 items-center gap-[14px]">
+          <div className="flex shrink-0 items-center gap-[12px]">
             {onExportPdf && <ExportButton label="PDF" onClick={() => onExportPdf(filtered)} />}
             {onExportCsv && <ExportButton label="CSV" onClick={() => onExportCsv(filtered)} />}
           </div>
@@ -124,24 +124,24 @@ export default function DataTable<T extends DataRow>({
           </colgroup>
 
           <thead>
-            <tr className="border-y border-line bg-canvas">
+            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className="px-[16px] py-[16px] text-left text-[13px] font-semibold leading-4 text-ink-soft"
+                  className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
                 >
                   {c.sortable ? (
                     <button
                       type="button"
                       onClick={() => toggleSort(c.key)}
-                      className="flex items-center gap-[5px] transition-colors hover:text-brand"
+                      className="flex items-center gap-[5px] transition-colors hover:text-[#0768D2]"
                     >
                       {c.label}
                       <ChevronDown
                         size={14}
                         className={`transition-transform ${
                           sort.key === c.key && sort.dir === 'desc' ? 'rotate-180' : ''
-                        } ${sort.key === c.key ? 'text-brand' : ''}`}
+                        } ${sort.key === c.key ? 'text-[#0768D2]' : ''}`}
                       />
                     </button>
                   ) : (
@@ -153,18 +153,25 @@ export default function DataTable<T extends DataRow>({
           </thead>
 
           <tbody>
-            {slice.map((row) => (
+            {slice.map((row, index) => (
               <Fragment key={row.id}>
-                <tr className={expanded === row.id ? '' : 'border-b border-line last:border-0'}>
+                <tr
+                  className={`border border-[#D8EDFF] ${
+                    index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                  }`}
+                >
                   {columns.map((c) => (
-                    <td key={c.key} className="px-[16px] py-[18px] align-middle text-[13px] leading-[18px] text-ink">
+                    <td
+                      key={c.key}
+                      className="px-[16px] py-[18px] align-middle text-[14px] font-medium leading-[22px] text-[#07121E]"
+                    >
                       {cell(row, c)}
                     </td>
                   ))}
                 </tr>
 
                 {expanded === row.id && renderExpanded && (
-                  <tr className="border-b border-line last:border-0">
+                  <tr className="border border-[#D8EDFF]">
                     <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
                       {renderExpanded(row)}
                     </td>
@@ -175,7 +182,10 @@ export default function DataTable<T extends DataRow>({
 
             {slice.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[13px] text-ink-muted">
+                <td
+                  colSpan={columns.length}
+                  className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]"
+                >
                   {emptyMessage}
                 </td>
               </tr>

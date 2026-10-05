@@ -13,31 +13,31 @@ type CountItem = {
 }
 
 const VALUE = {
-  brand: 'text-brand',
-  ok: 'text-ok decoration-ok',
-  danger: 'text-danger decoration-danger',
+  brand: 'text-[#0375BC]',
+  ok: 'text-[#168E3F] decoration-[#168E3F]',
+  danger: 'text-[#DC2626] decoration-[#DC2626]',
 }
 
 function CountCard({ item }: { item: CountItem }) {
   const valueClass = [
-    'text-[28px] font-bold leading-8',
+    'text-[32px] font-bold leading-[40px]',
     VALUE[item.tone],
-    item.href || item.onClick ? 'underline decoration-2 underline-offset-[6px]' : '',
+    item.href || item.onClick ? 'underline decoration-solid underline-offset-[4px]' : '',
   ].join(' ')
 
   return (
-    <Card className="flex min-h-[96px] flex-col justify-center px-[18px] py-[16px]">
-      <p className="text-[13px] font-medium leading-4 text-ink-soft">{item.label}</p>
+    <Card className="flex h-[112px] flex-col justify-center rounded-[8px] px-[16px] py-[18px] shadow-[0px_0px_3px_1.5px_rgba(0,0,0,0.25)]">
+      <p className="text-[18px] font-semibold leading-6 text-[#07121E]">{item.label}</p>
       {item.onClick ? (
-        <button type="button" onClick={item.onClick} className={`mt-[10px] w-fit ${valueClass}`}>
+        <button type="button" onClick={item.onClick} className={`mt-[12px] w-fit ${valueClass}`}>
           {item.value}
         </button>
       ) : item.href ? (
-        <Link to={item.href} className={`mt-[10px] w-fit ${valueClass}`}>
+        <Link to={item.href} className={`mt-[12px] w-fit ${valueClass}`}>
           {item.value}
         </Link>
       ) : (
-        <p className={`mt-[10px] ${valueClass}`}>{item.value}</p>
+        <p className={`mt-[12px] ${valueClass}`}>{item.value}</p>
       )}
     </Card>
   )
@@ -68,7 +68,7 @@ export default function StpCountCards({
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-[12px]">
+      <div className="grid grid-cols-3 gap-[16px]">
         {items.map((item) => (
           <CountCard key={item.key} item={item} />
         ))}

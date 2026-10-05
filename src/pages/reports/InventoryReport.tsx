@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportTable from '../../components/reports/ReportTable'
 import MetricRingCard from '../../components/ui/MetricRingCard'
-import SoftStatCardsRow, { type SoftStatItem } from '../../components/ui/SoftStatCard'
-import PillTabs from '../../components/ui/PillTabs'
+import { SoftStatCard, type SoftStatItem } from '../../components/ui/SoftStatCard'
+import InventorySubTabs, { type InventorySubTab } from '../../components/inventory/InventorySubTabs'
 import TabSectionHeader from '../../components/stp/TabSectionHeader'
 import DateRangeField from '../../components/ui/DateRangeField'
 import { StpLink, Tone } from '../../components/reports/cells'
@@ -16,7 +16,6 @@ import {
 } from '../../data/mockData'
 
 const TONED = { closing: 'green', lowStock: 'amber', outOfStock: 'red' }
-const SUB_TABS = ['Chemical', 'Equipment'] as const
 
 function inventoryBottomCards(): SoftStatItem[] {
   return inventoryStats
@@ -31,7 +30,7 @@ function inventoryBottomCards(): SoftStatItem[] {
 
 function InventoryReportBody() {
   const { range, setRange } = useReportFilters()
-  const [subTab, setSubTab] = useState<(typeof SUB_TABS)[number]>('Chemical')
+  const [subTab, setSubTab] = useState<InventorySubTab>('Chemical')
   const isChemical = subTab === 'Chemical'
   const summary = isChemical ? inventorySummary : equipmentSummary
   const adequate = summary.breakdown.find((b) => b.key === 'adequate')
@@ -47,17 +46,13 @@ function InventoryReportBody() {
   }
 
   return (
-    <>
+    <div className="space-y-[14px]">
       <TabSectionHeader
         tab="Inventory"
         right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
       />
 
-      <PillTabs
-        tabs={[...SUB_TABS]}
-        active={subTab}
-        onChange={(t) => setSubTab(t as (typeof SUB_TABS)[number])}
-      />
+      <InventorySubTabs active={subTab} onChange={setSubTab} />
 
       <div className="grid grid-cols-4 gap-[16px]">
         <MetricRingCard label={summary.label} value={summary.total} tone="brand" />
@@ -84,7 +79,18 @@ function InventoryReportBody() {
         />
       </div>
 
-      {isChemical && <SoftStatCardsRow items={inventoryBottomCards()} columns={3} gap={16} />}
+      {isChemical && (
+        <div className="grid grid-cols-4 gap-[16px]">
+          {inventoryBottomCards().map((item) => (
+            <SoftStatCard
+              key={item.key}
+              label={item.label}
+              value={item.value}
+              tone={item.tone}
+            />
+          ))}
+        </div>
+      )}
 
       <ReportTable
         columns={inventoryReportColumns}
@@ -96,7 +102,7 @@ function InventoryReportBody() {
         exportTitle="Inventory Report"
         exportFileName="inventory-report"
       />
-    </>
+    </div>
   )
 }
 

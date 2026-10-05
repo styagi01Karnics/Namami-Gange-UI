@@ -8,6 +8,11 @@ import {
   type LiveRealtimeData,
 } from '../../api/stpLive'
 
+const STREAM_SURFACE = {
+  brand: 'bg-[#F4F8FE]',
+  ok: 'bg-[#F8FCF9]',
+}
+
 export default function RealtimeParametersPanel({
   plantCode,
   refreshTick = 0,
@@ -39,27 +44,26 @@ export default function RealtimeParametersPanel({
   }, [plantCode, refreshTick])
 
   return (
-    <div className="grid grid-cols-2 gap-[14px]">
+    <div className="grid grid-cols-2 gap-[16px]">
       {stpStreams.map((stream) => {
         const data = realtime[stream.key]
+        const surface = STREAM_SURFACE[stream.tone] ?? STREAM_SURFACE.brand
 
         return (
           <div
             key={stream.key}
-            className="overflow-hidden rounded-[12px] border border-line bg-[#F7FAFF]"
+            className={`overflow-hidden rounded-[16px] shadow-[0px_0px_3px_1px_rgba(7,104,210,0.1)] ${surface}`}
           >
             <StreamHeader stream={stream} />
 
-            <div className="p-[14px]">
-              <p className="text-[13px] leading-[18px] text-ink-soft">
-                Flow{' '}
-                <span className="font-bold text-ink">
-                  {loading && !data.flow?.value ? '…' : data.flow.value}
-                  <span className="ml-[4px] text-[14px] font-semibold">{data.flow.unit}</span>
-                </span>
+            <div className="p-[12px]">
+              <p className="text-[16px] font-semibold leading-[22px] text-[#565656]">Flow</p>
+              <p className="mt-[8px] text-[18px] font-bold leading-[22px] text-[#07121E]">
+                {loading && !data.flow?.value ? '…' : data.flow.value}
+                <span className="ml-[4px]">{data.flow.unit}</span>
               </p>
 
-              <div className="mt-[12px] grid grid-cols-3 gap-[10px]">
+              <div className="mt-[16px] grid grid-cols-3 gap-[12px]">
                 {data.params.map((p) => (
                   <ParamTile key={p.key} param={p} />
                 ))}

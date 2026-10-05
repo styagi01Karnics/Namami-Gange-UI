@@ -129,8 +129,8 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         <span className="flex items-center gap-[10px]">
           <Avatar size={32} />
           <span className="min-w-0">
-            <span className="block truncate text-[13px] font-semibold leading-[18px] text-ink">{row.name}</span>
-            <span className="block text-[12px] leading-4 text-brand-link">{row.userId}</span>
+            <span className="block truncate text-[14px] font-semibold leading-[22px] text-[#07121E]">{row.name}</span>
+            <span className="block text-[12px] font-medium leading-4 text-[#0768D2]">{row.userId}</span>
           </span>
         </span>
       )
@@ -140,7 +140,14 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
       if (editingId === row.id) {
         return <ChipSelect value={draft.role} options={teamRoleNames} onChange={(role) => setDraft((d) => ({ ...d, role }))} />
       }
-      return <StatusPill tone={ROLE_TONE[row.role] ?? 'slate'}>{row.role}</StatusPill>
+      return (
+        <StatusPill
+          tone={ROLE_TONE[row.role] ?? 'slate'}
+          className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+        >
+          {row.role}
+        </StatusPill>
+      )
     }
 
     if (col.key === 'status') {
@@ -149,7 +156,14 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
           <ChipSelect value={draft.status} options={STATUS_OPTIONS} onChange={(status) => setDraft((d) => ({ ...d, status }))} />
         )
       }
-      return <StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill>
+      return (
+        <StatusPill
+          tone={statusTone(row.status)}
+          className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+        >
+          {row.status}
+        </StatusPill>
+      )
     }
 
     if (col.key === 'actions') {
@@ -159,21 +173,21 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
             type="button"
             onClick={() => setPendingDelete(row)}
             aria-label={`Remove ${row.name}`}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#F6C9CB] text-danger transition-colors hover:bg-danger-soft"
+            className="inline-flex items-center justify-center rounded-[4px] border border-[#F6C9CB] bg-[#FDECEC] p-[6px] text-[#DC2626] transition-opacity hover:opacity-90"
           >
-            <TrashIcon size={15} />
+            <TrashIcon size={20} />
           </button>
           <button
             type="button"
             onClick={() => (editingId === row.id ? saveEdit() : startEdit(row))}
             aria-label={editingId === row.id ? `Save ${row.name}` : `Edit ${row.name}`}
-            className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] transition-colors ${
+            className={`inline-flex items-center justify-center rounded-[4px] p-[6px] transition-opacity hover:opacity-90 ${
               editingId === row.id
-                ? 'bg-brand text-white hover:bg-[#1259C7]'
-                : 'border border-[#BFD8F8] text-brand hover:bg-brand-soft'
+                ? 'bg-[#0768D2] text-white'
+                : 'border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] text-[#0768D2]'
             }`}
           >
-            {editingId === row.id ? <CheckIcon size={15} /> : <PencilIcon size={15} />}
+            {editingId === row.id ? <CheckIcon size={20} /> : <PencilIcon size={20} />}
           </button>
         </span>
       )

@@ -197,7 +197,7 @@ export default function TransactionLogsTab({
         <p className="text-[13px] text-ink-soft">Loading transaction logs...</p>
       )}
 
-      <div className="grid grid-cols-2 gap-[14px] [&>*]:min-w-0">
+      <div className="grid grid-cols-2 gap-[18px] [&>*]:min-w-0">
         {stpStreams.map((stream) => (
           <StreamTransactionPanel
             key={stream.key}

@@ -1,6 +1,6 @@
 const TONE = {
-  brand: { bar: 'bg-brand', title: 'text-white' },
-  ok: { bar: 'bg-ok', title: 'text-white' },
+  brand: { bar: 'bg-[#0768D2]', title: 'text-white' },
+  ok: { bar: 'bg-[#168E3F]', title: 'text-white' },
 }
 
 /**
@@ -21,11 +21,11 @@ export default function StreamHeader({ stream, children = null, variant = 'bar' 
             <img src="/RPV.png" alt="" width={26} height={26} className="object-contain" />
           </span>
           <div>
-            <p className={`text-[15px] font-bold leading-5 ${stream.tone === 'ok' ? 'text-ok' : 'text-brand'}`}>
+            <p className={`text-[15px] font-bold leading-5 ${stream.tone === 'ok' ? 'text-[#168E3F]' : 'text-[#0768D2]'}`}>
               {stream.title}
             </p>
             {stream.subtitle && (
-              <p className="mt-[3px] text-[12.5px] leading-4 text-ink-soft">{stream.subtitle}</p>
+              <p className="mt-[3px] text-[12.5px] leading-4 text-[#646464]">{stream.subtitle}</p>
             )}
           </div>
         </div>
@@ -35,13 +35,16 @@ export default function StreamHeader({ stream, children = null, variant = 'bar' 
   }
 
   return (
-    <div className={`flex items-center justify-between gap-3 rounded-t-[12px] px-[14px] py-[12px] ${tone.bar}`}>
-      <div className="flex min-w-0 items-center gap-[10px]">
-        <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15">
-          <img src="/RPV.png" alt="" width={22} height={22} className="object-contain" />
+    <div className={`flex h-[64px] items-center justify-between gap-3 rounded-t-[16px] px-[12px] ${tone.bar}`}>
+      <div className="flex min-w-0 items-center gap-[12px]">
+        <span className="flex h-[40px] w-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15">
+          <img src="/RPV.png" alt="" width={28} height={28} className="object-contain" />
         </span>
-        <p className={`truncate text-[14.5px] font-bold leading-5 ${tone.title}`}>
-          {stream.barTitle ?? `${stream.title}${stream.subtitle ? ` (${stream.subtitle})` : ''}`}
+        <p className="truncate text-[20px] font-bold leading-[22px] text-white">
+          {stream.title}
+          {stream.subtitle ? (
+            <span className="ml-[8px] text-[14px] font-medium">({stream.subtitle})</span>
+          ) : null}
         </p>
       </div>
       {children}

@@ -111,10 +111,10 @@ export default function StpManagement() {
 
       <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />
 
-      <Card className="mt-[2px] border border-[#D7E6F5] p-[15px] shadow-card">
+      <Card className="mt-[2px] rounded-[12px] border-0 p-[16px] shadow-card">
         <TabSectionHeader tab={tab} right={headerControls} />
 
-        <div className="mt-[15px]">
+        <div className="mt-[16px]">
           {TabBody ? (
             tab === 'Compliance' ? (
               <ComplianceTab

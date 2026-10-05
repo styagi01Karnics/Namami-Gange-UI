@@ -4,6 +4,7 @@ import Avatar from '../ui/Avatar'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
 import PillTabs from '../ui/PillTabs'
+import IconToggle from '../ui/IconToggle'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { useTableExport } from '../export/useTableExport'
 import { staffAvailability, staffStatusFilterMap } from '../../data/mockData'
@@ -45,83 +46,107 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
   }, [filter, query, sortDir])
 
   return (
-    <section className="flex min-h-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-[12px] p-[15px]">
-        <PillTabs tabs={staffAvailability.filters} active={filter} onChange={setFilter} />
-
-        <div className="flex items-center gap-[12px]">
-          <SearchInput value={query} onChange={setQuery} className="w-[254px]" />
-          <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
-          <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
-        </div>
+    <section className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
+      <div className="flex items-center justify-between gap-[12px] px-[15px] py-[20px]">
+        <h3 className="text-[16px] font-semibold leading-[22px] text-[#07121E]">Staff Availability</h3>
+        {onToggle ? (
+          <IconToggle open={open} onClick={onToggle} label="Toggle Staff Availability" />
+        ) : null}
       </div>
-      {printNode}
 
       {open && (
-        <div className="scroll-thin overflow-x-auto">
-          <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
-            <thead>
-              <tr className="border-y border-line bg-canvas [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-canvas">
-                <th className="w-[14%] px-[16px] py-[15px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
-                  ID
-                </th>
-                <th className="w-[26%] px-[16px] py-[15px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
-                  Employee
-                </th>
-                <th className="w-[22%] px-[16px] py-[15px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
-                  Role
-                </th>
-                <th className="w-[20%] px-[16px] py-[15px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
-                  Department
-                </th>
-                <th className="w-[18%] px-[16px] py-[15px] text-left text-[12.5px] font-semibold leading-4 text-ink-soft">
-                  <button
-                    type="button"
-                    onClick={() => setSortDir((v) => (v === 'asc' ? 'desc' : 'asc'))}
-                    className="flex items-center gap-[4px] transition-colors hover:text-brand"
-                  >
-                    Status
-                    <ChevronDown
-                      size={14}
-                      className={`transition-transform ${sortDir === 'desc' ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b border-line last:border-0">
-                  <td className="px-[16px] py-[12px] text-[12.5px] font-semibold leading-4 text-brand-link underline">
-                    {r.id}
-                  </td>
-                  <td className="px-[16px] py-[12px]">
-                    <span className="flex items-center gap-[9px] text-[12.5px] leading-4 text-ink">
-                      <Avatar size={24} />
-                      {r.name}
-                    </span>
-                  </td>
-                  <td className="px-[16px] py-[12px] text-[12.5px] leading-4 text-ink">{r.role}</td>
-                  <td className="px-[16px] py-[12px] text-[12.5px] leading-4 text-ink">{r.dept}</td>
-                  <td className="px-[16px] py-[12px]">
-                    <StatusPill tone={statusTone(r.status)}>{r.status}</StatusPill>
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-[16px] py-[36px] text-center text-[12.5px] text-ink-muted">
-                    No staff match this filter.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <>
+          <div className="flex flex-col gap-[24px] px-[15px] pb-[16px]">
+            <PillTabs
+              variant="segmented"
+              tabs={staffAvailability.filters}
+              active={filter}
+              onChange={setFilter}
+              className="w-[387px]"
+            />
 
-      {/* Keep onToggle available for callers that still pass it; no visible toggle in the new design. */}
-      {onToggle ? null : null}
+            <div className="flex items-center justify-end gap-[12px]">
+              <SearchInput value={query} onChange={setQuery} className="w-[350px]" />
+              <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
+              <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
+            </div>
+          </div>
+          {printNode}
+
+          <div className="scroll-thin overflow-x-auto">
+            <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
+              <thead>
+                <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF] [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-[#EFF7FF]">
+                  <th className="w-[14%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    ID
+                  </th>
+                  <th className="w-[26%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Employee
+                  </th>
+                  <th className="w-[22%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Role
+                  </th>
+                  <th className="w-[20%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Department
+                  </th>
+                  <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    <button
+                      type="button"
+                      onClick={() => setSortDir((v) => (v === 'asc' ? 'desc' : 'asc'))}
+                      className="flex items-center gap-[4px] transition-colors hover:text-[#0768D2]"
+                    >
+                      Status
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform ${sortDir === 'desc' ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, index) => (
+                  <tr
+                    key={r.id}
+                    className={`border border-[#D8EDFF] ${index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'}`}
+                  >
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#0768D2] underline">
+                      {r.id}
+                    </td>
+                    <td className="px-[16px] py-[18px]">
+                      <span className="flex items-center gap-[9px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                        <Avatar size={24} />
+                        {r.name}
+                      </span>
+                    </td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {r.role}
+                    </td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {r.dept}
+                    </td>
+                    <td className="px-[16px] py-[18px]">
+                      <StatusPill
+                        tone={statusTone(r.status)}
+                        className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+                      >
+                        {r.status}
+                      </StatusPill>
+                    </td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-[16px] py-[36px] text-center text-[14px] text-[#646464]">
+                      No staff match this filter.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   )
 }

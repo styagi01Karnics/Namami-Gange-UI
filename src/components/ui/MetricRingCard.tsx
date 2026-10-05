@@ -10,45 +10,45 @@ type MetricRingCardProps = {
 
 const TONE = {
   brand: {
-    value: 'text-brand',
+    value: 'text-[#0768D2]',
     ring: '#0768D2',
     track: 'rgba(7, 104, 210, 0.12)',
-    border: '#0768D233',
+    border: 'rgba(7, 104, 210, 0.2)',
     // Tint on top of white — CSS paints first layer above later ones.
     background:
-      'linear-gradient(101.59deg, rgba(7, 104, 210, 0.05) -0.16%, rgba(7, 104, 210, 0) 100%), #FFFFFF',
+      'linear-gradient(116.19deg, rgba(7, 104, 210, 0.05) 0.16%, rgba(7, 104, 210, 0) 100%), #FFFFFF',
   },
   ok: {
-    value: 'text-ok',
+    value: 'text-[#168E3F]',
     ring: '#168E3F',
     track: 'rgba(22, 142, 63, 0.12)',
-    border: '#168E3F33',
+    border: 'rgba(22, 142, 63, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(22, 142, 63, 0.05) -0.16%, rgba(22, 142, 63, 0) 100%), #FFFFFF',
+      'linear-gradient(116.19deg, rgba(22, 142, 63, 0.05) 0.16%, rgba(22, 142, 63, 0) 100%), #FFFFFF',
   },
   danger: {
-    value: 'text-danger',
+    value: 'text-[#DC2626]',
     ring: '#DC2626',
     track: 'rgba(220, 38, 38, 0.12)',
-    border: '#C50F1F33',
+    border: 'rgba(197, 15, 31, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(220, 38, 38, 0.05) -0.16%, rgba(220, 38, 38, 0) 100%), #FFFFFF',
+      'linear-gradient(116.19deg, rgba(220, 38, 38, 0.05) 0.16%, rgba(220, 38, 38, 0) 100%), #FFFFFF',
   },
   warn: {
     value: 'text-[#E89802]',
     ring: '#E89802',
     track: 'rgba(232, 152, 2, 0.12)',
-    border: '#E8980233',
+    border: 'rgba(232, 152, 2, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(232, 152, 2, 0.05) -0.16%, rgba(232, 152, 2, 0) 100%), #FFFFFF',
+      'linear-gradient(116.19deg, rgba(232, 152, 2, 0.05) 0.16%, rgba(232, 152, 2, 0) 100%), #FFFFFF',
   },
   orange: {
     value: 'text-[#E89802]',
     ring: '#E89802',
     track: 'rgba(232, 152, 2, 0.12)',
-    border: '#E8980233',
+    border: 'rgba(232, 152, 2, 0.2)',
     background:
-      'linear-gradient(101.59deg, rgba(232, 152, 2, 0.05) -0.16%, rgba(232, 152, 2, 0) 100%), #FFFFFF',
+      'linear-gradient(116.19deg, rgba(232, 152, 2, 0.05) 0.16%, rgba(232, 152, 2, 0) 100%), #FFFFFF',
   },
 }
 
@@ -62,7 +62,7 @@ export default function MetricRingCard({
   className = '',
 }: MetricRingCardProps) {
   const t = TONE[tone]
-  const size = 64
+  const size = 70
   const stroke = 5.5
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
@@ -72,15 +72,15 @@ export default function MetricRingCard({
 
   return (
     <div
-      className={`flex min-h-[128px] min-w-0 items-center justify-between gap-[20px] rounded-[12px] px-[22px] py-[20px] ${className}`}
+      className={`flex h-[110px] min-w-0 items-center justify-between gap-[20px] rounded-[10px] p-[20px] ${className}`}
       style={{
         background: t.background,
         border: `1px solid ${t.border}`,
       }}
     >
       <div className="min-w-0">
-        <p className="text-[13.5px] font-medium leading-5 text-ink-soft">{label}</p>
-        <p className={`mt-[12px] text-[26px] font-bold leading-8 ${t.value}`}>{value}</p>
+        <p className="text-[14px] font-semibold leading-normal text-[#07121E]">{label}</p>
+        <p className={`mt-[8px] text-[24px] font-bold leading-[30px] ${t.value}`}>{value}</p>
       </div>
 
       {showRing && (
@@ -99,7 +99,7 @@ export default function MetricRingCard({
               strokeDashoffset={offset}
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold leading-none text-ink">
+          <span className="absolute inset-0 flex items-center justify-center text-[12px] font-semibold leading-none text-[#333333]">
             {percentLabel ?? `${pct}%`}
           </span>
         </div>

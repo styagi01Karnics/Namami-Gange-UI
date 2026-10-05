@@ -7,16 +7,16 @@ export default function AccordionCard({ title, badge, defaultOpen = false, child
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <Card>
-      <div className="flex h-[54px] items-center justify-between px-[15px]">
+    <Card className="rounded-[12px] border-0 shadow-card">
+      <div className="flex h-[54px] items-center justify-between px-[16px]">
         <div className="flex items-center gap-[10px]">
-          <h3 className="text-[14.5px] font-semibold leading-5 text-ink">{title}</h3>
+          <h3 className="text-[16px] font-semibold leading-[22px] text-[#07121E]">{title}</h3>
           {badge}
         </div>
         <IconToggle open={open} onClick={() => setOpen((v) => !v)} label={`Toggle ${title}`} />
       </div>
 
-      {open && <div className="border-t border-line px-[15px] py-[15px]">{children}</div>}
+      {open && <div className="border-t border-[#E7EEF7] px-[16px] py-[16px]">{children}</div>}
     </Card>
   )
 }

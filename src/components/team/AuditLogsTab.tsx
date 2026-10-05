@@ -21,8 +21,8 @@ function Person({ name, id }) {
     <span className="flex items-center gap-[10px]">
       <Avatar size={30} />
       <span className="min-w-0">
-        <span className="block truncate text-[13px] font-semibold leading-[18px] text-ink">{name}</span>
-        <span className="block text-[12px] leading-4 text-brand-link">{id}</span>
+        <span className="block truncate text-[14px] font-semibold leading-[22px] text-[#07121E]">{name}</span>
+        <span className="block text-[12px] font-medium leading-4 text-[#0768D2]">{id}</span>
       </span>
     </span>
   )
@@ -39,11 +39,31 @@ export default function AuditLogsTab({ onExportPdf }) {
   const renderCell = (row, col, { expanded, toggleExpanded }) => {
     if (col.key === 'member') return <Person name={row.member} id={row.memberId} />
     if (col.key === 'performedBy') return <Person name={row.performedBy} id={row.performedById} />
-    if (col.key === 'action') return <StatusPill tone={ACTION_TONE[row.action] ?? 'slate'}>{row.action}</StatusPill>
-    if (col.key === 'module') return <StatusPill tone="violet">{row.module}</StatusPill>
+    if (col.key === 'action') {
+      return (
+        <StatusPill
+          tone={ACTION_TONE[row.action] ?? 'slate'}
+          className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+        >
+          {row.action}
+        </StatusPill>
+      )
+    }
+    if (col.key === 'module') {
+      return (
+        <StatusPill
+          tone="violet"
+          className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
+        >
+          {row.module}
+        </StatusPill>
+      )
+    }
 
     if (col.key === 'change') {
-      return <span className="block truncate text-[13px] leading-[18px] text-brand-link">{row.change}</span>
+      return (
+        <span className="block truncate text-[14px] font-medium leading-[22px] text-[#0768D2]">{row.change}</span>
+      )
     }
 
     if (col.key === 'details') {
@@ -53,9 +73,9 @@ export default function AuditLogsTab({ onExportPdf }) {
           onClick={toggleExpanded}
           aria-expanded={expanded}
           aria-label={`Details for ${row.id}`}
-          className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#BFD8F8] text-brand transition-colors hover:bg-brand-soft"
+          className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
         >
-          <ChevronDown size={15} strokeWidth={2.2} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          <ChevronDown size={20} strokeWidth={2} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
       )
     }
@@ -64,14 +84,14 @@ export default function AuditLogsTab({ onExportPdf }) {
   }
 
   const renderExpanded = (row) => (
-    <div className="rounded-[10px] border border-line bg-[#F8FBFF] p-[16px]">
-      <p className="text-[13.5px] font-semibold leading-5 text-brand-link">Change Details</p>
+    <div className="rounded-[16px] bg-[#F4F8FE] p-[16px] shadow-[0px_0px_3px_1px_rgba(7,104,210,0.1)]">
+      <p className="text-[14px] font-semibold leading-[22px] text-[#0768D2]">Change Details</p>
 
       <div className="mt-[12px] grid grid-cols-3 gap-[16px]">
         {row.details.map((field) => (
           <div key={field.label}>
-            <p className="text-[12.5px] leading-4 text-ink-soft">{field.label}</p>
-            <p className="mt-[7px] rounded-[9px] border border-line bg-white px-[13px] py-[10px] text-[13px] leading-[18px] text-ink">
+            <p className="text-[12px] font-medium leading-4 text-[#646464]">{field.label}</p>
+            <p className="mt-[7px] rounded-[9px] border border-[#D8EDFF] bg-white px-[13px] py-[10px] text-[14px] font-medium leading-[22px] text-[#07121E]">
               {field.value}
             </p>
           </div>

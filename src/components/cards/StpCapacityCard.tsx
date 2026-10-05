@@ -2,14 +2,14 @@ import Card from '../ui/Card'
 import { polar } from '../charts/arc'
 import { stpCapacity } from '../../data/mockData'
 
-const SIZE = 240
+const SIZE = 320
 const CX = SIZE / 2
 const CY = SIZE / 2
-const R = 98
+const R = 130
 /** Pull the 25% slice out along its bisector so the cut edges stay axis-aligned. */
-const EXPLODE = 14
+const EXPLODE = 18
 /** Nudge labels toward the right so they sit in the visual middle of each segment. */
-const LABEL_NUDGE_X = 14
+const LABEL_NUDGE_X = 16
 
 function formatMld(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2)
@@ -42,28 +42,28 @@ export default function StpCapacityCard() {
   const notLabel = polar(explode.x, explode.y, R * 0.5, notUsedMid)
 
   return (
-    <Card className="flex h-full flex-col px-[22px] py-[18px]">
+    <Card className="flex h-full flex-col rounded-[16px] px-[16px] py-[18px]">
       <div>
-        <p className="text-[14px] font-semibold leading-5 text-ink">Total STP&rsquo;s Capacity</p>
-        <p className="mt-[6px] text-[28px] font-bold leading-8 text-ink">
+        <p className="text-[18px] font-semibold leading-6 text-[#07121E]">Total STP&rsquo;s Capacity</p>
+        <p className="mt-[12px] text-[24px] font-bold leading-10 text-[#07121E]">
           {total} {unit}
         </p>
       </div>
 
-      <div className="flex flex-1 items-center justify-center py-[4px]">
+      <div className="mt-[18px] flex flex-1 items-center justify-center">
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible">
           <circle cx={CX} cy={CY} r={R + 1} fill="#FFFFFF" />
 
-          <path d={pieSlice(CX, CY, R, usedStart, usedEnd)} fill="#1668E3" />
+          <path d={pieSlice(CX, CY, R, usedStart, usedEnd)} fill="#0768D2" />
           <path d={pieSlice(explode.x, explode.y, R, notUsedStart, notUsedEnd)} fill="#D4E8FB" />
 
           <text
             x={usedLabel.x + LABEL_NUDGE_X}
-            y={usedLabel.y - 8}
+            y={usedLabel.y - 10}
             textAnchor="middle"
             dominantBaseline="middle"
             fill="#FFFFFF"
-            fontSize="13"
+            fontSize="16"
             fontWeight="700"
           >
             {formatMld(used)} {unit}
@@ -74,7 +74,7 @@ export default function StpCapacityCard() {
             textAnchor="middle"
             dominantBaseline="middle"
             fill="#FFFFFF"
-            fontSize="12.5"
+            fontSize="14"
             fontWeight="500"
           >
             Used
@@ -82,11 +82,11 @@ export default function StpCapacityCard() {
 
           <text
             x={notLabel.x + LABEL_NUDGE_X}
-            y={notLabel.y - 8}
+            y={notLabel.y - 10}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="#0B4F9C"
-            fontSize="12"
+            fill="#0768D2"
+            fontSize="16"
             fontWeight="700"
           >
             {formatMld(notUsed)} {unit}
@@ -96,8 +96,8 @@ export default function StpCapacityCard() {
             y={notLabel.y + 12}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="#0B4F9C"
-            fontSize="11.5"
+            fill="#0768D2"
+            fontSize="14"
             fontWeight="500"
           >
             Not Used
