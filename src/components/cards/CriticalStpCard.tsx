@@ -37,7 +37,7 @@ export default function CriticalStpCard() {
         </div>
       </div>
 
-      <div className="mt-[24px] w-full overflow-x-auto">
+      <div className="scroll-thin table-scroll mt-[24px] w-full">
         <table className="w-full table-fixed border-collapse">
           <colgroup>
             <col className="w-[28%]" />

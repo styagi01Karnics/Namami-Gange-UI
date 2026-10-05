@@ -71,7 +71,7 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
           </div>
           {printNode}
 
-          <div className="scroll-thin min-h-0 flex-1 overflow-auto">
+          <div className="scroll-thin table-scroll min-h-0 flex-1">
             <table className="w-full min-w-[560px] table-fixed border-collapse">
               <colgroup>
                 {chemicalInventory.columns.map((c) => (

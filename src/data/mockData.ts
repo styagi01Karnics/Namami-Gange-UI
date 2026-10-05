@@ -50,16 +50,16 @@ export const dashboardGreeting = {
 }
 
 export const stpSummary = {
-  total: 77,
-  active: 68,
-  nonActive: 12,
-  activePercent: 88,
-  nonActivePercent: 12,
+  total: 13,
+  active: 13,
+  nonActive: 0,
+  activePercent: 100,
+  nonActivePercent: 0,
   activeDelta: '8%',
   nonActiveDelta: '20%',
   breakdown: [
-    { key: 'operational', label: 'Online', value: 68, tone: 'ok' },
-    { key: 'nonOperational', label: 'Offline', value: 12, tone: 'slate' },
+    { key: 'operational', label: 'Online', value: 13, tone: 'ok' },
+    { key: 'nonOperational', label: 'Offline', value: 0, tone: 'slate' },
     { key: 'maintenance', label: 'Delay', value: 0, tone: 'warn' },
     { key: 'critical', label: 'Critical', value: 0, tone: 'danger' },
   ],
@@ -68,8 +68,8 @@ export const stpSummary = {
 export const stpCapacity = {
   total: 469,
   unit: 'MLD',
-  used: 430.98,
-  notUsed: 38.02,
+  used: 369,
+  notUsed: 100,
 }
 
 /** Rows shown in the Non-Active STP's modal (opened from the dashboard count). */

@@ -21,7 +21,7 @@ export default function Manpower() {
       <div className="flex flex-col gap-[15px] pb-[22px]">
         <Select options={stpOptions} value={stpId} onChange={setStpId} className="w-1/2 self-end" align="right" />
 
-        <StpHeaderCard stp={stp} showPenalty={false} />
+        <StpHeaderCard stp={stp} />
 
         <Card className="p-[15px]">
           <DateRangeField value={range} onChange={setRange} className="ml-auto w-[54%]" />

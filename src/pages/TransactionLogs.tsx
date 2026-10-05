@@ -53,7 +53,7 @@ export default function TransactionLogs() {
           align="right"
         />
 
-        <StpHeaderCard stp={stp} showPenalty={false} />
+        <StpHeaderCard stp={stp} />
 
         <Card className="p-[15px]">
           <DateRangeField value={range} onChange={setRange} className="ml-auto w-[54%]" />

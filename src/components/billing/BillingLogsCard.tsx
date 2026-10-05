@@ -56,7 +56,7 @@ export default function BillingLogsCard() {
           </div>
           {printNode}
 
-          <div className="scroll-thin overflow-x-auto">
+          <div className="scroll-thin table-scroll">
             <table className="w-full min-w-[900px] table-fixed border-collapse">
               <colgroup>
                 {billingLogColumns.map((c) => (

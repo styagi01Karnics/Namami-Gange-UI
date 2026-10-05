@@ -41,7 +41,7 @@ export default function DataTable<T extends DataRow>({
   onExportCsv,
   emptyMessage = 'Nothing matches the current filters.',
   minWidth = 980,
-  pageSize: initialPageSize = 5,
+  pageSize: initialPageSize = 6,
   toolbarFill = false,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('')
@@ -115,7 +115,7 @@ export default function DataTable<T extends DataRow>({
         )}
       </div>
 
-      <div className="scroll-thin overflow-x-auto">
+      <div className="scroll-thin table-scroll">
         <table className="w-full table-fixed border-collapse" style={{ minWidth }}>
           <colgroup>
             {columns.map((c) => (
@@ -123,12 +123,12 @@ export default function DataTable<T extends DataRow>({
             ))}
           </colgroup>
 
-          <thead>
+          <thead className="sticky top-0 z-[1]">
             <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
+                  className="bg-[#EFF7FF] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
                 >
                   {c.sortable ? (
                     <button

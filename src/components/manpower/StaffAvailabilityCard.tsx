@@ -73,10 +73,10 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
           </div>
           {printNode}
 
-          <div className="scroll-thin overflow-x-auto">
+          <div className="scroll-thin table-scroll">
             <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
-              <thead>
-                <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF] [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-[#EFF7FF]">
+              <thead className="sticky top-0 z-[1]">
+                <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF] [&>th]:bg-[#EFF7FF]">
                   <th className="w-[14%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     ID
                   </th>

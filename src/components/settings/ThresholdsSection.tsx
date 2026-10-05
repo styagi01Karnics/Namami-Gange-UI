@@ -45,7 +45,7 @@ export default function ThresholdsSection({ section }) {
           </Button>
         </div>
 
-        <div className="mt-[12px] overflow-hidden rounded-[10px] border border-line">
+        <div className="scroll-thin table-scroll mt-[12px] overflow-hidden rounded-[10px] border border-line">
           <table className="w-full table-fixed border-collapse">
             <colgroup>
               <col style={{ width: '30%' }} />

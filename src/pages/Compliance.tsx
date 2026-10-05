@@ -51,7 +51,7 @@ export default function Compliance() {
           align="right"
         />
 
-        <StpHeaderCard stp={stp} plantCode={selectedPlant?.plantCode} showPenalty={false} />
+        <StpHeaderCard stp={stp} plantCode={selectedPlant?.plantCode} />
 
         <Card className="p-[15px]">
           <DateRangeField value={range} onChange={setRange} className="ml-auto w-[54%]" />

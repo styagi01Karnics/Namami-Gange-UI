@@ -53,7 +53,7 @@ export default function ContractsTable() {
       </div>
       {printNode}
 
-      <div className="scroll-thin overflow-x-auto">
+      <div className="scroll-thin table-scroll">
         <table className="w-full min-w-[940px] table-fixed border-collapse">
           <colgroup>
             {contractColumns.map((c) => (
@@ -61,12 +61,12 @@ export default function ContractsTable() {
             ))}
           </colgroup>
 
-          <thead>
+          <thead className="sticky top-0 z-[1]">
             <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {contractColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
+                  className={`bg-[#EFF7FF] px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >

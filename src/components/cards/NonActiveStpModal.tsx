@@ -45,7 +45,7 @@ export default function NonActiveStpModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        <div className="overflow-x-auto pb-[8px]">
+        <div className="scroll-thin table-scroll pb-[8px]">
           <table className="w-full table-fixed border-collapse">
             <colgroup>
               <col className="w-[26%]" />

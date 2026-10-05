@@ -34,6 +34,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ~6 data rows (~58px) + sticky header — vertical scroll for all app tables */
+.table-scroll {
+  max-height: 400px;
+  overflow: auto;
+}
+
 /* thin scrollbars used by the sidebar + scrollable card lists */
 .scroll-thin {
   scrollbar-width: thin;

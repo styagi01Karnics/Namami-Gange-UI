@@ -229,7 +229,7 @@ export default function ViolationsTable({
       </div>
       {printNode}
 
-      <div className="scroll-thin max-h-[560px] overflow-auto">
+      <div className="scroll-thin table-scroll">
         <table className="w-full min-w-[980px] table-fixed border-collapse">
           <colgroup>
             {columns.map((c) => (

@@ -103,7 +103,7 @@ export default function StpManagement() {
         align="right"
       />
 
-      <StpHeaderCard stp={stp} plantCode={selectedPlant?.plantCode} dateRangeLabel={range} />
+      <StpHeaderCard stp={stp} plantCode={selectedPlant?.plantCode} />
 
       <AccordionCard title="Realtime Parameter Values" badge={<LivePill />} defaultOpen>
         <RealtimeParametersPanel plantCode={selectedPlant?.plantCode} refreshTick={refreshTick} />

@@ -23,7 +23,7 @@ export default function TeamSection({ section }) {
           </Button>
         </div>
 
-        <div className="mt-[14px] overflow-hidden rounded-[10px] border border-line">
+        <div className="scroll-thin table-scroll mt-[14px] overflow-hidden rounded-[10px] border border-line">
           <table className="w-full table-fixed border-collapse">
             <colgroup>
               <col style={{ width: '38%' }} />

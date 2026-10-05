@@ -93,7 +93,7 @@ export default function ReportTable({
 
       {filters && <div className="px-[15px] pb-[16px]">{filters}</div>}
 
-      <div className="scroll-thin overflow-x-auto">
+      <div className="scroll-thin table-scroll">
         <table className="w-full table-fixed border-collapse" style={{ minWidth }}>
           <colgroup>
             {columns.map((c) => (
@@ -101,12 +101,12 @@ export default function ReportTable({
             ))}
           </colgroup>
 
-          <thead>
+          <thead className="sticky top-0 z-[1]">
             <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
+                  className={`bg-[#EFF7FF] px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
                     c.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >

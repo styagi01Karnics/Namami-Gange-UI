@@ -49,7 +49,7 @@ export default function StreamTransactionPanel({
       <div
         ref={scrollRef}
         onScroll={(event) => onScrollSync?.(stream.key, event.currentTarget.scrollTop)}
-        className={`scroll-thin overflow-auto ${expandedKey ? 'max-h-[min(720px,70vh)]' : 'max-h-[480px]'}`}
+        className="scroll-thin table-scroll"
       >
         <table className="w-full min-w-[420px] table-fixed border-collapse">
           <colgroup>

@@ -28,7 +28,7 @@ export default function Pagination({
   total,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [5, 10, 20, 50],
+  pageSizeOptions = [5, 6, 8],
 }: PaginationProps) {
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1
