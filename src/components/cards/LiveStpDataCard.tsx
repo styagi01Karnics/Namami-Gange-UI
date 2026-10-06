@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { liveStpData } from '../../data/mockData'
 import { stpRealtimePath } from '../../routes'
@@ -7,6 +7,8 @@ import Card from '../ui/Card'
 export default function LiveStpDataCard() {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true)
+  const autoScrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pages = Math.max(1, liveStpData.length - 2)
 
   const scrollTo = (index: number) => {
@@ -18,6 +20,33 @@ export default function LiveStpDataCard() {
     el.scrollTo({ left: index * width, behavior: 'smooth' })
     setPage(index)
   }
+
+  // Auto-scroll logic
+  useEffect(() => {
+    if (!isAutoScrolling || pages === 0) return
+
+    const startAutoScroll = () => {
+      autoScrollTimerRef.current = setInterval(() => {
+        setPage((prevPage) => {
+          const nextPage = (prevPage + 1) % pages
+          const el = scrollerRef.current
+          if (!el) return prevPage
+          const card = el.querySelector<HTMLElement>('[data-live-card]')
+          const width = card ? card.offsetWidth + 12 : 320
+          el.scrollTo({ left: nextPage * width, behavior: 'smooth' })
+          return nextPage
+        })
+      }, 3000) // Change slide every 3 seconds
+    }
+
+    startAutoScroll()
+
+    return () => {
+      if (autoScrollTimerRef.current) {
+        clearInterval(autoScrollTimerRef.current)
+      }
+    }
+  }, [isAutoScrolling, pages])
 
   return (
     <Card className="rounded-[12px] px-[14px] py-[12px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
@@ -31,6 +60,8 @@ export default function LiveStpDataCard() {
       <div
         ref={scrollerRef}
         className="scroll-thin mt-[10px] flex gap-[12px] overflow-x-auto pb-[4px]"
+        onMouseEnter={() => setIsAutoScrolling(false)}
+        onMouseLeave={() => setIsAutoScrolling(true)}
         onScroll={() => {
           const el = scrollerRef.current
           if (!el) return
@@ -84,7 +115,10 @@ export default function LiveStpDataCard() {
             key={i}
             type="button"
             aria-label={`Go to slide ${i + 1}`}
-            onClick={() => scrollTo(i)}
+            onClick={() => {
+              scrollTo(i)
+              setIsAutoScrolling(false) // Pause auto-scroll on manual click
+            }}
             className={`h-[7px] rounded-full transition-all ${
               page === i ? 'w-[18px] bg-[#0768D2]' : 'w-[7px] bg-[#B7D4F5]'
             }`}
