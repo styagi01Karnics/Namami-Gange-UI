@@ -167,6 +167,657 @@ export const topPerformingStps = [
   { rank: 10, name: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', score: 82 },
 ]
 
+/** Risk palette used by the STP Locations Leaflet map. */
+export const stpMapRiskLevels = [
+  { id: 'normal', label: 'Normal', percent: 18, color: '#22C55E' },
+  { id: 'watch', label: 'Watch', percent: 42, color: '#EAB308' },
+  { id: 'warning', label: 'Warning', percent: 68, color: '#F97316' },
+  { id: 'critical', label: 'Critical', percent: 91, color: '#EF4444' },
+] as const
+
+export type StpMapRiskId = (typeof stpMapRiskLevels)[number]['id']
+
+export type StpMapPoint = {
+  id: string
+  label: string
+  lat: number
+  lng: number
+  risk: StpMapRiskId
+  riskPercent: number
+  /** Zoom level at which this point becomes visible. */
+  minZoom: number
+  count?: string
+  children?: StpMapPoint[]
+}
+
+/**
+ * Hierarchical STP map — state → district → city/town → plant.
+ *
+ * Coordinates sources (verified, not guessed):
+ * - Most plants: SWIC / Jal Shakti Uttarakhand STP registry
+ *   https://swic.hid.gov.in/uk/UTR_Tree.aspx
+ * - 68 MLD Kargi: ADB IEE official DMS (30°17′11.30″N, 78°00′58.25″E)
+ * - 33 MLD Saliyar: Google Maps place listing for the plant
+ * - 5 MLD Indira Nagar: SWIC "Indra Nagar Zone-H" + Maps place listing
+ * - 2.70 MLD Marwari Joshimath: plant GPS not in SWIC STP table;
+ *   using published Marwari locality (Fallingrain) 30.5644, 79.5533
+ *
+ * Names / capacity / city / district from: Details of the STPs.docx
+ */
+export const stpMapHierarchy: StpMapPoint[] = [
+  {
+    id: 'uttarakhand',
+    label: 'Uttarakhand',
+    lat: 30.0668,
+    lng: 79.0193,
+    risk: 'warning',
+    riskPercent: 68,
+    minZoom: 5,
+    count: '36 STPs',
+    children: [
+      {
+        id: 'dehradun',
+        label: 'Dehradun',
+        lat: 30.3165,
+        lng: 78.0322,
+        risk: 'watch',
+        riskPercent: 42,
+        minZoom: 7,
+        count: '14 STPs',
+        children: [
+          {
+            id: 'city-dehradun',
+            label: 'Dehradun',
+            lat: 30.3165,
+            lng: 78.0322,
+            risk: 'watch',
+            riskPercent: 48,
+            minZoom: 9,
+            count: '8 STPs',
+            children: [
+              {
+                id: 'mothorowala-20-2',
+                label: '20 MLD STP, Motharawala-II',
+                lat: 30.261347,
+                lng: 78.041421,
+                risk: 'watch',
+                riskPercent: 65,
+                minZoom: 12,
+                count: 'Util 13 / 20 MLD',
+              },
+              {
+                id: 'mothorowala-20',
+                label: '20 MLD STP, Mothrowala-I',
+                lat: 30.261902,
+                lng: 78.042315,
+                risk: 'watch',
+                riskPercent: 70,
+                minZoom: 12,
+                count: 'Util 14 / 20 MLD',
+              },
+              {
+                id: 'kargi-68',
+                label: '68 MLD STP, Kargi',
+                lat: 30.286472,
+                lng: 78.016181,
+                risk: 'normal',
+                riskPercent: 31,
+                minZoom: 12,
+                count: 'Util 21 / 68 MLD',
+              },
+              {
+                id: 'vijay-colony-042',
+                label: '0.42 MLD STP, Vijay Colony',
+                lat: 30.343611,
+                lng: 78.043663,
+                risk: 'warning',
+                riskPercent: 83,
+                minZoom: 12,
+                count: 'Util 0.35 / 0.42 MLD',
+              },
+              {
+                id: 'salawala-071',
+                label: '0.71 MLD STP, Salawala',
+                lat: 30.361472,
+                lng: 78.061917,
+                risk: 'critical',
+                riskPercent: 91,
+                minZoom: 12,
+                count: 'Util 0.72 / 0.71 MLD',
+              },
+              {
+                id: 'jakhan-1',
+                label: '1.0 MLD STP, Jakhan',
+                lat: 30.361475,
+                lng: 78.061917,
+                risk: 'normal',
+                riskPercent: 14,
+                minZoom: 12,
+                count: 'Util 0.14 / 1.0 MLD',
+              },
+              {
+                id: 'indira-nagar-5',
+                label: '5.0 MLD STP, Indira Nagar',
+                lat: 30.30963,
+                lng: 77.99724,
+                risk: 'critical',
+                riskPercent: 90,
+                minZoom: 12,
+                count: 'Util 4.5 / 5.0 MLD',
+              },
+              {
+                id: 'kaulagarh-3',
+                label: '3.00 MLD STP, Kaulagarh',
+                lat: 30.352191,
+                lng: 77.990155,
+                risk: 'normal',
+                riskPercent: 27,
+                minZoom: 12,
+                count: 'Util 0.8 / 3.0 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-rishikesh',
+            label: 'Rishikesh',
+            lat: 30.0577,
+            lng: 78.2623,
+            risk: 'watch',
+            riskPercent: 69,
+            minZoom: 9,
+            count: '1 STP',
+            children: [
+              {
+                id: 'lakkarghat-26',
+                label: '26 MLD STP, Lakkarghat',
+                lat: 30.0577,
+                lng: 78.2623,
+                risk: 'watch',
+                riskPercent: 69,
+                minZoom: 12,
+                count: 'Util 17.92 / 26 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-mussoorie',
+            label: 'Mussoorie',
+            lat: 30.457,
+            lng: 78.078,
+            risk: 'normal',
+            riskPercent: 36,
+            minZoom: 9,
+            count: '5 STPs',
+            children: [
+              {
+                id: 'happy-valley-12',
+                label: '1.2 MLD STP, Happy Valley',
+                lat: 30.4787,
+                lng: 78.0548,
+                risk: 'normal',
+                riskPercent: 18,
+                minZoom: 12,
+                count: 'Util 0.22 / 1.2 MLD',
+              },
+              {
+                id: 'landour-south-13',
+                label: '1.3 MLD STP, Landour, South',
+                lat: 30.4513,
+                lng: 78.0908,
+                risk: 'critical',
+                riskPercent: 92,
+                minZoom: 12,
+                count: 'Util 1.2 / 1.3 MLD',
+              },
+              {
+                id: 'bhatta-fall-312',
+                label: '3.12 MLD STP, Bhatta fall',
+                lat: 30.4367,
+                lng: 78.0752,
+                risk: 'normal',
+                riskPercent: 26,
+                minZoom: 12,
+                count: 'Util 0.82 / 3.12 MLD',
+              },
+              {
+                id: 'landour-north-08',
+                label: '0.8 MLD STP, Landour, North',
+                lat: 30.461,
+                lng: 78.0891,
+                risk: 'normal',
+                riskPercent: 5,
+                minZoom: 12,
+                count: 'Util 0.037 / 0.8 MLD',
+              },
+              {
+                id: 'kurli-bazar-09',
+                label: '0.9 MLD STP, Kurli Bazar',
+                lat: 30.4577,
+                lng: 78.0819,
+                risk: 'watch',
+                riskPercent: 41,
+                minZoom: 12,
+                count: 'Util 0.37 / 0.9 MLD',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'haridwar',
+        label: 'Haridwar',
+        lat: 29.9457,
+        lng: 78.1642,
+        risk: 'critical',
+        riskPercent: 82,
+        minZoom: 7,
+        count: '6 STPs',
+        children: [
+          {
+            id: 'city-haridwar',
+            label: 'Haridwar',
+            lat: 29.9,
+            lng: 78.12,
+            risk: 'critical',
+            riskPercent: 91,
+            minZoom: 9,
+            count: '5 STPs',
+            children: [
+              {
+                id: 'jagjeetpur-27',
+                label: '27 MLD STP, Jagjeetpur',
+                lat: 29.8998,
+                lng: 78.1377,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 27 / 27 MLD',
+              },
+              {
+                id: 'jagjeetpur-18',
+                label: '18 MLD STP, Jagjeetpur',
+                lat: 29.9008,
+                lng: 78.1384,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 18 / 18 MLD',
+              },
+              {
+                id: 'sarai-18',
+                label: '18 MLD STP, Sarai',
+                lat: 29.8933,
+                lng: 78.0893,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 18 / 18 MLD',
+              },
+              {
+                id: 'jagjeetpur-68',
+                label: '68 MLD STP, Jagjeetpur',
+                lat: 29.8987,
+                lng: 78.139,
+                risk: 'critical',
+                riskPercent: 93,
+                minZoom: 12,
+                count: 'Util 63.22 / 68 MLD',
+              },
+              {
+                id: 'sarai-14',
+                label: '14 MLD STP, Sarai',
+                lat: 29.8952,
+                lng: 78.0893,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 14 / 14 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-roorkee',
+            label: 'Roorkee',
+            lat: 29.901612,
+            lng: 77.864822,
+            risk: 'normal',
+            riskPercent: 20,
+            minZoom: 9,
+            count: '1 STP',
+            children: [
+              {
+                id: 'saliyar-33',
+                label: '33 MLD STP, Saliyar',
+                lat: 29.901612,
+                lng: 77.864822,
+                risk: 'normal',
+                riskPercent: 20,
+                minZoom: 12,
+                count: 'Util 6.5 / 33 MLD',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'chamoli',
+        label: 'Chamoli',
+        lat: 30.42,
+        lng: 79.33,
+        risk: 'watch',
+        riskPercent: 37,
+        minZoom: 7,
+        count: '16 STPs',
+        children: [
+          {
+            id: 'city-karnprayag',
+            label: 'Karnprayag',
+            lat: 30.261,
+            lng: 79.217,
+            risk: 'watch',
+            riskPercent: 42,
+            minZoom: 9,
+            count: '5 STPs',
+            children: [
+              {
+                id: 'karnprayag-stp1',
+                label: '0.050 MLD STP-1, Near Police Chowki',
+                lat: 30.264,
+                lng: 79.2149,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 0.050 / 0.050 MLD',
+              },
+              {
+                id: 'karnprayag-stp2',
+                label: '0.100 MLD STP-2, Near Purana Pul',
+                lat: 30.2612,
+                lng: 79.2171,
+                risk: 'watch',
+                riskPercent: 43,
+                minZoom: 12,
+                count: 'Util 0.043 / 0.100 MLD',
+              },
+              {
+                id: 'karnprayag-stp3',
+                label: '0.050 MLD STP-3, Near Subhash Nagar',
+                lat: 30.2557,
+                lng: 79.2205,
+                risk: 'watch',
+                riskPercent: 40,
+                minZoom: 12,
+                count: 'Util 0.020 / 0.050 MLD',
+              },
+              {
+                id: 'karnprayag-stp4',
+                label: '0.050 MLD STP-4, Near Naya Pul',
+                lat: 30.2626,
+                lng: 79.2165,
+                risk: 'normal',
+                riskPercent: 16,
+                minZoom: 12,
+                count: 'Util 0.008 / 0.050 MLD',
+              },
+              {
+                id: 'karnprayag-stp5',
+                label: '0.100 MLD STP-5, Near Ward No.1 & 3',
+                lat: 30.2612,
+                lng: 79.2183,
+                risk: 'normal',
+                riskPercent: 27,
+                minZoom: 12,
+                count: 'Util 0.027 / 0.100 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-nandprayag',
+            label: 'Nandprayag',
+            lat: 30.3295,
+            lng: 79.3196,
+            risk: 'watch',
+            riskPercent: 53,
+            minZoom: 9,
+            count: '2 STPs',
+            children: [
+              {
+                id: 'nandprayag-stp1',
+                label: '0.100 MLD STP-1, Near Forest Nala',
+                lat: 30.3277,
+                lng: 79.3206,
+                risk: 'critical',
+                riskPercent: 90,
+                minZoom: 12,
+                count: 'Util 0.090 / 0.100 MLD',
+              },
+              {
+                id: 'nandprayag-stp2',
+                label: '0.050 MLD STP-2, Near Sangam road Nala',
+                lat: 30.3314,
+                lng: 79.3186,
+                risk: 'normal',
+                riskPercent: 30,
+                minZoom: 12,
+                count: 'Util 0.015 / 0.050 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-gopeshwar',
+            label: 'Gopeshwar',
+            lat: 30.408,
+            lng: 79.321,
+            risk: 'normal',
+            riskPercent: 26,
+            minZoom: 9,
+            count: '5 STPs',
+            children: [
+              {
+                id: 'gopeshwar-stp2',
+                label: '1.19 MLD STP-2, Vivekanand Colony',
+                lat: 30.4116,
+                lng: 79.3262,
+                risk: 'watch',
+                riskPercent: 42,
+                minZoom: 12,
+                count: 'Util 0.50 / 1.19 MLD',
+              },
+              {
+                id: 'gopeshwar-stp4',
+                label: '1.12 MLD STP-4, Dindayal Upadhyay Park',
+                lat: 30.4164,
+                lng: 79.313,
+                risk: 'normal',
+                riskPercent: 7,
+                minZoom: 12,
+                count: 'Util 0.075 / 1.12 MLD',
+              },
+              {
+                id: 'gopeshwar-stp3',
+                label: '1.25 MLD STP-3, Pokhari Bend',
+                lat: 30.4071,
+                lng: 79.3096,
+                risk: 'watch',
+                riskPercent: 40,
+                minZoom: 12,
+                count: 'Util 0.50 / 1.25 MLD',
+              },
+              {
+                id: 'gopeshwar-stp1',
+                label: '0.760 MLD STP-1, Near Mahindra Show Room',
+                lat: 30.4005,
+                lng: 79.3297,
+                risk: 'normal',
+                riskPercent: 7,
+                minZoom: 12,
+                count: 'Util 0.050 / 0.760 MLD',
+              },
+              {
+                id: 'gopeshwar-stp5',
+                label: '0.050 MLD STP-5, Near Old Suspension Bridge',
+                lat: 30.405,
+                lng: 79.3295,
+                risk: 'normal',
+                riskPercent: 20,
+                minZoom: 12,
+                count: 'Util 0.010 / 0.050 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-joshimath',
+            label: 'Joshimath',
+            lat: 30.56,
+            lng: 79.565,
+            risk: 'watch',
+            riskPercent: 41,
+            minZoom: 9,
+            count: '2 STPs',
+            children: [
+              {
+                id: 'joshimath-marwari',
+                label: '2.70 MLD STP-2, Marwari',
+                lat: 30.5644,
+                lng: 79.5533,
+                risk: 'watch',
+                riskPercent: 41,
+                minZoom: 12,
+                count: 'Util 1.11 / 2.70 MLD',
+              },
+              {
+                id: 'joshimath-pokhari',
+                label: '1.08 MLD STP-1, Pokhari',
+                lat: 30.5581,
+                lng: 79.5765,
+                risk: 'watch',
+                riskPercent: 39,
+                minZoom: 12,
+                count: 'Util 0.421 / 1.08 MLD',
+              },
+            ],
+          },
+          {
+            id: 'city-badrinath',
+            label: 'Badrinath',
+            lat: 30.7425,
+            lng: 79.492,
+            risk: 'watch',
+            riskPercent: 60,
+            minZoom: 9,
+            count: '2 STPs',
+            children: [
+              {
+                id: 'badrinath-stp',
+                label: '0.26 MLD STP, Shri Badrinath',
+                lat: 30.7418,
+                lng: 79.4919,
+                risk: 'critical',
+                riskPercent: 100,
+                minZoom: 12,
+                count: 'Util 0.26 / 0.26 MLD',
+              },
+              {
+                id: 'badrinath-stp2',
+                label: '1.0 MLD STP-2, Near Bamini Jhula Pul',
+                lat: 30.7416,
+                lng: 79.4927,
+                risk: 'watch',
+                riskPercent: 50,
+                minZoom: 12,
+                count: 'Util 0.50 / 1.0 MLD',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]
+
+/**
+ * Cascade helpers for State → District → City/Town → STP map filters.
+ * Selecting a lower level auto-fills parents via `findStpMapPath`.
+ */
+export type StpMapPath = {
+  state: StpMapPoint
+  district?: StpMapPoint
+  city?: StpMapPoint
+  stp?: StpMapPoint
+}
+
+export function findStpMapPath(id: string, nodes: StpMapPoint[] = stpMapHierarchy): StpMapPath | null {
+  for (const state of nodes) {
+    if (state.id === id) return { state }
+    for (const district of state.children ?? []) {
+      if (district.id === id) return { state, district }
+      for (const city of district.children ?? []) {
+        if (city.id === id) return { state, district, city }
+        for (const stp of city.children ?? []) {
+          if (stp.id === id) return { state, district, city, stp }
+        }
+      }
+    }
+  }
+  return null
+}
+
+export function getStpMapStateOptions() {
+  return [
+    { id: 'all', label: 'All States' },
+    ...stpMapHierarchy.map((s) => ({ id: s.id, label: s.label })),
+  ]
+}
+
+export function getStpMapDistrictOptions(stateId: string) {
+  const states =
+    stateId === 'all' ? stpMapHierarchy : stpMapHierarchy.filter((s) => s.id === stateId)
+
+  return [
+    { id: 'all', label: 'All Districts' },
+    ...states.flatMap((s) => (s.children ?? []).map((d) => ({ id: d.id, label: d.label }))),
+  ]
+}
+
+export function getStpMapCityOptions(stateId: string, districtId: string) {
+  const states =
+    stateId === 'all' ? stpMapHierarchy : stpMapHierarchy.filter((s) => s.id === stateId)
+
+  const districts = states.flatMap((s) => {
+    const kids = s.children ?? []
+    if (districtId === 'all') return kids
+    return kids.filter((d) => d.id === districtId)
+  })
+
+  return [
+    { id: 'all', label: 'All Cities' },
+    ...districts.flatMap((d) => (d.children ?? []).map((c) => ({ id: c.id, label: c.label }))),
+  ]
+}
+
+export function getStpMapStpOptions(stateId: string, districtId: string, cityId = 'all') {
+  const states =
+    stateId === 'all' ? stpMapHierarchy : stpMapHierarchy.filter((s) => s.id === stateId)
+
+  const districts = states.flatMap((s) => {
+    const kids = s.children ?? []
+    if (districtId === 'all') return kids
+    return kids.filter((d) => d.id === districtId)
+  })
+
+  const cities = districts.flatMap((d) => {
+    const kids = d.children ?? []
+    if (cityId === 'all') return kids
+    return kids.filter((c) => c.id === cityId)
+  })
+
+  return [
+    { id: 'all', label: 'All STPs' },
+    ...cities.flatMap((c) => (c.children ?? []).map((p) => ({ id: p.id, label: p.label }))),
+  ]
+}
+
+/** @deprecated Prefer stpMapHierarchy — kept for any leftover % overlays. */
 export const stpMapMarkers = [
   { id: 'uttarkashi', label: 'Uttarkashi', count: '1 STP', x: 62, y: 22, tone: 'ok' as const },
   { id: 'tehri-n', label: 'Tehri', count: '1 STP', x: 52, y: 42, tone: 'ok' as const },
