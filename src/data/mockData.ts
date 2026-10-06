@@ -51,15 +51,15 @@ export const dashboardGreeting = {
 
 export const stpSummary = {
   total: 13,
-  active: 13,
-  nonActive: 0,
-  activePercent: 100,
-  nonActivePercent: 0,
+  active: 12,
+  nonActive: 1,
+  activePercent: 92,
+  nonActivePercent: 8,
   activeDelta: '8%',
-  nonActiveDelta: '20%',
+  nonActiveDelta: '5.9%',
   breakdown: [
-    { key: 'operational', label: 'Online', value: 13, tone: 'ok' },
-    { key: 'nonOperational', label: 'Offline', value: 0, tone: 'slate' },
+    { key: 'operational', label: 'Online', value: 12, tone: 'ok' },
+    { key: 'nonOperational', label: 'Offline', value: 1, tone: 'slate' },
     { key: 'maintenance', label: 'Delay', value: 0, tone: 'warn' },
     { key: 'critical', label: 'Critical', value: 0, tone: 'danger' },
   ],
@@ -68,9 +68,112 @@ export const stpSummary = {
 export const stpCapacity = {
   total: 469,
   unit: 'MLD',
-  used: 369,
-  notUsed: 100,
+  used: 360,
+  notUsed: 109,
 }
+
+/** Figma dashboard KPI strip (node 2155:5699). */
+export const dashboardKpis = [
+  {
+    key: 'total',
+    label: 'Total STPs',
+    value: '13',
+    badge: 'Across all States',
+    tone: 'brand' as const,
+  },
+  {
+    key: 'active',
+    label: 'Active STPs',
+    value: '12',
+    badge: '8% vs yesterday',
+    tone: 'ok' as const,
+    href: '/stp-management',
+    trend: 'up' as const,
+  },
+  {
+    key: 'nonActive',
+    label: 'Non Active STPs',
+    value: '1',
+    badge: '5.9% vs yesterday',
+    tone: 'danger' as const,
+    openNonActive: true,
+    trend: 'up' as const,
+  },
+  {
+    key: 'capacity',
+    label: 'Total Capacity',
+    value: '469 MLD',
+    badge: "Across 77 STP's",
+    tone: 'violet' as const,
+  },
+]
+
+export const capacityUtilization = {
+  percent: 98,
+  used: { stps: 13, mld: 360, status: 'Under Monitoring' as const },
+  notUsed: { stps: 77, mld: 469, status: 'Not Monitored' as const },
+}
+
+export const liveStpData = [
+  {
+    id: 'jag-68',
+    name: '68 MLD Jagjeetpur',
+    plantCode: '68mldjag',
+    image: '/dashboard/stp-jagjeetpur.png',
+    status: 'Active' as const,
+    inlet: '42.6 MLD',
+    outlet: '40.8 MLD',
+  },
+  {
+    id: 'sarai-14',
+    name: '14 MLD Sarai',
+    plantCode: '14mldsarai',
+    image: '/dashboard/stp-sarai.png',
+    status: 'Active' as const,
+    inlet: '13.2 MLD',
+    outlet: '12.6 MLD',
+  },
+  {
+    id: 'jag-18',
+    name: '18 MLD Jagjeetpur',
+    plantCode: '18mldjag',
+    image: '/dashboard/stp-saliyar.png',
+    status: 'Active' as const,
+    inlet: '42.6 MLD',
+    outlet: '40.8 MLD',
+  },
+  {
+    id: 'saliyar-33',
+    name: '33 MLD Saliyar',
+    plantCode: '33mldsali',
+    image: '/dashboard/stp-saliyar.png',
+    status: 'Active' as const,
+    inlet: '28.4 MLD',
+    outlet: '27.1 MLD',
+  },
+]
+
+/** Weekly compliance ranking (dashboard Top 10 card). */
+export const topPerformingStps = [
+  { rank: 1, name: '18 MLD Jagjeetpur', plantCode: '18mldjag', score: 99 },
+  { rank: 2, name: '68 MLD Jagjeetpur', plantCode: '68mldjag', score: 98 },
+  { rank: 3, name: '14 MLD Sarai', plantCode: '14mldsarai', score: 96 },
+  { rank: 4, name: '33 MLD Salyar', plantCode: '33mldsali', score: 94 },
+  { rank: 5, name: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', score: 92 },
+  { rank: 6, name: '68 MLD Kargi', plantCode: '68mldkargi', score: 90 },
+  { rank: 7, name: '20 MLD Mothorowala', plantCode: '20mldmothorowala', score: 88 },
+  { rank: 8, name: '27 MLD Kankhal', plantCode: '27mldknh4', score: 86 },
+  { rank: 9, name: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', score: 84 },
+  { rank: 10, name: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', score: 82 },
+]
+
+export const stpMapMarkers = [
+  { id: 'uttarkashi', label: 'Uttarkashi', count: '1 STP', x: 62, y: 22, tone: 'ok' as const },
+  { id: 'tehri-n', label: 'Tehri', count: '1 STP', x: 52, y: 42, tone: 'ok' as const },
+  { id: 'rudraprayag', label: 'Rudraprayag', count: '1 STP', x: 72, y: 58, tone: 'ok' as const },
+  { id: 'tehri', label: 'Tehri', count: '4 STP', x: 42, y: 52, tone: 'warn' as const },
+  { id: 'haridwar', label: 'Hairdwar', count: '4 STP', x: 22, y: 50, tone: 'danger' as const },
+]
 
 /** Rows shown in the Non-Active STP's modal (opened from the dashboard count). */
 export const nonActiveStpRows = [
@@ -182,11 +285,27 @@ export const criticalStps = {
   tabs: ['Parameter Breach', 'Equipment Failure'] as const,
   'Parameter Breach': [
     {
+      id: 'jagjeetpur-18',
+      name: '18 MLD Jagjeetpur',
+      plantCode: '18mldjag',
+      stpId: 'sarai-18',
+      category: 'Parameter Breach',
+      breachLabel: '3 Parameter Breached',
+      nonComplianceTime: '9:00 AM',
+      parameters: [
+        { key: 'ph', label: 'pH', delta: '13.3%' },
+        { key: 'bod', label: 'BOD', delta: '13.3%' },
+        { key: 'cod', label: 'COD', delta: '13.3%' },
+      ],
+    },
+    {
       id: 'sarai-14',
-      name: '14 MLD STP, Sarai, Haridwar',
-      href: '/stp-management',
+      name: '14 MLD STP, Sarai',
+      plantCode: '14mldsarai',
+      stpId: 'sarai-14',
       category: 'Parameter Breach',
       breachLabel: '3 Parameter Breached',
+      nonComplianceTime: '9:00 AM',
       parameters: [
         { key: 'ph', label: 'pH', delta: '13.3%' },
         { key: 'bod', label: 'BOD', delta: '13.3%' },
@@ -194,48 +313,41 @@ export const criticalStps = {
       ],
     },
     {
-      id: 'lakkar-ghat-26',
-      name: '26 MLD STP, Lakkar Ghat, Rishikesh',
-      href: '/stp-management',
-      category: 'Parameter Breach',
-      breachLabel: '3 Parameter Breached',
-      parameters: [
-        { key: 'ph', label: 'pH', delta: '13.3%' },
-        { key: 'bod', label: 'BOD', delta: '13.3%' },
-        { key: 'cod', label: 'COD', delta: '13.3%' },
-      ],
-    },
-    {
-      id: 'jagjeetpur-68',
-      name: '68 MLD STP, Jagjeetpur, Haridwar',
-      href: '/stp-management',
+      id: 'saliyar-33-a',
+      name: '33 MLD Salyar',
+      plantCode: '33mldsali',
+      stpId: 'saliar-33',
       category: 'Parameter Breach',
       breachLabel: '2 Parameter Breached',
+      nonComplianceTime: '9:00 AM to 11:00 AM',
       parameters: [
-        { key: 'bod', label: 'BOD', delta: '18.1%' },
-        { key: 'cod', label: 'COD', delta: '11.2%' },
+        { key: 'ph', label: 'pH', delta: '12%' },
+        { key: 'cod', label: 'COD', delta: '13.3%' },
       ],
     },
     {
-      id: 'kargi-68',
-      name: '68 MLD STP, Kargi, Dehradun',
-      href: '/stp-management',
+      id: 'saliyar-33-b',
+      name: '33 MLD Salyar',
+      plantCode: '33mldsali',
+      stpId: 'saliar-33',
       category: 'Parameter Breach',
-      breachLabel: '3 Parameter Breached',
+      breachLabel: '2 Parameter Breached',
+      nonComplianceTime: '9:00 AM',
       parameters: [
-        { key: 'ph', label: 'pH', delta: '9.4%' },
-        { key: 'bod', label: 'BOD', delta: '15.2%' },
-        { key: 'tss', label: 'TSS', delta: '12.6%' },
+        { key: 'ph', label: 'pH', delta: '12%' },
+        { key: 'cod', label: 'COD', delta: '13.3%' },
       ],
     },
   ],
   'Equipment Failure': [
     {
       id: 'mothorowala-20',
-      name: '20 MLD STP, Mothorowala, Dehradun',
-      href: '/stp-management',
+      name: '20 MLD STP, Mothorowala',
+      plantCode: '20mldmothorowala',
+      stpId: 'mothorowala-20',
       category: 'Equipment Failure',
       breachLabel: '2 Equipment Failed',
+      nonComplianceTime: '10:30 AM',
       parameters: [
         { key: 'blower', label: 'Blower', delta: '18.1%' },
         { key: 'pump', label: 'Pump', delta: '11.2%' },
@@ -243,10 +355,12 @@ export const criticalStps = {
     },
     {
       id: 'kankhal-27',
-      name: '27 MLD STP, Kankhal, Haridwar',
-      href: '/stp-management',
+      name: '27 MLD STP, Kankhal',
+      plantCode: '27mldknh4',
+      stpId: 'kankhal-27',
       category: 'Equipment Failure',
       breachLabel: '3 Equipment Failed',
+      nonComplianceTime: '8:00 AM to 12:00 PM',
       parameters: [
         { key: 'aerator', label: 'Aerator', delta: '12.6%' },
         { key: 'flow', label: 'Flow Meter', delta: '8.7%' },
@@ -255,10 +369,12 @@ export const criticalStps = {
     },
     {
       id: 'bhagwanpur-5',
-      name: '5 MLD STP, Bhagwanpur, Haridwar',
-      href: '/stp-management',
+      name: '5 MLD STP, Bhagwanpur',
+      plantCode: '5mldbgp6',
+      stpId: 'bhagwanpur-5',
       category: 'Equipment Failure',
       breachLabel: '1 Equipment Failed',
+      nonComplianceTime: '2:15 PM',
       parameters: [{ key: 'blower', label: 'Blower', delta: '9.4%' }],
     },
   ],

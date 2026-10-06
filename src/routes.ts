@@ -27,6 +27,14 @@ export const stpTabPath = (label) => `/stp-management/${slugify(label)}`
 export const stpTabFromSlug = (slug: string) => stpSectionTabs.find((label) => slugify(label) === slug)
 export const STP_TAB_PATHS = stpSectionTabs.map(stpTabPath)
 
+/** Dashboard → STP Management › Compliance, with plant pre-selected in the dropdown. */
+export const stpCompliancePath = (plantCode: string) =>
+  `${stpTabPath('Compliance')}?plant=${encodeURIComponent(plantCode)}`
+
+/** Dashboard Live Data → STP Management › Realtime Parameter Values, plant synced. */
+export const stpRealtimePath = (plantCode: string) =>
+  `/stp-management?plant=${encodeURIComponent(plantCode)}&focus=realtime`
+
 /** Sidebar structure + route paths. Add a section here and it appears in the nav. */
 export const MENU_ITEMS: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon, path: '/dashboard' },

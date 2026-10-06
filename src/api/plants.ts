@@ -17,6 +17,9 @@ const PLANT_CODE_TO_STP_ID: Record<string, string> = {
   '14mldsarai': 'sarai-14',
   '20mldmothorowala': 'mothorowala-20',
   '20mldmoth_2': 'mothorowala-20-2',
+  '27mldknh4': 'kankhal-27',
+  '5mldbgp6': 'bhagwanpur-5',
+  '26mldlkgt2': 'lakkar-ghat-26',
 }
 
 export type PlantOption = {
@@ -35,6 +38,9 @@ export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
   { id: '14mldsarai', label: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14' },
   { id: '20mldmothorowala', label: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
   { id: '20mldmoth_2', label: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
+  { id: '27mldknh4', label: '27 MLD Kankhal', plantCode: '27mldknh4', stpId: 'kankhal-27' },
+  { id: '5mldbgp6', label: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', stpId: 'bhagwanpur-5' },
+  { id: '26mldlkgt2', label: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26' },
 ]
 
 export const ALL_STP_FILTER_OPTION = { id: 'all', label: "All STP's" } as const
