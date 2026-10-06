@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
+import { stpCompliancePath } from '../../routes'
 
 type CriticalTab = (typeof criticalStps.tabs)[number]
 
@@ -72,7 +73,7 @@ export default function CriticalStpCard() {
               >
                 <td className="px-[16px] py-[20px]">
                   <Link
-                    to={row.href}
+                    to={stpCompliancePath(row.plantCode)}
                     className="block truncate text-[14px] font-medium leading-[22px] text-[#0768D2] hover:underline"
                   >
                     {row.name}
