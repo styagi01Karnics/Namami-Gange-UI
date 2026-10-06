@@ -1,16 +1,25 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
 
 type CriticalTab = (typeof criticalStps.tabs)[number]
 
+const COLUMNS = [
+  { key: 'stp', label: 'STP' },
+  { key: 'capacity', label: 'Capacity (MLD)' },
+  { key: 'district', label: 'District' },
+  { key: 'omDept', label: 'O&M Dept' },
+  { key: 'param', label: 'Non-Complying Param' },
+  { key: 'range', label: 'Range' },
+  { key: 'time', label: 'Time' },
+] as const
+
 export default function CriticalStpCard() {
   const [tab, setTab] = useState<CriticalTab>(criticalStps.tabs[0])
   const rows = criticalStps[tab]
-  const breachHeading = tab === 'Parameter Breach' ? 'Parameter Breach' : 'Equipment Failure'
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-[10px] pb-[4px] pt-[18px]">
@@ -38,31 +47,18 @@ export default function CriticalStpCard() {
         </div>
       </div>
 
-      <div className="scroll-thin table-scroll mt-[24px] w-full">
-        <table className="w-full table-fixed border-collapse">
-          <colgroup>
-            <col className="w-[28%]" />
-            <col className="w-[20%]" />
-            <col className="w-[22%]" />
-            <col className="w-[30%]" />
-          </colgroup>
+      <div className="scroll-thin table-scroll mt-[24px] w-full overflow-auto">
+        <table className="w-full min-w-[760px] table-fixed border-collapse">
           <thead>
             <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
-              <th className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                STP Name
-              </th>
-              <th className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                <span className="inline-flex items-center gap-[4px]">
-                  Category
-                  <ChevronDown size={16} />
-                </span>
-              </th>
-              <th className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                {breachHeading}
-              </th>
-              <th className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                Parameter
-              </th>
+              {COLUMNS.map((col) => (
+                <th
+                  key={col.key}
+                  className="px-[12px] py-[16px] text-left text-[13px] font-semibold leading-[22px] text-[#363636]"
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -71,43 +67,36 @@ export default function CriticalStpCard() {
                 key={row.id}
                 className="border-b border-[#D8EDFF] bg-white odd:bg-white even:bg-[rgba(248,248,248,0.9)] last:border-0"
               >
-                <td className="px-[16px] py-[20px]">
+                <td className="px-[12px] py-[16px]">
                   <Link
                     to={stpCompliancePath(row.plantCode)}
-                    className="block truncate text-[14px] font-medium leading-[22px] text-[#0768D2] hover:underline"
+                    className="block truncate text-[13px] font-medium leading-[20px] text-[#0768D2] hover:underline"
                   >
                     {row.name}
                   </Link>
                 </td>
-                <td className="px-[16px] py-[20px] text-[14px] font-medium leading-[22px] text-[#07121E]">
-                  {row.category}
-                </td>
-                <td className="px-[16px] py-[20px]">
-                  <span className="inline-flex h-[32px] items-center rounded-full bg-[#F5E7E7] px-[8px] text-[14px] font-semibold leading-4 text-[#DC2626]">
-                    {row.breachLabel}
-                  </span>
-                </td>
-                <td className="px-[16px] py-[20px]">
-                  <div className="flex flex-wrap gap-[8px]">
-                    {row.parameters.map((param) => (
-                      <div key={`${row.id}-${param.key}`} className="flex flex-col items-center gap-[6px]">
-                        <span className="inline-flex h-[32px] min-w-[54px] items-center justify-center rounded-[4px] bg-[#F4FAFF] px-[6px] text-[12px] font-semibold leading-4 text-[#07121E]">
-                          {param.label}
-                        </span>
-                        <span className="inline-flex h-[20px] items-center gap-[0px] rounded-full bg-[#F5E7E7] px-[4px] text-[10px] font-medium leading-[14px] text-[#DC2626]">
-                          <TrendingUp size={12} strokeWidth={2.4} />
-                          {param.delta}
-                        </span>
-                      </div>
-                    ))}
+                <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.capacityMld}</td>
+                <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.district}</td>
+                <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.omDept}</td>
+                <td className="px-[12px] py-[16px]">
+                  <div className="flex flex-col items-start gap-[6px]">
+                    <span className="inline-flex h-[28px] min-w-[72px] items-center justify-center rounded-[4px] bg-[#F4FAFF] px-[8px] text-[12px] font-semibold leading-4 text-[#0768D2]">
+                      {row.param.label}
+                    </span>
+                    <span className="inline-flex h-[20px] items-center gap-[2px] rounded-full bg-[#F5E7E7] px-[6px] text-[10px] font-medium leading-[14px] text-[#DC2626]">
+                      <TrendingUp size={12} strokeWidth={2.4} />
+                      {row.param.delta}
+                    </span>
                   </div>
                 </td>
+                <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.range}</td>
+                <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.time}</td>
               </tr>
             ))}
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-[16px] py-[36px] text-center text-[14px] text-[#646464]">
+                <td colSpan={COLUMNS.length} className="px-[16px] py-[36px] text-center text-[14px] text-[#646464]">
                   No critical STP&rsquo;s in this category
                 </td>
               </tr>

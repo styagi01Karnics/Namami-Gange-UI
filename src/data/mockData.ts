@@ -109,10 +109,10 @@ export const dashboardKpis = [
 ]
 
 export const capacityUtilization = {
-  percent: 98,
   used: { stps: 13, mld: 360, status: 'Under Monitoring' as const },
-  notUsed: { stps: 77, mld: 469, status: 'Not Monitored' as const },
+  total: { stps: 77, mld: 469 },
 }
+
 
 export const liveStpData = [
   {
@@ -281,104 +281,72 @@ export const flowTrend = [
 export const flowTrendTicks = ['1 May', '2 May', '3 May', '4 May', '5 May', '6 May', '7 May']
 export const flowTrendRanges = ['Weekly', 'Daily', 'Monthly']
 
+const OM_DEPTS = ['Payjal Nigam', 'Jal Sansthan'] as const
+
+/** Stable pseudo-random pick so O&M dept doesn't flicker on re-render. */
+function omDeptFor(seed: string) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) hash = (hash + seed.charCodeAt(i) * (i + 1)) % 97
+  return OM_DEPTS[hash % OM_DEPTS.length]
+}
+
+/** Non-performing rows aligned to STP Management dropdown plants; 18 MLD first. */
+const NON_PERFORMING_PLANTS = [
+  { id: 'jagjeetpur-18', name: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'sarai-18', capacityMld: 18, district: 'Haridwar' },
+  { id: 'jagjeetpur-68', name: '68 MLD Jagjeetpur', plantCode: '68mldjag', stpId: 'jagjeetpur-68', capacityMld: 68, district: 'Haridwar' },
+  { id: 'kargi-68', name: '68 MLD Kargi', plantCode: '68mldkargi', stpId: 'kargi-68', capacityMld: 68, district: 'Dehradun' },
+  { id: 'saliar-33', name: '33 MLD Saliar', plantCode: '33mldsali', stpId: 'saliar-33', capacityMld: 33, district: 'Haridwar' },
+  { id: 'sarai-14', name: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14', capacityMld: 14, district: 'Haridwar' },
+  { id: 'mothorowala-20', name: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20', capacityMld: 20, district: 'Dehradun' },
+  { id: 'mothorowala-20-2', name: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2', capacityMld: 20, district: 'Dehradun' },
+  { id: 'kankhal-27', name: '27 MLD Kankhal', plantCode: '27mldknh4', stpId: 'kankhal-27', capacityMld: 27, district: 'Haridwar' },
+  { id: 'bhagwanpur-5', name: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', stpId: 'bhagwanpur-5', capacityMld: 5, district: 'Haridwar' },
+  { id: 'lakkar-ghat-26', name: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26', capacityMld: 26, district: 'Rishikesh' },
+] as const
+
+const PARAM_SAMPLES = [
+  { param: { label: 'nh4n_outlet', delta: '5.1%' }, range: '0-10', time: '9.30am-2.00pm' },
+  { param: { label: 'bod_outlet', delta: '41.0%' }, range: '0-30', time: '8.00am-11.30am' },
+  { param: { label: 'cod_outlet', delta: '23.5%' }, range: '0-150', time: '10.00am-3.00pm' },
+  { param: { label: 'tss_outlet', delta: '36.8%' }, range: '0-50', time: '7.30am-12.00pm' },
+  { param: { label: 'ph_outlet', delta: '7.1%' }, range: '6.5-8.5', time: '9.00am-1.00pm' },
+] as const
+
+const EQUIPMENT_SAMPLES = [
+  { param: { label: 'blower', delta: '18.1%' }, range: '—', time: '10.30am-1.00pm' },
+  { param: { label: 'pump', delta: '11.2%' }, range: '—', time: '8.00am-12.00pm' },
+  { param: { label: 'aerator', delta: '12.6%' }, range: '—', time: '11.00am-2.30pm' },
+  { param: { label: 'flow_meter', delta: '8.7%' }, range: '—', time: '9.15am-1.45pm' },
+] as const
+
+function toCriticalRows(
+  samples: readonly { param: { label: string; delta: string }; range: string; time: string }[],
+  pinned?: Record<string, { param: { label: string; delta: string }; range: string; time: string }>,
+) {
+  return NON_PERFORMING_PLANTS.map((plant, index) => {
+    const sample = pinned?.[plant.plantCode] ?? samples[index % samples.length]
+    return {
+      ...plant,
+      omDept: omDeptFor(plant.plantCode),
+      param: sample.param,
+      range: sample.range,
+      time: sample.time,
+    }
+  })
+}
+
 export const criticalStps = {
   tabs: ['Parameter Breach', 'Equipment Failure'] as const,
-  'Parameter Breach': [
-    {
-      id: 'jagjeetpur-18',
-      name: '18 MLD Jagjeetpur',
-      plantCode: '18mldjag',
-      stpId: 'sarai-18',
-      category: 'Parameter Breach',
-      breachLabel: '3 Parameter Breached',
-      nonComplianceTime: '9:00 AM',
-      parameters: [
-        { key: 'ph', label: 'pH', delta: '13.3%' },
-        { key: 'bod', label: 'BOD', delta: '13.3%' },
-        { key: 'cod', label: 'COD', delta: '13.3%' },
-      ],
+  'Parameter Breach': toCriticalRows(PARAM_SAMPLES, {
+    '14mldsarai': {
+      param: { label: 'nh4n_outlet', delta: '5.1%' },
+      range: '0-10',
+      time: '9.30am-2.00pm',
     },
-    {
-      id: 'sarai-14',
-      name: '14 MLD STP, Sarai',
-      plantCode: '14mldsarai',
-      stpId: 'sarai-14',
-      category: 'Parameter Breach',
-      breachLabel: '3 Parameter Breached',
-      nonComplianceTime: '9:00 AM',
-      parameters: [
-        { key: 'ph', label: 'pH', delta: '13.3%' },
-        { key: 'bod', label: 'BOD', delta: '13.3%' },
-        { key: 'cod', label: 'COD', delta: '13.3%' },
-      ],
-    },
-    {
-      id: 'saliyar-33-a',
-      name: '33 MLD Salyar',
-      plantCode: '33mldsali',
-      stpId: 'saliar-33',
-      category: 'Parameter Breach',
-      breachLabel: '2 Parameter Breached',
-      nonComplianceTime: '9:00 AM to 11:00 AM',
-      parameters: [
-        { key: 'ph', label: 'pH', delta: '12%' },
-        { key: 'cod', label: 'COD', delta: '13.3%' },
-      ],
-    },
-    {
-      id: 'saliyar-33-b',
-      name: '33 MLD Salyar',
-      plantCode: '33mldsali',
-      stpId: 'saliar-33',
-      category: 'Parameter Breach',
-      breachLabel: '2 Parameter Breached',
-      nonComplianceTime: '9:00 AM',
-      parameters: [
-        { key: 'ph', label: 'pH', delta: '12%' },
-        { key: 'cod', label: 'COD', delta: '13.3%' },
-      ],
-    },
-  ],
-  'Equipment Failure': [
-    {
-      id: 'mothorowala-20',
-      name: '20 MLD STP, Mothorowala',
-      plantCode: '20mldmothorowala',
-      stpId: 'mothorowala-20',
-      category: 'Equipment Failure',
-      breachLabel: '2 Equipment Failed',
-      nonComplianceTime: '10:30 AM',
-      parameters: [
-        { key: 'blower', label: 'Blower', delta: '18.1%' },
-        { key: 'pump', label: 'Pump', delta: '11.2%' },
-      ],
-    },
-    {
-      id: 'kankhal-27',
-      name: '27 MLD STP, Kankhal',
-      plantCode: '27mldknh4',
-      stpId: 'kankhal-27',
-      category: 'Equipment Failure',
-      breachLabel: '3 Equipment Failed',
-      nonComplianceTime: '8:00 AM to 12:00 PM',
-      parameters: [
-        { key: 'aerator', label: 'Aerator', delta: '12.6%' },
-        { key: 'flow', label: 'Flow Meter', delta: '8.7%' },
-        { key: 'dosing', label: 'Dosing', delta: '4.5%' },
-      ],
-    },
-    {
-      id: 'bhagwanpur-5',
-      name: '5 MLD STP, Bhagwanpur',
-      plantCode: '5mldbgp6',
-      stpId: 'bhagwanpur-5',
-      category: 'Equipment Failure',
-      breachLabel: '1 Equipment Failed',
-      nonComplianceTime: '2:15 PM',
-      parameters: [{ key: 'blower', label: 'Blower', delta: '9.4%' }],
-    },
-  ],
+  }),
+  'Equipment Failure': toCriticalRows(EQUIPMENT_SAMPLES),
 }
+
 
 /* ==========================================================================
    3. STP MANAGEMENT
