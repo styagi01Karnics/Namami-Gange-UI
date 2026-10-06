@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Security camera glyph from Iconify (`at-icons:security-camera`). */
+/** Figma camera icon — Live Camera Feed. */
 export default function CctvIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="at-icons:security-camera" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-cctv.svg" size={size} className={className} />
 }

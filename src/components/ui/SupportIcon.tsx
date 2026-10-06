@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Support glyph from Iconify (`fluent:person-support-16-filled`). */
+/** Figma support person icon — Support Tickets. */
 export default function SupportIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="fluent:person-support-16-filled" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-support.svg" size={size} className={className} />
 }

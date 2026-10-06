@@ -6,7 +6,7 @@ import { ico } from '../ui/Ico'
  */
 export const TEAM_THEME = {
   'User Management': {
-    color: '#2563EB',
+    color: '#0768D2',
     icon: ico('fluent:people-team-16-filled'),
     blurb: 'Manage user accounts, roles, access, and verification details',
   },

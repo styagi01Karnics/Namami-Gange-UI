@@ -4,41 +4,47 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: [
+          'Inter',
+          'SF Pro Text',
+          'SF Pro',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'sans-serif',
+        ],
         deva: ['"Noto Sans Devanagari"', 'Inter', 'sans-serif'],
       },
       colors: {
-        // page / surfaces
-        // the pale tone sampled from the sidebar banner (public/sidebarbg.png)
-        canvas: '#E6F4FE',
+        // Figma Ganga Plus tokens (node 2155:*)
+        canvas: '#EEF8FC',
         card: '#FFFFFF',
         line: '#E7EEF7',
-        // brand
         brand: {
-          DEFAULT: '#1668E3',
-          light: '#B9D4F7',
-          soft: '#E8F1FD',
-          link: '#2B7CF6',
+          DEFAULT: '#0768D2',
+          light: '#B7D4F5',
+          soft: '#E5F3FF',
+          link: '#0768D2',
         },
-        navy: '#1B4B79',
+        navy: '#003C7A',
         ink: {
-          DEFAULT: '#22303F',
-          soft: '#4A5A6D',
+          DEFAULT: '#07121E',
+          soft: '#646464',
           muted: '#7B8A9C',
         },
-        ok: { DEFAULT: '#2E9E5B', soft: '#EAF7EF' },
-        warn: { DEFAULT: '#F5B417', soft: '#FEF7E6' },
-        danger: { DEFAULT: '#E5484D', soft: '#FDECEE' },
-        slate2: { DEFAULT: '#3A4450', soft: '#F1F4F7' },
-        orange: { DEFAULT: '#EE9B2C' },
+        ok: { DEFAULT: '#168E3F', soft: '#EAF3EC' },
+        warn: { DEFAULT: '#F69A30', soft: '#FEF7E6' },
+        danger: { DEFAULT: '#DC2626', soft: '#F5E7E7' },
+        slate2: { DEFAULT: '#333333', soft: '#F1F4F7' },
+        orange: { DEFAULT: '#F69A30' },
         label: '#B0894F',
       },
       boxShadow: {
-        card: '0px 0px 3px 3px #0768D21A',
+        card: '0px 0px 3px 3px rgba(7, 104, 210, 0.1)',
         pop: '0 8px 24px rgba(23, 43, 77, 0.10)',
       },
       borderRadius: {
-        card: '14px',
+        card: '12px',
       },
       fontSize: {
         '2xs': ['10px', '14px'],

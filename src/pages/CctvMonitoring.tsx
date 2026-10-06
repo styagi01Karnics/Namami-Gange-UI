@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import Select from '../components/ui/Select'
 import CctvSiteCard from '../components/cctv/CctvSiteCard'
@@ -20,7 +19,7 @@ export default function CctvMonitoring() {
   const [openIds, setOpenIds] = useState<string[]>([])
   const [expanded, setExpanded] = useState(null)
   const [liveByStp, setLiveByStp] = useState<Record<string, LiveSiteCamera[]>>({})
-  const [titleActionHost, setTitleActionHost] = useState<HTMLElement | null>(null)
+
 
   const plantOptions = useMemo(
     () =>
@@ -30,10 +29,6 @@ export default function CctvMonitoring() {
       ),
     [stpOptions],
   )
-
-  useEffect(() => {
-    setTitleActionHost(document.getElementById('page-title-action'))
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -131,15 +126,16 @@ export default function CctvMonitoring() {
 
   return (
     <div className="flex flex-col gap-[15px] pb-[22px]">
-      {titleActionHost && createPortal(expandAllButton, titleActionHost)}
-
-      <Select
-        options={stpOptions}
-        value={stpId}
-        onChange={selectStp}
-        className="w-1/2 self-end"
-        align="right"
-      />
+      <div className="flex items-center justify-end gap-[10px]">
+        {expandAllButton}
+        <Select
+          options={stpOptions}
+          value={stpId}
+          onChange={selectStp}
+          className="w-1/2"
+          align="right"
+        />
+      </div>
 
       {sites.map((site) => (
         <CctvSiteCard

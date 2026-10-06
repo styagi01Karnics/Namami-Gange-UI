@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Settings glyph from Iconify (`famicons:settings-sharp`). */
+/** Figma settings gear — Settings (sidebar). */
 export default function SettingsIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="famicons:settings-sharp" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-settings.svg" size={size} className={className} />
 }

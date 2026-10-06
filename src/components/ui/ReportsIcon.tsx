@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Data reports glyph from Iconify (`famicons:document-sharp`). */
+/** Figma document icon — Data Reports. */
 export default function ReportsIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="famicons:document-sharp" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-reports.svg" size={size} className={className} />
 }

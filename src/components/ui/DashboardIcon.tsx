@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Dashboard grid glyph from Iconify (`bi:grid-fill`). */
+/** Figma Grid icon — Dashboard. */
 export default function DashboardIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="bi:grid-fill" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-dashboard.svg" size={size} className={className} />
 }

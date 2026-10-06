@@ -6,7 +6,7 @@
 
 /* Exact card shadow — set here so Tailwind's ring layers cannot override it. */
 .shadow-card {
-  box-shadow: 0px 0px 3px 3px #0768D21A;
+  box-shadow: 0px 0px 3px 3px rgba(7, 104, 210, 0.1);
 }
 
 /* Nested cards drop the glow and use a blue border instead. */

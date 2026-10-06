@@ -102,57 +102,39 @@ function Shell() {
   const [collapsed, setCollapsed] = useState(false)
   const { pathname } = useLocation()
   const title = pageTitle(pathname)
-  const isDashboard = pathname === '/dashboard' || pathname === '/'
   const hideCctvFloat =
     pathname === '/cctv-monitoring' || pathname === stpTabPath('CCTV')
 
-  /**
-   * Dashboard shell: compact header so Top / Non-Performing card tops land above the fold.
-   */
-  if (isDashboard) {
-    return (
-      <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[#F3F9FF]">
-        {/* Full-bleed mountain wash — sits behind header + top of body only */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[180px] overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-[rgba(189,226,253,0.65)] to-[rgba(243,249,255,0.85)]" />
-          <img
-            src="/dashboard/hero-mountains.png"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-[center_28%] opacity-40"
-          />
-        </div>
-
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-          <Topbar title={title} variant="dashboard" />
-
-          <div className="flex min-h-0 flex-1 overflow-hidden">
-            <Sidebar
-              collapsed={collapsed}
-              onToggleCollapse={() => setCollapsed((v) => !v)}
-              variant="dashboard"
-            />
-            <main className="scroll-thin relative min-w-0 flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[2px]">
-              <AppRoutesInner />
-            </main>
-          </div>
-        </div>
-
-        {!hideCctvFloat && <FloatingCctvButton />}
-      </div>
-    )
-  }
-
+  // One chrome for every authenticated page — Figma mountain header on all tabs.
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-canvas">
-      <Sidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed((v) => !v)} />
+    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[#EEF8FC]">
+      {/* Full-width mountain wash behind header (matches Figma on every screen). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[230px] overflow-hidden"
+      >
+        <img
+          src="/dashboard/hero-mountains.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(189,226,253,0.2)] via-transparent to-[#EEF8FC]" />
+      </div>
 
-      <main className="scroll-thin relative flex min-w-0 flex-1 flex-col overflow-y-auto px-[24px]">
-        <Topbar title={title} />
-        <AppRoutesInner />
-      </main>
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <Topbar title={title} variant="dashboard" />
+
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <Sidebar
+            collapsed={collapsed}
+            onToggleCollapse={() => setCollapsed((v) => !v)}
+            variant="dashboard"
+          />
+          <main className="scroll-thin relative min-w-0 flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[2px]">
+            <AppRoutesInner />
+          </main>
+        </div>
+      </div>
 
       {!hideCctvFloat && <FloatingCctvButton />}
     </div>

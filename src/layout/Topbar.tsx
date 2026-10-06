@@ -162,22 +162,22 @@ export default function Topbar({
   if (variant === 'dashboard') {
     return (
       <>
-        {/* Logos + controls — tightened so dashboard first fold shows bottom cards. */}
-        <header className="relative z-20 flex h-[112px] shrink-0 items-start justify-between px-[40px] pt-[6px] pr-[28px]">
-          <div className="flex min-w-0 flex-1 items-start gap-[28px]">
+        {/* Transparent header so the shell mountain wash shows through (Figma). */}
+        <header className="relative z-20 flex h-[156px] shrink-0 items-start justify-between px-[40px] pt-[10px] pr-[28px]">
+          <div className="flex min-w-0 flex-1 items-start gap-[40px]">
             <img
               src="/dashboard/logo-uttarakhand.png"
               alt="Uttarakhand Gange — Real-Time STP Monitoring Platform"
-              className="h-[100px] w-[120px] shrink-0 object-contain object-top"
+              className="h-[141px] w-[170px] shrink-0 object-contain object-top"
             />
             <img
               src="/dashboard/logo-kartavya.png"
               alt="Kartavya Ganga — नहीं रुकेंगे, स्वच्छ करेंगे"
-              className="mt-[2px] h-[94px] w-auto max-w-[min(340px,40vw)] object-contain object-left"
+              className="mt-[3px] h-[133px] w-auto max-w-[min(400px,42vw)] object-contain object-left"
             />
           </div>
 
-          <div className="mt-[14px] flex shrink-0 items-center gap-[8px]">
+          <div className="mt-[22px] flex shrink-0 items-center gap-[8px]">
             <div ref={notifRef} className="relative z-40">
               <button
                 type="button"

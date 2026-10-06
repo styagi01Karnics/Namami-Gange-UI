@@ -1,7 +1,7 @@
-import { Icon } from '@iconify/react'
+import FigmaNavIcon from './FigmaNavIcon'
 import type { IconProps } from '../../types'
 
-/** Team management glyph from Iconify (`heroicons:users-solid`). */
+/** Figma people icon — Team Management. */
 export default function TeamIcon({ size = 20, className = '' }: IconProps) {
-  return <Icon icon="heroicons:users-solid" width={size} height={size} className={`shrink-0 ${className}`} />
+  return <FigmaNavIcon src="/dashboard/icons/nav-team.svg" size={size} className={className} />
 }

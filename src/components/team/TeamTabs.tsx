@@ -1,11 +1,10 @@
 /**
- * Section switcher for Team Management.
- * Same square-footed strip as STP Management / Data Reports.
+ * Team Management tab strip — Figma pill style (node 2155:9015).
  */
 export default function TeamTabs({ tabs, active, onChange, className = '' }) {
   return (
-    <div className={`scroll-thin overflow-x-auto border-b border-line ${className}`}>
-      <div className="flex items-end gap-[4px]">
+    <div className={`scroll-thin overflow-x-auto ${className}`}>
+      <div className="inline-flex items-center gap-[8px] rounded-[10px] bg-white/80 p-[4px] shadow-card">
         {tabs.map((tab) => {
           const isActive = active === tab
 
@@ -14,10 +13,10 @@ export default function TeamTabs({ tabs, active, onChange, className = '' }) {
               key={tab}
               type="button"
               onClick={() => onChange(tab)}
-              className={`shrink-0 whitespace-nowrap rounded-t-[8px] text-[14px] font-semibold leading-5 tracking-normal transition-all ${
+              className={`h-[36px] shrink-0 whitespace-nowrap rounded-[8px] px-[16px] text-[14px] font-semibold leading-5 transition-colors ${
                 isActive
-                  ? 'h-[42px] bg-brand px-[16px] text-white'
-                  : 'h-[34px] border border-b-0 border-line bg-white px-[12px] text-[#07121E] hover:text-brand'
+                  ? 'bg-brand text-white'
+                  : 'bg-transparent text-ink hover:bg-brand-soft hover:text-brand'
               }`}
             >
               {tab}
