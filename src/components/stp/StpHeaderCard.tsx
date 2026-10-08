@@ -6,27 +6,44 @@ import StatusPill, { statusTone } from '../ui/StatusPill'
 import { fetchPenaltyVendors } from '../../api/penalty'
 
 const PinIcon = ico('fluent:location-24-filled')
-const PersonIcon = ico('fluent:person-24-filled')
-const PhoneIcon = ico('fluent:call-24-filled')
-const MailIcon = ico('fluent:mail-24-filled')
-const RoleIcon = ico('fluent:hat-graduation-24-filled')
 
-function ContactItem({ icon: Glyph, children }) {
+function DetailRow({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex min-w-0 items-center gap-[8px] text-[13px] leading-[18px] text-ink">
-      <Glyph size={15} className="shrink-0 text-brand" />
-      <span className="truncate">{children}</span>
+    <div className="grid grid-cols-[120px_12px_1fr] items-baseline gap-x-[4px] text-[13px] leading-[20px]">
+      <span className="text-ink-soft">{label}</span>
+      <span className="text-ink-soft">:</span>
+      <span className="min-w-0 break-words font-medium text-ink">{value || '—'}</span>
     </div>
   )
 }
 
-function SiteField({ label, value }) {
+function DetailColumn({ title, rows, bordered }: { title: string; rows: [string, string | null | undefined][]; bordered?: boolean }) {
   return (
-    <div className="flex min-w-0 items-baseline gap-[10px]">
-      <span className="shrink-0 text-[12.5px] font-medium leading-4 text-ink-soft">{label}</span>
-      <span className="truncate text-[13px] font-semibold leading-[18px] text-ink">{value}</span>
+    <div className={`min-w-0 ${bordered ? 'lg:border-l lg:border-[#E3ECF7] lg:pl-[28px]' : ''}`}>
+      <h3 className="text-[15px] font-semibold leading-5 text-[#003C7A]">{title}</h3>
+      <div className="mt-[10px] space-y-[4px]">
+        {rows.map(([label, value]) => <DetailRow key={label} label={label} value={value} />)}
+      </div>
     </div>
   )
+}
+
+type StpInfo = {
+  name: string
+  address: string
+  inCharge: { name: string; phone: string; email: string; role: string; department?: string; alternateContact?: string }
+  vendor: {
+    name: string
+    prefixId: string
+    contactPerson?: string
+    phone?: string
+    email?: string
+    amcStart?: string
+    amcEnd?: string
+    serviceType?: string
+    address?: string
+  }
+  site: { state: string; city: string; zip: string; lat: string; lng: string; technology?: string; commissionedOn?: string }
 }
 
 function DetailsPanel({
@@ -34,48 +51,58 @@ function DetailsPanel({
   vendorName,
   prefixId,
 }: {
-  stp: {
-    inCharge: { name: string; phone: string; email: string; role: string }
-    vendor: { name: string; prefixId: string }
-    site: { state: string; city: string; zip: string; lat: string; lng: string }
-  }
+  stp: StpInfo
   vendorName?: string | null
   prefixId?: string | null
 }) {
   const { inCharge, vendor, site } = stp
+  const capacity = stp.name.match(/[\d.]+\s*MLD/i)?.[0]
+  const plantName = stp.name.replace(/\s+STP,?\s*/i, ' ').trim()
 
   return (
-    <div className="mt-[16px]">
-      <div className="grid grid-cols-[1.35fr_1fr] items-start gap-x-[40px] gap-y-[16px]">
-        <div>
-          <h3 className="text-[14px] font-semibold leading-5 text-[#0768D2]">STP In-Charges</h3>
-          <div className="mt-[12px] grid grid-cols-2 gap-x-[28px] gap-y-[12px]">
-            <ContactItem icon={PersonIcon}>{inCharge.name}</ContactItem>
-            <ContactItem icon={PhoneIcon}>{inCharge.phone}</ContactItem>
-            <ContactItem icon={MailIcon}>{inCharge.email}</ContactItem>
-            <ContactItem icon={RoleIcon}>{inCharge.role}</ContactItem>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-[14px] font-semibold leading-5 text-[#0768D2]">Vendor Details</h3>
-          <div className="mt-[12px] space-y-[12px]">
-            <SiteField label="Vendor" value={vendorName || vendor.name || '—'} />
-            <SiteField label="Prefix ID" value={prefixId || vendor.prefixId || '—'} />
-          </div>
-        </div>
-      </div>
-
-      <h3 className="mt-[18px] text-[14px] font-semibold leading-5 text-[#0768D2]">STP Details</h3>
-      <div className="mt-[10px] rounded-[10px] border border-[#C7DDFB] bg-white px-[18px] py-[14px]">
-        <div className="grid grid-cols-3 gap-x-[24px] gap-y-[12px]">
-          <SiteField label="State" value={site.state} />
-          <SiteField label="City" value={site.city} />
-          <SiteField label="Zip Code" value={site.zip} />
-          <SiteField label="Latitude" value={site.lat} />
-          <SiteField label="Longitude" value={site.lng} />
-        </div>
-      </div>
+    <div className="mt-[16px] grid grid-cols-1 gap-x-[28px] gap-y-[20px] rounded-[10px] border border-[#E3ECF7] bg-white px-[18px] py-[16px] lg:grid-cols-3">
+      <DetailColumn
+        title="STP Details"
+        rows={[
+          ['STP Name', plantName],
+          ['State', site.state],
+          ['City', site.city],
+          ['Address', stp.address],
+          ['Zip Code', site.zip],
+          ['Latitude', site.lat],
+          ['Longitude', site.lng],
+          ['Capacity', capacity],
+          ['Technology', site.technology],
+          ['Commissioned On', site.commissionedOn],
+        ]}
+      />
+      <DetailColumn
+        bordered
+        title="STP In-Charge"
+        rows={[
+          ['Name', inCharge.name],
+          ['Designation', inCharge.role],
+          ['Department', inCharge.department],
+          ['Mobile', inCharge.phone],
+          ['Email', inCharge.email],
+          ['Alternate Contact', inCharge.alternateContact],
+        ]}
+      />
+      <DetailColumn
+        bordered
+        title="Vendor Details"
+        rows={[
+          ['Vendor Name', vendorName || vendor.name],
+          ['Contact Person', vendor.contactPerson],
+          ['Mobile', vendor.phone],
+          ['Email', vendor.email],
+          ['Prefix ID', prefixId || vendor.prefixId],
+          ['AMC Start Date', vendor.amcStart],
+          ['AMC End Date', vendor.amcEnd],
+          ['Service Type', vendor.serviceType],
+          ['Address', vendor.address],
+        ]}
+      />
     </div>
   )
 }
@@ -84,14 +111,9 @@ export default function StpHeaderCard({
   stp,
   plantCode,
 }: {
-  stp: {
-    name: string
+  stp: StpInfo & {
     status: string
-    address: string
     penalty: { amount: string; reason?: string }
-    inCharge: { name: string; phone: string; email: string; role: string }
-    vendor: { name: string; prefixId: string }
-    site: { state: string; city: string; zip: string; lat: string; lng: string }
   }
   plantCode?: string
 }) {

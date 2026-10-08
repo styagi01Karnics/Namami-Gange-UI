@@ -12,6 +12,7 @@ import SectionTabs from '../components/stp/SectionTabs'
 import TabSectionHeader from '../components/stp/TabSectionHeader'
 import TabPlaceholder from '../components/stp/TabPlaceholder'
 import ManpowerTab from '../components/manpower/ManpowerTab'
+import { todayLabel } from '../components/manpower/todayManpower'
 import InventoryTab from '../components/inventory/InventoryTab'
 import CctvTab from '../components/cctv/CctvTab'
 import CalibrationTab from '../components/calibration/CalibrationTab'
@@ -38,7 +39,7 @@ const TAB_BODY = {
   'Remote Calibration': CalibrationTab,
   'Transaction Logs': TransactionLogsTab,
   Contracts: ContractsTab,
-  Compliance: ComplianceTab,
+  Violation: ComplianceTab,
   Billing: BillingTab,
 }
 
@@ -62,6 +63,17 @@ export default function StpManagement() {
   )
   const [range, setRange] = useState(defaultDateRange)
   const [billingMonth, setBillingMonth] = useState('June 2026')
+  const previousMonth = useMemo(() => {
+    const today = new Date()
+    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const end = new Date(today.getFullYear(), today.getMonth(), 0)
+    const month = start.toLocaleString('en-US', { month: 'long' })
+    const shortMonth = start.toLocaleString('en-US', { month: 'short' })
+    return {
+      label: `${month} ${start.getFullYear()}`,
+      range: `1 ${shortMonth} ${start.getFullYear()} - ${end.getDate()} ${shortMonth} ${start.getFullYear()}`,
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -125,7 +137,7 @@ export default function StpManagement() {
 
   // Focus Compliance section when arriving from dashboard non-performing / top links.
   useEffect(() => {
-    if (tab !== 'Compliance') return undefined
+    if (tab !== 'Violation') return undefined
     const timer = window.setTimeout(() => {
       document.getElementById('stp-section-compliance')?.scrollIntoView({
         behavior: 'smooth',
@@ -165,12 +177,31 @@ export default function StpManagement() {
           Generate Invoice
         </Button>
       </div>
+    ) : tab === 'Manpower' ? (
+      <span className="shrink-0 whitespace-nowrap rounded-[10px] border border-[#C7DDFB] bg-[#F4F9FF] px-[14px] py-[7px] text-[13px] font-semibold text-[#003C7A]">
+        Today, {todayLabel()}
+      </span>
+    ) : tab === 'Violation' ? (
+      <span className="flex h-[32px] shrink-0 items-center whitespace-nowrap rounded-[9px] border border-line bg-white px-[14px] text-[13px] font-medium text-ink">
+        {previousMonth.label}
+      </span>
     ) : (
       <DateRangeField compact value={range} onChange={setRange} className="w-[236px] shrink-0" />
     )
 
   return (
-    <ExportMetaProvider value={stpExportMeta(stp, tab === 'Billing' ? billingMonth : range)}>
+    <ExportMetaProvider
+      value={stpExportMeta(
+        stp,
+        tab === 'Billing'
+          ? billingMonth
+          : tab === 'Manpower'
+            ? `Today, ${todayLabel()}`
+            : tab === 'Violation'
+              ? previousMonth.range
+              : range,
+      )}
+    >
       <div className="flex flex-col gap-[15px] pb-[22px]">
         <Select
           options={pickerOptions}
@@ -194,14 +225,14 @@ export default function StpManagement() {
         <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />
 
         <Card
-          id={tab === 'Compliance' ? 'stp-section-compliance' : undefined}
+          id={tab === 'Violation' ? 'stp-section-compliance' : undefined}
           className="mt-[2px] scroll-mt-[24px] rounded-[12px] border-0 p-[16px] shadow-card"
         >
           <TabSectionHeader tab={tab} right={headerControls} />
 
           <div className="mt-[16px]">
             {TabBody ? (
-              tab === 'Compliance' ? (
+              tab === 'Violation' ? (
                 <ComplianceTab
                   plantCode={selectedPlant?.plantCode}
                   exportLabel={
@@ -209,7 +240,7 @@ export default function StpManagement() {
                     selectedPlant?.label ||
                     stp.name
                   }
-                  dateRangeLabel={range}
+                  dateRangeLabel={previousMonth.range}
                   stpManagementPdf
                 />
               ) : (

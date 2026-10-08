@@ -24,7 +24,7 @@ function ComplianceReportBody() {
   return (
     <>
       <TabSectionHeader
-        tab="Compliance"
+        tab="Violation"
         right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
       />
 
