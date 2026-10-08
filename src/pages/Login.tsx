@@ -118,7 +118,7 @@ export default function Login() {
         </section>
 
         {/* Sign-in card */}
-        <section className="flex w-full max-w-[480px] shrink-0 flex-col rounded-[20px] bg-white px-5 py-4 shadow-pop sm:px-8 sm:py-5 xl:max-w-[520px] [@media(min-height:820px)]:px-[42px] [@media(min-height:820px)]:py-8">
+        <section className="flex w-full max-w-[440px] shrink-0 flex-col rounded-[22px] border border-white/70 bg-white px-5 py-4 shadow-[0_20px_60px_rgba(4,25,55,0.22)] sm:px-8 sm:py-5 [@media(min-height:820px)]:px-9 [@media(min-height:820px)]:py-7">
           <h2 className="bg-gradient-to-r from-[#1668E3] to-[#EE9B2C] bg-clip-text text-center text-[22px] font-bold leading-8 text-transparent sm:text-[26px] [@media(min-height:820px)]:text-[28px] [@media(min-height:820px)]:leading-9">
             Namami Gange
           </h2>

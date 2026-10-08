@@ -47,7 +47,7 @@ function resolvePlantId(options: PlantOption[], plantParam: string | null) {
   const byCode = options.find((option) => option.id === plantParam || option.plantCode === plantParam)
   if (byCode) return byCode.id
   const byStp = options.find((option) => option.stpId === plantParam)
-  return byStp?.id ?? null
+  return byStp?.id ?? plantParam
 }
 
 export default function StpManagement() {
@@ -102,8 +102,22 @@ export default function StpManagement() {
   }
 
   const selectedPlant = useMemo(
-    () => plantOptions.find((option) => option.id === plantCode) ?? plantOptions[0],
-    [plantOptions, plantCode],
+    () => plantOptions.find((option) => option.id === plantCode)
+      ?? (plantParam
+        ? {
+            id: plantParam,
+            label: searchParams.get('name') ?? plantParam,
+            plantCode: plantParam,
+            stpId: plantParam,
+          }
+        : plantOptions[0]),
+    [plantOptions, plantCode, plantParam, searchParams],
+  )
+  const pickerOptions = useMemo(
+    () => selectedPlant && !plantOptions.some((option) => option.id === selectedPlant.id)
+      ? [...plantOptions, selectedPlant]
+      : plantOptions,
+    [plantOptions, selectedPlant],
   )
   const stp = resolveStpDetail(selectedPlant)
   const TabBody = TAB_BODY[tab]
@@ -159,7 +173,7 @@ export default function StpManagement() {
     <ExportMetaProvider value={stpExportMeta(stp, tab === 'Billing' ? billingMonth : range)}>
       <div className="flex flex-col gap-[15px] pb-[22px]">
         <Select
-          options={plantOptions}
+          options={pickerOptions}
           value={selectedPlant?.id}
           onChange={onPlantChange}
           className="w-1/2 self-end"
