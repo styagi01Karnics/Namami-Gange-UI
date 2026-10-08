@@ -12,13 +12,15 @@ import {
 import { liveStpData } from '../../data/mockData'
 import Card from '../ui/Card'
 
-type ParameterKey = 'COD' | 'BOD' | 'TSS' | 'pH'
+type ParameterKey = 'BOD' | 'pH' | 'Totalizer' | 'TSS' | 'COD' | 'NO₃-N'
 
-const PARAMS: Record<ParameterKey, { unit: string; limit: number; label: string }> = {
-  COD: { unit: 'mg/L', limit: 50, label: 'Chemical Oxygen Demand' },
-  BOD: { unit: 'mg/L', limit: 10, label: 'Biochemical Oxygen Demand' },
-  TSS: { unit: 'mg/L', limit: 20, label: 'Total Suspended Solids' },
-  'pH': { unit: 'pH', limit: 9, label: 'pH' },
+const PARAMS: Record<ParameterKey, { unit: string; limit?: number; min?: number; ideal?: string; label: string }> = {
+  BOD: { unit: 'mg/L', limit: 10, min: 0, ideal: '0 – 10', label: 'Biochemical Oxygen Demand' },
+  'pH': { unit: 'pH', limit: 9, min: 5.5, ideal: '5.5 – 9', label: 'pH' },
+  Totalizer: { unit: 'm³', label: 'Totalizer' },
+  TSS: { unit: 'mg/L', limit: 20, min: 0, ideal: '0 – 20', label: 'Total Suspended Solids' },
+  COD: { unit: 'mg/L', limit: 50, min: 0, ideal: '0 – 50', label: 'Chemical Oxygen Demand' },
+  'NO₃-N': { unit: 'mg/L', limit: 10, min: 0, ideal: '0 – 10', label: 'Nitrate Nitrogen' },
 }
 
 const COLORS = ['#2588EE', '#16B98B', '#FF6265', '#FF941F', '#8B5CF6', '#EC58A5', '#12B8D2', '#F5B700', '#3F75D5', '#19A97C', '#F04444', '#28B7E5', '#7C8BA1']
@@ -32,9 +34,15 @@ function seriesValue(stpIndex: number, pointIndex: number, parameter: ParameterK
       ? [5.2, 4.7, 8.1, 3.8, 4.4, 6.2, 5.5, 5.3, 3.2, 6.8, 5.1, 4.9, 3.6][stpIndex]
       : parameter === 'TSS'
         ? [14, 18, 24, 12, 16, 21, 19, 15, 11, 22, 17, 13, 10][stpIndex]
-        : [7.1, 7.3, 8.8, 7.0, 7.4, 7.2, 7.6, 7.4, 7.1, 8.4, 7.3, 7.5, 7.2][stpIndex]
-  const wave = Math.sin(pointIndex * 0.72 + stpIndex * 1.37) * (parameter === 'pH' ? 0.3 : config.limit * 0.085)
-    + Math.cos(pointIndex * 0.31 + stpIndex * 0.83) * (parameter === 'pH' ? 0.14 : config.limit * 0.045)
+        : parameter === 'NO₃-N'
+          ? [6.0, 6.4, 8.1, 5.6, 7.2, 6.8, 5.4, 6.3, 4.8, 8.4, 6.2, 5.9, 7.0][stpIndex]
+          : parameter === 'Totalizer'
+            ? 0
+            : [7.1, 7.3, 8.8, 7.0, 7.4, 7.2, 7.6, 7.4, 7.1, 8.4, 7.3, 7.5, 7.2][stpIndex]
+  const variation = parameter === 'pH' ? 0.3 : parameter === 'Totalizer' ? 80 : (config.limit ?? 10) * 0.085
+  const secondaryVariation = parameter === 'pH' ? 0.14 : parameter === 'Totalizer' ? 35 : (config.limit ?? 10) * 0.045
+  const wave = Math.sin(pointIndex * 0.72 + stpIndex * 1.37) * variation
+    + Math.cos(pointIndex * 0.31 + stpIndex * 0.83) * secondaryVariation
   return Number(Math.max(0, base + wave).toFixed(1))
 }
 
@@ -72,6 +80,7 @@ export default function RealtimeStpTrendsCard() {
   }, [parameter])
 
   const filteredPlants = liveStpData.filter((stp) => stp.name.toLowerCase().includes(search.toLowerCase()))
+  const allPlantsSelected = liveStpData.every((stp) => selected.has(stp.id))
   const currentValues = liveStpData.map((stp, index) => ({
     stp,
     value: seriesValue(index, CHART_POINTS - 1, parameter),
@@ -80,6 +89,20 @@ export default function RealtimeStpTrendsCard() {
   const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const splitIndex = Math.ceil(liveStpData.length / 2)
   const visibleGroups = [liveStpData.slice(0, splitIndex), liveStpData.slice(splitIndex)]
+  const matrixStatus = (value: number) => {
+    if (config.min === undefined || config.limit === undefined) return 'normal'
+    if (value < config.min || value > config.limit) return 'breach'
+    const width = config.limit - config.min
+    const nearLower = value < config.min + width * 0.12
+    const nearUpper = value > config.limit - width * 0.12
+    return nearLower || nearUpper ? 'warning' : 'normal'
+  }
+
+  const MATRIX_COLORS = {
+    normal: 'bg-[#DDF8E8] text-[#155B37]',
+    warning: 'bg-[#FFF1BD] text-[#73530A]',
+    breach: 'bg-[#FFDADA] text-[#8F2222]',
+  }
 
   const togglePlant = (id: string) => {
     setSelected((previous) => {
@@ -114,20 +137,30 @@ export default function RealtimeStpTrendsCard() {
             <p className="text-[12px] font-medium leading-4 text-[#7085A2]">Compare parameter values across all STPs</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="flex flex-col gap-1 text-[11px] font-medium text-[#647A96]">
-            Parameter
-            <select value={parameter} onChange={(event) => setParameter(event.target.value as ParameterKey)} className="h-9 rounded-[7px] border border-[#DCE8F5] bg-white px-2 text-[12px] font-semibold text-[#273B56] outline-none focus:border-brand">
-              {Object.entries(PARAMS).map(([key, item]) => <option key={key} value={key}>{key} ({item.unit})</option>)}
-            </select>
-          </label>
-          <div className="flex flex-col gap-1 text-[11px] font-medium text-[#647A96]">
+        <div className="flex flex-nowrap items-end gap-2">
+          <div className="flex shrink-0 flex-col gap-1 text-[11px] font-medium text-[#647A96]">
+            <span>Ideal Range</span>
+            <span className="inline-flex h-9 items-center">
+              <span className="inline-flex min-h-[26px] items-center rounded-full bg-[#EAF4FF] px-2 text-[10px] font-semibold text-[#1673E6]">
+                {config.ideal ? `${config.ideal} ${config.unit}` : 'Not specified'}
+              </span>
+            </span>
+          </div>
+          <div className="flex shrink-0 flex-col gap-1 text-[11px] font-medium text-[#647A96]">
+            <label htmlFor="trend-parameter">Parameter</label>
+            <div className="flex h-9 items-center">
+              <select id="trend-parameter" value={parameter} onChange={(event) => setParameter(event.target.value as ParameterKey)} className="h-9 rounded-[7px] border border-[#DCE8F5] bg-white px-2 text-[12px] font-semibold text-[#273B56] outline-none focus:border-brand">
+                {Object.entries(PARAMS).map(([key, item]) => <option key={key} value={key}>{key} ({item.unit})</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-col gap-1 text-[11px] font-medium text-[#647A96]">
             Time Range
             <div className="flex h-9 items-center rounded-[7px] border border-[#E2ECF7] bg-[#F6FAFE] p-[2px]">
               <span className="flex h-[29px] items-center rounded-[5px] bg-[#1673E6] px-3 text-[11px] font-semibold text-white shadow-sm">24H</span>
             </div>
           </div>
-          <div className="flex h-9 items-center rounded-[7px] border border-[#E2ECF7] bg-white p-[2px]">
+          <div className="flex h-9 shrink-0 items-center rounded-[7px] border border-[#E2ECF7] bg-white p-[2px]">
             <button type="button" onClick={() => setView('graph')} className={`flex h-[29px] items-center gap-1 rounded-[5px] px-2 text-[11px] font-semibold ${view === 'graph' ? 'bg-[#1673E6] text-white' : 'text-[#51647D]'}`}><LineChartIcon size={14} /> Graphical View</button>
             <button type="button" onClick={() => setView('list')} className={`flex h-[29px] items-center gap-1 rounded-[5px] px-2 text-[11px] font-semibold ${view === 'list' ? 'bg-[#1673E6] text-white' : 'text-[#51647D]'}`}><List size={14} /> List View</button>
           </div>
@@ -150,10 +183,39 @@ export default function RealtimeStpTrendsCard() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="max-h-[258px] overflow-auto">
-              <table className="w-full min-w-max border-collapse text-left text-[12px]">
-                <thead className="sticky top-0 bg-[#EFF7FF] text-[#526780]"><tr><th className="p-2">Time</th>{liveStpData.filter((stp) => selected.has(stp.id)).map((stp) => <th key={stp.id} className="min-w-[90px] p-2">{stp.name}</th>)}</tr></thead>
-                <tbody>{rows.map((row) => <tr key={String(row.time)} className="border-b border-[#E8F0F8]"><td className="whitespace-nowrap p-2 text-[#526780]">{row.time}</td>{liveStpData.filter((stp) => selected.has(stp.id)).map((stp) => <td key={stp.id} className="p-2 font-medium">{row[stp.id]} {config.unit}</td>)}</tr>)}</tbody>
+            <div className="max-h-[320px] overflow-auto">
+              <table className="w-full min-w-[900px] border-separate border-spacing-[1px] text-left text-[11px]">
+                <thead className="sticky top-0 z-[2] text-center text-[10px] font-semibold text-[#526780]">
+                  <tr>
+                    <th className="sticky left-0 z-[3] w-9 bg-[#EFF7FF] px-2 py-1.5">#</th>
+                    <th className="sticky left-9 z-[3] min-w-[190px] bg-[#EFF7FF] px-2 py-1.5 text-left">STP Name</th>
+                    <th className="w-[76px] bg-[#EFF7FF] px-2 py-1.5">Capacity<br />(MLD)</th>
+                    <th className="w-[82px] bg-[#EFF7FF] px-2 py-1.5">Status</th>
+                    <th className="w-[110px] bg-[#EFF7FF] px-2 py-1.5">{parameter}<br />({config.unit})<br />{config.ideal ?? '—'}</th>
+                    <th className="w-[90px] bg-[#EFF7FF] px-2 py-1.5">Trend</th>
+                    <th className="w-[100px] bg-[#EFF7FF] px-2 py-1.5">Last Update</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {liveStpData.filter((stp) => selected.has(stp.id)).map((stp) => {
+                    const index = liveStpData.findIndex((plant) => plant.id === stp.id)
+                    return (
+                      <tr key={stp.id} className="h-[34px] text-center">
+                        <td className="sticky left-0 z-[1] bg-white px-2 py-1 text-[#647A96]">{index + 1}</td>
+                        <td className="sticky left-9 z-[1] bg-white px-2 py-1 text-left font-semibold text-[#245077]" title={stp.name}>{stp.name}</td>
+                        <td className="bg-white px-2 py-1">{stp.name.match(/[\d.]+/)?.[0] ?? '—'}</td>
+                        <td className="bg-white px-2 py-1"><span className="inline-flex items-center gap-1 rounded-full bg-[#E4F8EC] px-2 py-1 text-[10px] font-semibold text-[#16834A]"><span className="size-1.5 rounded-full bg-[#16A765]" />Online</span></td>
+                        {(() => {
+                          const value = currentValues[index].value
+                          const status = matrixStatus(value)
+                          return <td className={`px-2 py-1 font-semibold ${MATRIX_COLORS[status]}`}>{value.toFixed(1)}</td>
+                        })()}
+                        <td className={`bg-white px-2 py-1 font-semibold ${currentValues[index].trend === 'up' ? 'text-[#E34449]' : 'text-[#15976A]'}`}>{currentValues[index].trend === 'up' ? '↑' : '↓'} {(1.1 + (index % 5) * 0.6).toFixed(1)}%</td>
+                        <td className="bg-white px-2 py-1 text-[#647A96]">{currentTime}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
               </table>
             </div>
           )}
@@ -162,7 +224,14 @@ export default function RealtimeStpTrendsCard() {
         <aside className="flex min-h-0 flex-col rounded-[9px] border border-[#E5EEF8] bg-white p-2">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-[12px] font-bold text-[#243955]">STP List ({liveStpData.length})</h3>
-            <button type="button" onClick={() => setSelected(new Set(liveStpData.map((stp) => stp.id)))} className="text-[11px] font-semibold text-[#1673E6] hover:underline">Select all</button>
+            <button
+              type="button"
+              aria-pressed={allPlantsSelected}
+              onClick={() => setSelected(allPlantsSelected ? new Set() : new Set(liveStpData.map((stp) => stp.id)))}
+              className="text-[11px] font-semibold text-[#1673E6] hover:underline"
+            >
+              {allPlantsSelected ? 'Deselect all' : 'Select all'}
+            </button>
           </div>
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search STP..." className="mt-1.5 h-8 rounded-[6px] border border-[#E4ECF5] px-2 text-[11px] outline-none focus:border-brand" />
           <div className="scroll-thin mt-1.5 max-h-[206px] space-y-0.5 overflow-y-auto">
@@ -217,15 +286,18 @@ export default function RealtimeStpTrendsCard() {
                 <tbody>{group.map((stp) => {
                   const index = liveStpData.findIndex((plant) => plant.id === stp.id)
                   const value = currentValues[index].value
-                  const status = value > config.limit ? 'Breach' : value > config.limit * 0.8 ? 'Warning' : 'Normal'
-                  return <tr key={stp.id} className="border-b border-[#E8F0F8] last:border-0"><td className="p-1 text-[#647A96]">{index + 1}</td><td className="truncate p-1 font-medium text-[#245077]" title={stp.name}>{stp.name}</td><td className="p-1">{stp.name.match(/[\d.]+/)?.[0] ?? '—'}</td><td className="p-1 font-semibold">{value.toFixed(1)}</td><td className="p-1">0-{config.limit}</td><td className="p-1"><span className={`inline-flex items-center gap-0.5 whitespace-nowrap font-semibold ${status === 'Normal' ? 'text-[#13996C]' : status === 'Warning' ? 'text-[#EAA600]' : 'text-[#E33E45]'}`}><span className="size-1.5 rounded-full bg-current" />{status}</span></td><td className={`p-1 font-semibold ${currentValues[index].trend === 'up' ? 'text-[#E34449]' : 'text-[#15976A]'}`}>{currentValues[index].trend === 'up' ? '↑' : '↓'} {(1.1 + (index % 5) * 0.6).toFixed(1)}%</td></tr>
+                  const hasIdeal = config.min !== undefined && config.limit !== undefined
+                  const outOfRange = hasIdeal && (value < config.min! || value > config.limit!)
+                  const nearLimit = hasIdeal && (value >= config.limit! * 0.8 || value < config.min! + (config.limit! - config.min!) * 0.1)
+                  const status = !hasIdeal ? 'Normal' : outOfRange ? 'Breach' : nearLimit ? 'Warning' : 'Normal'
+                  return <tr key={stp.id} className="border-b border-[#E8F0F8] last:border-0"><td className="p-1 text-[#647A96]">{index + 1}</td><td className="truncate p-1 font-medium text-[#245077]" title={stp.name}>{stp.name}</td><td className="p-1">{stp.name.match(/[\d.]+/)?.[0] ?? '—'}</td><td className="p-1 font-semibold">{value.toFixed(1)}</td><td className="p-1">{config.ideal ?? '—'}</td><td className="p-1"><span className={`inline-flex items-center gap-0.5 whitespace-nowrap font-semibold ${status === 'Normal' ? 'text-[#13996C]' : status === 'Warning' ? 'text-[#EAA600]' : 'text-[#E33E45]'}`}><span className="size-1.5 rounded-full bg-current" />{status}</span></td><td className={`p-1 font-semibold ${currentValues[index].trend === 'up' ? 'text-[#E34449]' : 'text-[#15976A]'}`}>{currentValues[index].trend === 'up' ? '↑' : '↓'} {(1.1 + (index % 5) * 0.6).toFixed(1)}%</td></tr>
                 })}</tbody>
               </table>
             </div>
           ))}
         </div>
       </section>
-      <p className="mt-2 px-1 text-[11px] leading-4 text-[#788A9E]">Preview data only — current readings, trends, and statuses are illustrative. Live and historical parameter telemetry is not connected.</p>
+      
     </Card>
   )
 }

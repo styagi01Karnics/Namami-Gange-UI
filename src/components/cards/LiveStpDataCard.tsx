@@ -95,7 +95,7 @@ export default function LiveStpDataCard() {
                   title={stp.operator}
                   className={`inline-flex h-[22px] max-w-[112px] shrink-0 items-center truncate rounded-full px-[7px] text-[10px] font-semibold ${stp.status === 'Active' ? 'bg-[#EAF3EC] text-[#168E3F]' : 'bg-[#F1F4F7] text-[#667085]'}`}
                 >
-                  {stp.operator} · {stp.status}
+                  {stp.operator} · {stp.status === 'Active' ? 'Online' : stp.status}
                 </span>
               </div>
               <div className="mt-[6px] flex gap-[16px]">

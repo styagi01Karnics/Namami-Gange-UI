@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
@@ -16,15 +16,7 @@ export type PlaybackFeed = {
   status?: string
 }
 
-function formatTimestamp(date: Date) {
-  const h = date.getHours() % 12 || 12
-  const m = String(date.getMinutes()).padStart(2, '0')
-  const s = String(date.getSeconds()).padStart(2, '0')
-  const cs = String(Math.floor(date.getMilliseconds() / 10)).padStart(2, '0')
-  return `${h}:${m}:${s}:${cs}`
-}
-
-/** Live / playback viewer opened from Recording Playback → Play Recording. */
+/** Playback viewer opened from Recording Playback → Play Recording. */
 export default function RecordingPlaybackModal({
   feed,
   onClose,
@@ -32,7 +24,6 @@ export default function RecordingPlaybackModal({
   feed: PlaybackFeed
   onClose: () => void
 }) {
-  const [timestamp, setTimestamp] = useState(() => formatTimestamp(new Date()))
   const showStream = Boolean(feed.streamUrl) && feed.status !== 'Offline'
 
   useEffect(() => {
@@ -40,11 +31,6 @@ export default function RecordingPlaybackModal({
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setTimestamp(formatTimestamp(new Date())), 80)
-    return () => window.clearInterval(timer)
-  }, [])
 
   return (
     <div
@@ -55,16 +41,13 @@ export default function RecordingPlaybackModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={`Camera ${feed.id} recording playback`}
+        aria-label={`${feed.location} recording playback`}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-[720px] rounded-[18px] bg-white p-[18px] shadow-pop"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-[16px] font-semibold leading-5 text-ink">
-              CAM ID:{' '}
-              <span className="text-brand-link">{feed.cameraId ?? feed.id}</span>
-            </h3>
+            <h3 className="text-[16px] font-semibold leading-5 text-ink">Recording Playback</h3>
             <p className="mt-[6px] flex items-center gap-[5px] text-[13px] font-semibold leading-4 text-orange">
               <PinIcon size={15} className="text-orange" />
               {feed.location}
@@ -94,11 +77,6 @@ export default function RecordingPlaybackModal({
           ) : (
             <PlantScene id={`playback-${feed.id}`} />
           )}
-
-          <span className="pointer-events-none absolute bottom-[14px] left-1/2 inline-flex -translate-x-1/2 items-center gap-[6px] text-[13px] font-semibold leading-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
-            <span className="h-[7px] w-[7px] rounded-full bg-danger" />
-            {timestamp}
-          </span>
         </div>
       </div>
     </div>

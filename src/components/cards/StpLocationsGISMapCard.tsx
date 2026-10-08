@@ -14,6 +14,7 @@ import {
   TileLayer,
   ZoomControl,
   useMap,
+  useMapEvents,
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import Select from '../ui/Select'
@@ -169,6 +170,28 @@ function MapPopupController({
   useEffect(() => {
     markers.get(selectedId)?.openPopup()
   }, [map, markers, selectedId])
+  return null
+}
+
+function MapPopupCloseReset({
+  markers,
+  onReset,
+}: {
+  markers: Map<string, L.Marker>
+  onReset: () => void
+}) {
+  const map = useMap()
+  useMapEvents({
+    popupclose: () => {
+      // Wait a tick so switching straight to another marker does not reset.
+      window.setTimeout(() => {
+        if ([...markers.values()].some((marker) => marker.isPopupOpen())) return
+        onReset()
+        const bounds = L.latLngBounds(PLANT_POINTS.map((point) => [point.lat, point.lng])).pad(0.08)
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 7, duration: 0.7 })
+      }, 0)
+    },
+  })
   return null
 }
 
@@ -388,6 +411,16 @@ export default function StpLocationsGISMapCard() {
           <MapInitialBounds />
           <MapFocus point={focusPoint} />
           <MapPopupController selectedId={stpId} markers={markerRefs.current} />
+          <MapPopupCloseReset
+            markers={markerRefs.current}
+            onReset={() => {
+              setStateId(ALL)
+              setDistrictId(ALL)
+              setCityId(ALL)
+              setStpId(ALL)
+              setFocusPoint(null)
+            }}
+          />
           {visiblePoints.map((point) => (
             <Marker
               key={point.id}

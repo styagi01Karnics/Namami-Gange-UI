@@ -35,7 +35,7 @@ export default function NonPerformingStpsCard() {
       <div className="shrink-0 px-[12px]">
         <h3 className="text-[15px] font-bold leading-5 text-[#DC2626]">Non Performing STPs</h3>
         <p className="mt-[2px] text-[11px] font-medium leading-4 text-[#64748B]">
-          STP&rsquo;s with Parameter Breach &amp; Equipment Failure
+          STP&rsquo;s with Parameter Breach &amp; 
         </p>
 
         <div className="mt-[8px] inline-flex h-[28px] items-center gap-1 rounded-[8px] bg-[#F2F7FC] p-[3px]">

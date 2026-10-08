@@ -1349,13 +1349,11 @@ export const stpTrends = {
 }
 
 export const stpSectionTabs = [
+  'CCTV',
   'Manpower',
   'Inventory',
-  'CCTV',
-  'Transaction Logs',
   'Contracts',
-  'Compliance',
-  'Billing',
+  'Violation',
 ]
 
 /* ---- Billing (STP Management tab) ---------------------------------------
@@ -1788,7 +1786,7 @@ export const complianceSummary = [
   { key: 'payable', label: 'Total Amount to Pay', value: '₹45,000', tone: 'ok' as const },
 ]
 
-export const complianceTypes = ['Parameter Breach', 'Equipment Failure']
+export const complianceTypes = ['Parameter Breach']
 export const complianceBasisOptions = ['Based On Parameter Breach', 'Based On Equipment Failure']
 
 export const complianceParameters = ['pH', 'BOD', 'COD', 'TSS', 'Flow', 'Temperature']

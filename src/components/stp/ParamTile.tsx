@@ -1,5 +1,5 @@
 const VALUE_TONE = {
-  ok: 'text-[#168E3F]',
+  ok: 'text-[#0B6B2B]',
   breach: 'text-[#DC2626]',
   ink: 'text-[#07121E]',
   brand: 'text-[#0768D2]',

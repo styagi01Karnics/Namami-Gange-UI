@@ -5,7 +5,7 @@ import { topPerformingStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
 import Card from '../ui/Card'
 
-const RANGES = ['Weekly', 'Last 30 Days', 'Last 90 Days'] as const
+const RANGES = ['Weekly'] as const
 const TOP_COUNT = 10
 
 export default function TopPerformingStpsCard() {

@@ -74,6 +74,12 @@ export default function Topbar({
   const [passwordOpen, setPasswordOpen] = useState(false)
   const [updatedOpen, setUpdatedOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [today, setToday] = useState(() => new Date())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setToday(new Date()), 60000)
+    return () => window.clearInterval(timer)
+  }, [])
   const [unreadCount, setUnreadCount] = useState(
     () => inboxNotifications.filter((item) => !item.read).length,
   )
@@ -183,6 +189,9 @@ export default function Topbar({
           </div>
 
           <div className="mt-[22px] flex shrink-0 items-center gap-[8px]">
+            <time className="mr-[8px] hidden whitespace-nowrap text-[14px] font-semibold text-[#1F3B5C] lg:block">
+              {today.toLocaleDateString('en-GB', { weekday: 'long' })}, {today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </time>
             <div ref={notifRef} className="relative z-40">
               <button
                 type="button"

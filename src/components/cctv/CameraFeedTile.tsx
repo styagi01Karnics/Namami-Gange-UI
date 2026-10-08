@@ -6,6 +6,9 @@ import type { CameraPlayer } from '../../api/cctv'
 
 const STATUS_DOT = { Live: 'bg-ok', Offline: 'bg-danger' }
 
+export const waterLabel = (location: string) =>
+  location === 'Influent' ? 'Treated Water' : location === 'Effluent' ? 'Sewer Water' : location
+
 export type LiveFeed = {
   key: string
   cameraId?: number
@@ -19,34 +22,16 @@ export type LiveFeed = {
   timecode?: string | null
 }
 
-function formatLiveTimestamp(date: Date) {
-  return date.toLocaleTimeString('en-GB', {
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-}
-
 export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFeed; divider?: boolean }) {
   const isOffline = feed.status === 'Offline'
   const [streaming, setStreaming] = useState(!isOffline && Boolean(feed.streamUrl))
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState('')
-  const [timestamp, setTimestamp] = useState(() => formatLiveTimestamp(new Date()))
 
   useEffect(() => {
     setStreaming(feed.status !== 'Offline' && Boolean(feed.streamUrl))
     setMessage('')
   }, [feed.cameraId, feed.status, feed.streamUrl])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setTimestamp(formatLiveTimestamp(new Date()))
-    }, 1000)
-
-    return () => window.clearInterval(timer)
-  }, [])
 
   async function handleStart() {
     if (!feed.cameraId) {
@@ -123,14 +108,12 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
 
         {isOffline && feed.image && <div className="absolute inset-0 bg-white/45" />}
 
-        <span
-          className={`pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex max-w-[calc(100%-5.5rem)] items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 shadow-card ${
-            isOffline ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok'
-          }`}
-        >
-          <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${STATUS_DOT[feed.status] ?? 'bg-danger'}`} />
-          <span className="truncate">{isOffline ? 'Non-Active' : 'Live'}</span>
-        </span>
+        {isOffline && (
+          <span className="pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex items-center gap-[6px] rounded-full bg-danger-soft px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-danger shadow-card">
+            <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${STATUS_DOT.Offline}`} />
+            Non-Active
+          </span>
+        )}
 
         {showStream && (
           <button
@@ -140,20 +123,6 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
           >
             Stop
           </button>
-        )}
-
-        {showStream && feed.player !== 'whep' && (
-          <span className="pointer-events-none absolute bottom-[9px] left-1/2 z-[1] inline-flex -translate-x-1/2 items-center gap-[5px] text-[11px] font-medium leading-4 text-white opacity-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)] transition-opacity group-hover:opacity-100">
-            <span className="h-[5px] w-[5px] rounded-full bg-danger" />
-            {timestamp}
-          </span>
-        )}
-
-        {!showStream && feed.timecode && (
-          <span className="absolute bottom-[9px] left-1/2 inline-flex -translate-x-1/2 items-center gap-[5px] text-[11px] font-medium leading-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
-            <span className="h-[5px] w-[5px] rounded-full bg-danger" />
-            {feed.timecode}
-          </span>
         )}
 
         {message && (
@@ -169,8 +138,7 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
         }`}
       >
         {[
-          ['Camera ID:', feed.id],
-          ['Location:', feed.location],
+          ['Location:', waterLabel(feed.location)],
         ].map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-[10px]">
             <dt className="text-[13px] leading-[18px] text-ink-soft">{label}</dt>

@@ -26,7 +26,7 @@ export default function CriticalStpCard() {
       <div className="px-[14px]">
         <h3 className="text-[18px] font-semibold leading-5 text-[#DC2626]">Critical STP&rsquo;s</h3>
         <p className="mt-[12px] text-[16px] font-medium leading-5 text-[#646464]">
-          STP&rsquo;s with Parameter Breach &amp; Equipment Failure
+          STP&rsquo;s with Parameter Breach
         </p>
 
         <div className="mt-[24px] inline-flex h-[32px] items-center rounded-[8px] bg-white p-[2px]">
