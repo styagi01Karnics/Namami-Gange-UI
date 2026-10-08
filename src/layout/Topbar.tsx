@@ -164,16 +164,21 @@ export default function Topbar({
       <>
         {/* Transparent header so the shell mountain wash shows through (Figma). */}
         <header className="relative z-20 flex h-[156px] shrink-0 items-start justify-between px-[40px] pt-[10px] pr-[28px]">
-          <div className="flex min-w-0 flex-1 items-start gap-[40px]">
+          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4 xl:gap-5">
             <img
               src="/dashboard/logo-uttarakhand.png"
               alt="Uttarakhand Gange — Real-Time STP Monitoring Platform"
-              className="h-[141px] w-[170px] shrink-0 object-contain object-top"
+              className="h-[118px] w-[148px] shrink-0 object-contain object-top md:h-[128px] md:w-[160px]"
+            />
+            <img
+              src="/logo.png"
+              alt="Namami Gange"
+              className="h-[66px] w-[128px] shrink-0 object-contain mix-blend-multiply md:h-[78px] md:w-[158px]"
             />
             <img
               src="/dashboard/logo-kartavya.png"
               alt="Kartavya Ganga — नहीं रुकेंगे, स्वच्छ करेंगे"
-              className="mt-[3px] h-[133px] w-auto max-w-[min(400px,42vw)] object-contain object-left"
+              className="h-[82px] w-auto max-w-[min(270px,25vw)] object-contain object-left md:h-[94px] md:max-w-[min(300px,27vw)]"
             />
           </div>
 
@@ -235,11 +240,12 @@ export default function Topbar({
 
             <button
               type="button"
-              aria-label="Log out"
+              aria-label="Logout"
               onClick={() => setLogoutOpen(true)}
-              className="flex size-[48px] items-center justify-center rounded-full bg-[#003C7A] text-white transition-colors hover:bg-[#0648A8] hover:text-white"
+              className="flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-full bg-[#003C7A] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#0648A8]"
             >
               <LogOut size={20} strokeWidth={2} />
+              <span>Logout</span>
             </button>
           </div>
         </header>
