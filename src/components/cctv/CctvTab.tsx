@@ -98,10 +98,10 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
           <CameraStatCard label="Active Camera" value={stats.online} tone="ok" />
           <CameraStatCard label="Non-Active Camera" value={stats.offline} tone="danger" />
         </div>
-        <LiveCameraFeed cameras={cameras} loading={loading} />
+        <LiveCameraFeed cameras={cameras} loading={loading} stpId={stpId} plantCode={plantCode} />
       </div>
 
-      <RecordingPlaybackCard cameras={cameras} />
+      <RecordingPlaybackCard cameras={cameras} stpId={stpId} plantCode={plantCode} />
     </div>
   )
 }

@@ -1,7 +1,10 @@
-import { Info } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Info, Play } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import PlantScene from './PlantScene'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
+import RecordingAutoPlayer from './RecordingAutoPlayer'
+import { probeLiveStream, type RecordingTarget } from '../../api/cctv'
 
 const ExpandIcon = ico('fluent:full-screen-maximize-24-filled')
 
@@ -12,25 +15,57 @@ const STATUS_DOT = {
 }
 
 /** The camera still itself — shared by the tile and the expanded overlay. */
-export function CameraStill({ camera, sceneId }) {
-  const dimmed = camera.status !== 'Live'
-  const streamUrl = camera.streamUrl
+export function CameraStill({
+  camera,
+  sceneId,
+  recording,
+  liveFailed = false,
+}: {
+  camera
+  sceneId: string
+  recording?: RecordingTarget | null
+  liveFailed?: boolean
+}) {
+  const claimedLive = Boolean(camera.streamUrl) && camera.status === 'Live' && !liveFailed
+  const [liveOk, setLiveOk] = useState(false)
 
-  if (streamUrl && camera.status === 'Live') {
+  useEffect(() => {
+    if (!claimedLive) {
+      setLiveOk(false)
+      return undefined
+    }
+
+    // Wait for a real WHEP check so the MediaMTX "stream not found" page is not shown.
+    setLiveOk(false)
+    let cancelled = false
+    probeLiveStream(camera.streamUrl).then((ok) => {
+      if (!cancelled) setLiveOk(ok)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [claimedLive, camera.streamUrl])
+
+  if (claimedLive && liveOk) {
     if (camera.player === 'whep') {
-      return <MediaMtxWhepPlayer src={streamUrl} title={camera.location} />
+      return <MediaMtxWhepPlayer src={camera.streamUrl} title={camera.location} />
     }
 
     return (
       <iframe
         title={camera.location}
-        src={streamUrl}
+        src={camera.streamUrl}
         allow="autoplay; fullscreen"
         className="absolute inset-0 h-full w-full border-0"
       />
     )
   }
 
+  if (recording) {
+    return <RecordingAutoPlayer recording={recording} title={camera.location} />
+  }
+
+  const dimmed = camera.status !== 'Live'
   return (
     <>
       <div className={dimmed ? 'h-full w-full grayscale' : 'h-full w-full'}>
@@ -45,19 +80,33 @@ export function CameraStill({ camera, sceneId }) {
   )
 }
 
-export default function CameraTile({ camera, onExpand }) {
+export default function CameraTile({ camera, onExpand, onPlayRecording, recording, hideTags = false }) {
   return (
     <div className="min-w-0 rounded-[12px] bg-[#EAF2FC] p-[12px]">
       <div className="flex items-center justify-between gap-3">
         <h4 className="truncate text-[13.5px] font-semibold leading-5 text-ink">{camera.location}</h4>
-        <span className="inline-flex shrink-0 items-center gap-[6px] rounded-full bg-white px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-ink">
-          <span className={`h-[7px] w-[7px] rounded-full ${STATUS_DOT[camera.status] ?? 'bg-ink-muted'}`} />
-          {camera.status}
-        </span>
+        {!hideTags && (
+          <span className="inline-flex shrink-0 items-center gap-[6px] rounded-full bg-white px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-ink">
+            <span className={`h-[7px] w-[7px] rounded-full ${STATUS_DOT[camera.status] ?? 'bg-ink-muted'}`} />
+            {camera.status}
+          </span>
+        )}
       </div>
 
       <div className="relative mt-[10px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
-        <CameraStill camera={camera} sceneId={`tile-${camera.key}`} />
+        <CameraStill camera={camera} sceneId={`tile-${camera.key}`} recording={recording} />
+
+        {onPlayRecording && !hideTags && (
+          <button
+            type="button"
+            onClick={() => onPlayRecording(camera)}
+            aria-label={`Play ${camera.location} recording`}
+            className="absolute left-[10px] top-[10px] z-[1] inline-flex h-[26px] items-center gap-[4px] rounded-[7px] bg-white/90 px-[8px] text-[11px] font-semibold text-ink-soft shadow-card transition-colors hover:text-brand"
+          >
+            <Play size={11} fill="currentColor" />
+            Recording
+          </button>
+        )}
 
         <button
           type="button"

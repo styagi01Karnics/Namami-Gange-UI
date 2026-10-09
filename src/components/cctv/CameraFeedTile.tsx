@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import PlantScene from './PlantScene'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
-import { startCameraStream, stopCameraStream } from '../../api/cctv'
-import type { CameraPlayer } from '../../api/cctv'
+import RecordingAutoPlayer from './RecordingAutoPlayer'
+import { probeLiveStream, startCameraStream, stopCameraStream } from '../../api/cctv'
+import type { CameraPlayer, RecordingTarget } from '../../api/cctv'
 
 const STATUS_DOT = { Live: 'bg-ok', Offline: 'bg-danger' }
 
@@ -28,17 +29,44 @@ function formatLiveTimestamp(date: Date) {
   })
 }
 
-export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFeed; divider?: boolean }) {
+export default function CameraFeedTile({
+  feed,
+  divider = false,
+  recording,
+}: {
+  feed: LiveFeed
+  divider?: boolean
+  recording?: RecordingTarget
+}) {
   const isOffline = feed.status === 'Offline'
   const [streaming, setStreaming] = useState(!isOffline && Boolean(feed.streamUrl))
+  const [liveOk, setLiveOk] = useState(false)
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState('')
   const [timestamp, setTimestamp] = useState(() => formatLiveTimestamp(new Date()))
 
   useEffect(() => {
-    setStreaming(feed.status !== 'Offline' && Boolean(feed.streamUrl))
+    const running = feed.status !== 'Offline' && Boolean(feed.streamUrl)
+    setStreaming(running)
+    setLiveOk(false)
     setMessage('')
   }, [feed.cameraId, feed.status, feed.streamUrl])
+
+  useEffect(() => {
+    if (!streaming || !feed.streamUrl || isOffline) {
+      setLiveOk(false)
+      return undefined
+    }
+
+    setLiveOk(false)
+    let cancelled = false
+    probeLiveStream(feed.streamUrl).then((ok) => {
+      if (!cancelled) setLiveOk(ok)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [streaming, feed.streamUrl, isOffline])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -85,7 +113,8 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
     }
   }
 
-  const showStream = streaming && !isOffline && feed.streamUrl
+  const showStream = streaming && !isOffline && liveOk && Boolean(feed.streamUrl)
+  const showRecording = Boolean(recording) && !showStream
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -99,6 +128,8 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
             allow="autoplay; fullscreen"
             className="absolute inset-0 h-full w-full border-0"
           />
+        ) : showRecording && recording ? (
+          <RecordingAutoPlayer recording={recording} title={feed.location} />
         ) : feed.image ? (
           <img src={feed.image} alt={`${feed.location} camera`} className="h-full w-full object-cover" />
         ) : isOffline || !streaming ? (
@@ -123,14 +154,20 @@ export default function CameraFeedTile({ feed, divider = false }: { feed: LiveFe
 
         {isOffline && feed.image && <div className="absolute inset-0 bg-white/45" />}
 
-        <span
-          className={`pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex max-w-[calc(100%-5.5rem)] items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 shadow-card ${
-            isOffline ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok'
-          }`}
-        >
-          <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${STATUS_DOT[feed.status] ?? 'bg-danger'}`} />
-          <span className="truncate">{isOffline ? 'Non-Active' : 'Live'}</span>
-        </span>
+        {!recording && (
+          <span
+            className={`pointer-events-none absolute left-[10px] top-[10px] z-[1] inline-flex max-w-[calc(100%-5.5rem)] items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 shadow-card ${
+              isOffline ? 'bg-danger-soft text-danger' : 'bg-ok-soft text-ok'
+            }`}
+          >
+            <span
+              className={`h-[7px] w-[7px] shrink-0 rounded-full ${
+                STATUS_DOT[feed.status] ?? 'bg-danger'
+              }`}
+            />
+            <span className="truncate">{isOffline ? 'Non-Active' : 'Live'}</span>
+          </span>
+        )}
 
         {showStream && (
           <button

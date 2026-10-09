@@ -1,7 +1,7 @@
 const CCTV_API = import.meta.env.VITE_CCTV_API_URL ?? '/cctv-api'
 const STREAM_BASE = import.meta.env.VITE_STREAM_BASE ?? 'https://stream.karnics.com'
 
-export type CameraPlayer = 'whep' | 'iframe'
+export type CameraPlayer = 'whep' | 'iframe' | 'mp4'
 
 export type CctvCamera = {
   id: string | number
@@ -54,7 +54,7 @@ const STP_14MLD_CAMERAS: CctvCamera[] = [
     status: 'LIVE',
     siteCode: 'STP14MLD',
     streamUrl:
-      import.meta.env.VITE_STP_14MLD_CAMERA_1 || 'https://stp14mldkpi5-1.tail72c450.ts.net/camera1/',
+      import.meta.env.VITE_STP_14MLD_CAMERA_1 || 'https://stp14mldkpi5-1.tail72c450.ts.net/camera2/',
     player: 'whep',
   },
   {
@@ -64,7 +64,7 @@ const STP_14MLD_CAMERAS: CctvCamera[] = [
     status: 'LIVE',
     siteCode: 'STP14MLD',
     streamUrl:
-      import.meta.env.VITE_STP_14MLD_CAMERA_2 || 'https://stp14mldkpi5-1.tail72c450.ts.net/camera2/',
+      import.meta.env.VITE_STP_14MLD_CAMERA_2 || 'https://stp14mldkpi5-1.tail72c450.ts.net/camera1/',
     player: 'whep',
   },
 ]
@@ -167,6 +167,231 @@ export async function stopCameraStream(cameraId: number) {
   }
 }
 
+export type RecordingClip = {
+  id: string
+  plantCode: string
+  stpId: string
+  channel: number
+  fileName: string
+  startTime: string
+  endTime: string
+  sizeBytes: number
+  streamUrl: string
+}
+
+export type PlaybackClip = {
+  id: string
+  channel: number
+  fileName: string
+  startTime: string
+  endTime: string
+  sizeBytes: number
+  player: CameraPlayer
+  ready: boolean
+  streamUrl: string
+}
+
+export type PlaybackStartResult = {
+  ready: boolean
+  player: CameraPlayer
+  plantCode: string
+  stpId: string
+  channel: number
+  startTime: string
+  endTime: string
+  clips: PlaybackClip[]
+  message: string
+}
+
+export type PlaybackStartInput = {
+  plantCode?: string
+  stpId?: string
+  channel: number
+  location?: string
+  date: string
+  startTime: string
+  endTime: string
+}
+
+export async function fetchRecordings(input: {
+  plantCode?: string
+  stpId?: string
+  channel?: number
+  date?: string
+}) {
+  const params = new URLSearchParams()
+  if (input.plantCode) params.set('plantCode', input.plantCode)
+  if (input.stpId) params.set('stpId', input.stpId)
+  if (input.channel != null) params.set('channel', String(input.channel))
+  if (input.date) params.set('date', input.date)
+
+  const query = params.toString()
+  const response = await fetch(`${CCTV_API}/recordings${query ? `?${query}` : ''}`)
+  const payload = await response.json()
+  if (!response.ok) {
+    throw new Error(payload.message ?? 'Unable to load recordings')
+  }
+  const clips = payload.data
+  return Array.isArray(clips) ? (clips as RecordingClip[]) : []
+}
+
+const AUTO_PLAY_MAX_BYTES = 80 * 1024 * 1024
+
+export type RecordingPeriod = 'day' | 'evening' | 'night'
+
+export const RECORDING_PERIODS: Record<
+  RecordingPeriod,
+  { label: string; ranges: Array<{ start: string; end: string }> }
+> = {
+  day: { label: 'Day', ranges: [{ start: '06:00:00', end: '16:00:00' }] },
+  evening: { label: 'Evening', ranges: [{ start: '16:00:00', end: '20:00:00' }] },
+  night: {
+    label: 'Night',
+    ranges: [
+      { start: '20:00:00', end: '23:59:59' },
+      { start: '00:00:00', end: '06:00:00' },
+    ],
+  },
+}
+
+export function periodFromHour(hour: number): RecordingPeriod {
+  if (hour >= 6 && hour < 16) return 'day'
+  if (hour >= 16 && hour < 20) return 'evening'
+  return 'night'
+}
+
+export function currentRecordingPeriod(now = new Date()): RecordingPeriod {
+  return periodFromHour(now.getHours())
+}
+
+export function clipPeriod(clip: { startTime: string }): RecordingPeriod {
+  const hour = Number(String(clip.startTime).slice(11, 13))
+  return periodFromHour(Number.isFinite(hour) ? hour : 0)
+}
+
+function clipStartMs(clip: { startTime: string }) {
+  const value = Date.parse(clip.startTime.replace(' ', 'T'))
+  return Number.isFinite(value) ? value : 0
+}
+
+function sortClipsForPeriod(clips: RecordingClip[], period: RecordingPeriod) {
+  const playableFirst = (left: RecordingClip, right: RecordingClip) => {
+    const leftOk = left.sizeBytes <= AUTO_PLAY_MAX_BYTES ? 0 : 1
+    const rightOk = right.sizeBytes <= AUTO_PLAY_MAX_BYTES ? 0 : 1
+    if (leftOk !== rightOk) return leftOk - rightOk
+    return clipStartMs(right) - clipStartMs(left)
+  }
+  return [
+    ...clips.filter((clip) => clipPeriod(clip) === period).sort(playableFirst),
+    ...clips.filter((clip) => clipPeriod(clip) !== period).sort(playableFirst),
+  ]
+}
+
+export type RecordingTarget = {
+  plantCode?: string
+  stpId?: string
+  channel: number
+  location?: string
+  period?: RecordingPeriod
+}
+
+export type ReadyRecording = PlaybackClip & { period: RecordingPeriod }
+
+export async function startRecordingPlayback(input: PlaybackStartInput) {
+  const response = await fetch(`${CCTV_API}/playback/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload?.success || !payload?.data?.clips?.length) {
+    throw new Error(payload?.message ?? 'No recording for this time range')
+  }
+  return payload.data as PlaybackStartResult
+}
+
+export async function startPeriodPlayback(input: {
+  plantCode?: string
+  stpId?: string
+  channel: number
+  location?: string
+  date: string
+  period: RecordingPeriod
+}) {
+  const windows = RECORDING_PERIODS[input.period].ranges
+  const clips: PlaybackClip[] = []
+  let message = `No ${RECORDING_PERIODS[input.period].label.toLowerCase()} recording for this date`
+
+  for (const range of windows) {
+    try {
+      const result = await startRecordingPlayback({
+        plantCode: input.plantCode,
+        stpId: input.stpId,
+        channel: input.channel,
+        location: input.location,
+        date: input.date,
+        startTime: range.start,
+        endTime: range.end,
+      })
+      message = result.message
+      clips.push(...result.clips.filter((clip) => clip.ready))
+    } catch (error) {
+      message = error instanceof Error ? error.message : message
+    }
+  }
+
+  if (clips.length === 0) {
+    throw new Error(message)
+  }
+  return clips
+}
+
+export async function loadPeriodRecording(input: RecordingTarget) {
+  const period = input.period ?? currentRecordingPeriod()
+  const listed = await fetchRecordings({
+    plantCode: input.plantCode,
+    stpId: input.stpId,
+    channel: input.channel,
+  })
+  if (listed.length === 0) return null
+
+  for (const clip of sortClipsForPeriod(listed, period)) {
+    try {
+      const result = await startRecordingPlayback({
+        plantCode: input.plantCode,
+        stpId: input.stpId,
+        channel: input.channel,
+        location: input.location,
+        date: clip.startTime.slice(0, 10),
+        startTime: clip.startTime.slice(11, 19),
+        endTime: clip.endTime.slice(11, 19),
+      })
+      const ready = result.clips.find((item) => item.ready)
+      if (ready) return { ...ready, period: clipPeriod(clip) } satisfies ReadyRecording
+    } catch {
+      // try the next clip in this period, then other times of day
+    }
+  }
+
+  return null
+}
+
+export async function loadLatestReadyRecording(input: RecordingTarget) {
+  return loadPeriodRecording(input)
+}
+
+export async function probeLiveStream(url?: string | null) {
+  if (!url) return false
+
+  try {
+    const response = await fetch(`${CCTV_API}/stream/health?url=${encodeURIComponent(url)}`)
+    const payload = await response.json().catch(() => ({}))
+    return Boolean(payload.live)
+  } catch {
+    return false
+  }
+}
+
 /** Display labels used by Live Camera Feed tiles. */
 export function cameraLocationLabel(camera: CctvCamera) {
   const name = String(camera.name ?? '').toLowerCase().replace(/\s+/g, '')
@@ -206,6 +431,26 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
       streamUrl: getStreamUrl(siteCode, camera.channel, camera),
       player: camera.player,
       channel: camera.channel,
+    }
+  })
+}
+
+export function hasCpvRecordings(stpId?: string, plantCode?: string) {
+  const keys = [stpId, plantCode].map((value) => String(value ?? '').trim().toLowerCase())
+  return keys.some((key) => key === 'jagjeetpur-68' || key === '68mldjag')
+}
+
+export function toPlaybackCameras(cameras: LiveSiteCamera[]): CctvCamera[] {
+  return cameras.map((camera) => {
+    const location = camera.location || camera.id
+    const effluent = String(location).toLowerCase().includes('effluent')
+    return {
+      id: camera.id,
+      name: location,
+      channel: camera.channel ?? (effluent ? 2 : 1),
+      status: camera.status,
+      player: camera.player,
+      streamUrl: camera.streamUrl ?? undefined,
     }
   })
 }

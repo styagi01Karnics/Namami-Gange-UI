@@ -1,39 +1,44 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Play } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import type { IconComponent } from '../../types'
 import Select from '../ui/Select'
+import PillTabs from '../ui/PillTabs'
 import RecordingPlaybackModal, { type PlaybackFeed } from './RecordingPlaybackModal'
 import {
-  getCameraSiteCode,
-  getStreamUrl,
-  isCameraOnline,
+  RECORDING_PERIODS,
+  cameraLocationLabel as apiCameraLocationLabel,
+  currentRecordingPeriod,
+  fetchRecordings,
+  startPeriodPlayback,
   type CctvCamera,
+  type RecordingPeriod,
 } from '../../api/cctv'
 
-const HistoryIcon = ico('fluent:history-20-filled')
 const CalendarIcon = ico('fluent:calendar-ltr-20-filled')
 const PinIcon = ico('fluent:location-20-filled')
+const ClockIcon = ico('fluent:clock-20-filled')
 
-const HOURS = Array.from({ length: 12 }, (_, i) => {
-  const n = i + 1
-  return { id: String(n).padStart(2, '0'), label: String(n) }
-})
-const MINUTES = ['00', '15', '30', '45'].map((m) => ({ id: m, label: m }))
-const MERIDIEM = [
-  { id: 'AM', label: 'AM' },
-  { id: 'PM', label: 'PM' },
-]
+const PERIOD_TABS = (Object.keys(RECORDING_PERIODS) as RecordingPeriod[]).map(
+  (id) => RECORDING_PERIODS[id].label,
+)
+const PERIOD_BY_LABEL = Object.fromEntries(
+  (Object.keys(RECORDING_PERIODS) as RecordingPeriod[]).map((id) => [RECORDING_PERIODS[id].label, id]),
+) as Record<string, RecordingPeriod>
+
 const LOCATIONS = [
   { id: 'Influent', label: 'Influent' },
   { id: 'Effluent', label: 'Effluent' },
 ]
 
 function cameraLocationLabel(camera: CctvCamera) {
-  const name = String(camera.name ?? '').toLowerCase().replace(/\s+/g, '')
-  if (camera.channel === 1 || /camera1|cam-?1\b/.test(name) || name.includes('influent')) return 'Influent'
-  if (camera.channel === 2 || /camera2|cam-?2\b/.test(name) || name.includes('effluent')) return 'Effluent'
-  return camera.name
+  return apiCameraLocationLabel(camera)
+}
+
+function channelFromLocation(location: string, cameras: CctvCamera[]) {
+  const match = cameras.find((camera) => cameraLocationLabel(camera) === location)
+  if (match?.channel) return match.channel
+  return /effluent|outlet/i.test(location) ? 2 : 1
 }
 
 function FilterBlock({
@@ -60,60 +65,37 @@ function FilterBlock({
   )
 }
 
-function TimeFields({
-  hour,
-  minute,
-  meridiem,
-  onHour,
-  onMinute,
-  onMeridiem,
-}: {
-  hour: string
-  minute: string
-  meridiem: string
-  onHour: (v: string) => void
-  onMinute: (v: string) => void
-  onMeridiem: (v: string) => void
-}) {
-  return (
-    <div className="flex items-center gap-[6px]">
-      <Select
-        options={HOURS}
-        value={hour}
-        onChange={onHour}
-        className="min-w-0 flex-1"
-        buttonClassName="h-[34px] px-[10px] text-[12.5px]"
-      />
-      <span className="text-[13px] font-semibold text-ink">:</span>
-      <Select
-        options={MINUTES}
-        value={minute}
-        onChange={onMinute}
-        className="min-w-0 flex-1"
-        buttonClassName="h-[34px] px-[10px] text-[12.5px]"
-      />
-      <Select
-        options={MERIDIEM}
-        value={meridiem}
-        onChange={onMeridiem}
-        className="min-w-0 flex-1"
-        buttonClassName="h-[34px] px-[10px] text-[12.5px]"
-      />
-    </div>
-  )
-}
-
 /** Recording playback controls for the CCTV tab redesign. */
-export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: CctvCamera[] }) {
-  const [startH, setStartH] = useState('09')
-  const [startM, setStartM] = useState('00')
-  const [startAp, setStartAp] = useState('AM')
-  const [endH, setEndH] = useState('10')
-  const [endM, setEndM] = useState('00')
-  const [endAp, setEndAp] = useState('AM')
-  const [date, setDate] = useState('2026-05-06')
+export default function RecordingPlaybackCard({
+  cameras = [],
+  stpId,
+  plantCode,
+}: {
+  cameras?: CctvCamera[]
+  stpId?: string
+  plantCode?: string
+}) {
+  const [period, setPeriod] = useState<RecordingPeriod>(() => currentRecordingPeriod())
+  const [date, setDate] = useState('')
   const [location, setLocation] = useState('Influent')
   const [playback, setPlayback] = useState<PlaybackFeed | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRecordings({ plantCode, stpId })
+      .then((clips) => {
+        if (cancelled || clips.length === 0) return
+        setDate(clips[clips.length - 1].startTime.slice(0, 10))
+      })
+      .catch(() => {
+        if (!cancelled) setDate((current) => current || new Date().toISOString().slice(0, 10))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [plantCode, stpId])
 
   const locationOptions = useMemo(() => {
     if (cameras.length === 0) return LOCATIONS
@@ -121,57 +103,56 @@ export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: Cctv
     return labels.map((label) => ({ id: label, label }))
   }, [cameras])
 
-  const openPlayback = () => {
-    const match =
-      cameras.find((camera) => cameraLocationLabel(camera) === location) ?? cameras[0]
-
-    if (match) {
-      const siteCode = getCameraSiteCode(match)
-      const online = isCameraOnline(match)
-      setPlayback({
-        cameraId: match.id,
-        id: match.name || String(match.id),
-        location: cameraLocationLabel(match),
-        streamUrl: getStreamUrl(siteCode, match.channel, match),
-        player: match.player,
-        status: online ? 'Live' : 'Offline',
-      })
+  const openPlayback = async () => {
+    if (!date) {
+      setError('No recording date available')
       return
     }
 
-    // Fallback preview when no camera is loaded for the plant.
-    setPlayback({
-      cameraId: '123456',
-      id: 'CAM-IN',
-      location,
-      status: 'Offline',
-    })
+    const match =
+      cameras.find((camera) => cameraLocationLabel(camera) === location) ?? cameras[0]
+    const channel = channelFromLocation(location, cameras)
+
+    setError('')
+    setLoading(true)
+
+    try {
+      const clips = await startPeriodPlayback({
+        plantCode,
+        stpId,
+        channel,
+        location,
+        date,
+        period,
+      })
+      setPlayback({
+        cameraId: match?.id ?? channel,
+        id: match?.name || String(channel),
+        location,
+        player: 'mp4',
+        status: 'Recording',
+        clips,
+        streamUrl: clips[0].streamUrl,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to play recording')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <section className="rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       <h3 className="text-[15px] font-semibold leading-5 text-ink">Recording Playback</h3>
 
-      <div className="mt-[14px] grid grid-cols-[1.15fr_1.15fr_1fr_0.9fr] items-stretch gap-[12px]">
-        <FilterBlock icon={HistoryIcon} label="Start Time">
-          <TimeFields
-            hour={startH}
-            minute={startM}
-            meridiem={startAp}
-            onHour={setStartH}
-            onMinute={setStartM}
-            onMeridiem={setStartAp}
-          />
-        </FilterBlock>
-
-        <FilterBlock icon={HistoryIcon} label="End Time">
-          <TimeFields
-            hour={endH}
-            minute={endM}
-            meridiem={endAp}
-            onHour={setEndH}
-            onMinute={setEndM}
-            onMeridiem={setEndAp}
+      <div className="mt-[14px] grid grid-cols-[1.4fr_1fr_0.9fr] items-stretch gap-[12px]">
+        <FilterBlock icon={ClockIcon} label="Time of day">
+          <PillTabs
+            tabs={PERIOD_TABS}
+            active={RECORDING_PERIODS[period].label}
+            onChange={(tab) => setPeriod(PERIOD_BY_LABEL[tab] ?? period)}
+            variant="segmented"
+            className="w-full"
           />
         </FilterBlock>
 
@@ -201,13 +182,16 @@ export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: Cctv
         </FilterBlock>
       </div>
 
+      {error && <p className="mt-[12px] text-[12.5px] font-medium text-danger">{error}</p>}
+
       <div className="mt-[14px] flex justify-end">
         <button
           type="button"
           onClick={openPlayback}
-          className="inline-flex h-[40px] items-center gap-[8px] rounded-[10px] bg-brand px-[18px] text-[13.5px] font-semibold text-white transition-colors hover:bg-brand/90"
+          disabled={loading || !date}
+          className="inline-flex h-[40px] items-center gap-[8px] rounded-[10px] bg-brand px-[18px] text-[13.5px] font-semibold text-white transition-colors hover:bg-brand/90 disabled:opacity-60"
         >
-          Play Recording
+          {loading ? 'Preparing…' : `Play ${RECORDING_PERIODS[period].label} Recording`}
           <Play size={14} fill="currentColor" />
         </button>
       </div>

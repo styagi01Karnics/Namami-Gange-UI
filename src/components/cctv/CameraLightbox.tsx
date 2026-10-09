@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { CameraStill } from './CameraTile'
+import { hasCpvRecordings } from '../../api/cctv'
 
 /** Full-screen view behind the expand button on a camera tile. */
-export default function CameraLightbox({ camera, siteName, onClose }) {
+export default function CameraLightbox({ camera, siteName, plantCode, stpId, onClose }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
@@ -42,7 +43,22 @@ export default function CameraLightbox({ camera, siteName, onClose }) {
         </div>
 
         <div className="relative mt-[13px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
-          <CameraStill camera={camera} sceneId={`lightbox-${camera.key}`} />
+          <CameraStill
+            camera={camera}
+            sceneId={`lightbox-${camera.key}`}
+            recording={
+              hasCpvRecordings(stpId, plantCode)
+                ? {
+                    plantCode,
+                    stpId,
+                    channel:
+                      camera.channel ??
+                      (String(camera.location ?? '').toLowerCase().includes('effluent') ? 2 : 1),
+                    location: camera.location,
+                  }
+                : undefined
+            }
+          />
 
           {camera.timecode && !camera.streamUrl && (
             <span className="absolute bottom-[12px] right-[12px] inline-flex items-center gap-[5px] rounded-full bg-white/90 px-[9px] py-[4px] text-[12px] font-medium leading-4 text-ink">

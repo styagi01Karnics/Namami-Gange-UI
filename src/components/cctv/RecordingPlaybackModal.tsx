@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
 import PlantScene from './PlantScene'
-import type { CameraPlayer } from '../../api/cctv'
+import type { CameraPlayer, PlaybackClip } from '../../api/cctv'
 
 const PinIcon = ico('fluent:location-20-filled')
 
@@ -14,6 +14,7 @@ export type PlaybackFeed = {
   streamUrl?: string
   player?: CameraPlayer
   status?: string
+  clips?: PlaybackClip[]
 }
 
 function formatTimestamp(date: Date) {
@@ -33,7 +34,11 @@ export default function RecordingPlaybackModal({
   onClose: () => void
 }) {
   const [timestamp, setTimestamp] = useState(() => formatTimestamp(new Date()))
-  const showStream = Boolean(feed.streamUrl) && feed.status !== 'Offline'
+  const [clipIndex, setClipIndex] = useState(0)
+  const clips = feed.clips ?? []
+  const activeClip = clips[clipIndex]
+  const mp4Url = activeClip?.streamUrl ?? (feed.player === 'mp4' ? feed.streamUrl : undefined)
+  const showStream = Boolean(mp4Url || feed.streamUrl) && feed.status !== 'Offline'
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -84,6 +89,19 @@ export default function RecordingPlaybackModal({
         <div className="relative mt-[14px] aspect-[16/10] w-full overflow-hidden rounded-[22px] bg-[#07121e]">
           {showStream && feed.player === 'whep' ? (
             <MediaMtxWhepPlayer src={feed.streamUrl!} title={feed.location} />
+          ) : showStream && (feed.player === 'mp4' || mp4Url) ? (
+            <video
+              key={mp4Url}
+              title={feed.location}
+              src={mp4Url}
+              controls
+              autoPlay
+              playsInline
+              className="absolute inset-0 h-full w-full bg-[#07121e] object-contain"
+              onEnded={() => {
+                if (clipIndex + 1 < clips.length) setClipIndex(clipIndex + 1)
+              }}
+            />
           ) : showStream ? (
             <iframe
               title={feed.location}
@@ -95,10 +113,12 @@ export default function RecordingPlaybackModal({
             <PlantScene id={`playback-${feed.id}`} />
           )}
 
-          <span className="pointer-events-none absolute bottom-[14px] left-1/2 inline-flex -translate-x-1/2 items-center gap-[6px] text-[13px] font-semibold leading-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
-            <span className="h-[7px] w-[7px] rounded-full bg-danger" />
-            {timestamp}
-          </span>
+          {feed.player !== 'mp4' && (
+            <span className="pointer-events-none absolute bottom-[14px] left-1/2 inline-flex -translate-x-1/2 items-center gap-[6px] text-[13px] font-semibold leading-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
+              <span className="h-[7px] w-[7px] rounded-full bg-danger" />
+              {timestamp}
+            </span>
+          )}
         </div>
       </div>
     </div>

@@ -21,8 +21,10 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/cctv-api': {
-          target: env.VITE_CCTV_API_BASE_URL || 'http://localhost:8080',
+          target: env.VITE_CCTV_API_BASE_URL || 'http://localhost:8905',
           changeOrigin: true,
+          timeout: 0,
+          proxyTimeout: 0,
           rewrite: (path) => path.replace(/^\/cctv-api/, '/api'),
         },
         '/dashboard-api': {
