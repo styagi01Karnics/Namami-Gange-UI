@@ -27,15 +27,19 @@ export function CameraStill({
   liveFailed?: boolean
 }) {
   const claimedLive = Boolean(camera.streamUrl) && camera.status === 'Live' && !liveFailed
-  const [liveOk, setLiveOk] = useState(false)
+  // WHEP players (14 MLD) report their own errors — do not block them on the CCTV health API.
+  const needsProbe = claimedLive && camera.player !== 'whep'
+  const [liveOk, setLiveOk] = useState(!needsProbe)
+  const [whepFailed, setWhepFailed] = useState(false)
 
   useEffect(() => {
-    if (!claimedLive) {
-      setLiveOk(false)
+    setWhepFailed(false)
+    if (!needsProbe) {
+      setLiveOk(claimedLive)
       return undefined
     }
 
-    // Wait for a real WHEP check so the MediaMTX "stream not found" page is not shown.
+    // Probe iframe/MediaMTX pages so a dead stream does not show the "stream not found" HTML.
     setLiveOk(false)
     let cancelled = false
     probeLiveStream(camera.streamUrl).then((ok) => {
@@ -44,11 +48,17 @@ export function CameraStill({
     return () => {
       cancelled = true
     }
-  }, [claimedLive, camera.streamUrl])
+  }, [needsProbe, claimedLive, camera.streamUrl])
 
-  if (claimedLive && liveOk) {
+  if (claimedLive && liveOk && !whepFailed) {
     if (camera.player === 'whep') {
-      return <MediaMtxWhepPlayer src={camera.streamUrl} title={camera.location} />
+      return (
+        <MediaMtxWhepPlayer
+          src={camera.streamUrl}
+          title={camera.location}
+          onError={() => setWhepFailed(true)}
+        />
+      )
     }
 
     return (

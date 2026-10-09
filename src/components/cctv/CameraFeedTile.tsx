@@ -34,20 +34,26 @@ export default function CameraFeedTile({
 }) {
   const isOffline = feed.status === 'Offline'
   const [streaming, setStreaming] = useState(!isOffline && Boolean(feed.streamUrl))
-  const [liveOk, setLiveOk] = useState(false)
+  // WHEP (14 MLD) connects in the browser; only iframe/MediaMTX pages need a backend probe.
+  const [liveOk, setLiveOk] = useState(feed.player === 'whep')
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
     const running = feed.status !== 'Offline' && Boolean(feed.streamUrl)
     setStreaming(running)
-    setLiveOk(false)
+    setLiveOk(feed.player === 'whep')
     setMessage('')
-  }, [feed.cameraId, feed.status, feed.streamUrl])
+  }, [feed.cameraId, feed.status, feed.streamUrl, feed.player])
 
   useEffect(() => {
     if (!streaming || !feed.streamUrl || isOffline) {
       setLiveOk(false)
+      return undefined
+    }
+
+    if (feed.player === 'whep') {
+      setLiveOk(true)
       return undefined
     }
 
@@ -59,7 +65,7 @@ export default function CameraFeedTile({
     return () => {
       cancelled = true
     }
-  }, [streaming, feed.streamUrl, isOffline])
+  }, [streaming, feed.streamUrl, feed.player, isOffline])
 
   async function handleStart() {
     if (!feed.cameraId) {
@@ -105,7 +111,11 @@ export default function CameraFeedTile({
     <div className="flex min-w-0 flex-col">
       <div className="group relative aspect-[5/3] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
         {showStream && feed.player === 'whep' ? (
-          <MediaMtxWhepPlayer src={feed.streamUrl} title={feed.location} />
+          <MediaMtxWhepPlayer
+            src={feed.streamUrl!}
+            title={feed.location}
+            onError={() => setLiveOk(false)}
+          />
         ) : showStream ? (
           <iframe
             title={feed.location}

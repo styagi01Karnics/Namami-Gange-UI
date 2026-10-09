@@ -5,6 +5,7 @@ import {
   fetchCctvCameras,
   fetchCctvSites,
   getCamerasForStp,
+  hasCpvRecordings,
   isCameraOnline,
   type CctvCamera,
 } from '../../api/cctv'
@@ -101,7 +102,9 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
         <LiveCameraFeed cameras={cameras} loading={loading} stpId={stpId} plantCode={plantCode} />
       </div>
 
-      <RecordingPlaybackCard cameras={cameras} stpId={stpId} plantCode={plantCode} />
+      {hasCpvRecordings(stpId, plantCode) && (
+        <RecordingPlaybackCard cameras={cameras} stpId={stpId} plantCode={plantCode} />
+      )}
     </div>
   )
 }

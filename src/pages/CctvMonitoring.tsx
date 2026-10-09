@@ -5,7 +5,13 @@ import CctvSiteCard from '../components/cctv/CctvSiteCard'
 import CameraLightbox from '../components/cctv/CameraLightbox'
 import { CameraStill } from '../components/cctv/CameraTile'
 import { cctvSites } from '../data/mockData'
-import { emptyCameras, loadLiveCamerasByStp, type LiveSiteCamera } from '../api/cctv'
+import {
+  emptyCameras,
+  hasCpvRecordings,
+  loadLiveCamerasByStp,
+  type LiveSiteCamera,
+  type RecordingTarget,
+} from '../api/cctv'
 import {
   ALL_STP_FILTER_OPTION,
   fetchDashboardPlants,
@@ -26,18 +32,56 @@ function is68MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: stri
   return plantKey(item).some((key) => key === '68mldjag' || key === 'jagjeetpur-68')
 }
 
+function is33MldSaliar(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some((key) => key === '33mldsali' || key === 'saliar-33')
+}
+
 function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string }>(items: T[]) {
   const first = items.find(is14MldSarai)
   const second = items.find(is68MldJagjeetpur)
-  const rest = items.filter((item) => item !== first && item !== second)
-  return [...(first ? [first] : []), ...(second ? [second] : []), ...rest]
+  const third = items.find(is33MldSaliar)
+  const pinned = new Set([first, second, third].filter(Boolean))
+  const rest = items.filter((item) => !pinned.has(item))
+  return [
+    ...(first ? [first] : []),
+    ...(second ? [second] : []),
+    ...(third ? [third] : []),
+    ...rest,
+  ]
+}
+
+/** Keep dropdown / Auto view / Camera list on the same MLD sequence. */
+function pinFilterPlantOptions(
+  options: Array<{ id: string; label: string; plantCode?: string; stpId?: string }>,
+) {
+  const allOption = options.find((option) => option.id === ALL_STP_FILTER_OPTION.id)
+  const plants = options.filter((option) => option.id !== ALL_STP_FILTER_OPTION.id)
+  return [...(allOption ? [allOption] : []), ...pinCctvSiteOrder(plants)]
+}
+
+function cameraChannel(camera: LiveSiteCamera) {
+  if (camera.channel) return camera.channel
+  return String(camera.location ?? '').toLowerCase().includes('effluent') ? 2 : 1
+}
+
+function recordingFor(
+  site: { plantCode?: string; stpId?: string },
+  camera: LiveSiteCamera,
+): RecordingTarget | undefined {
+  if (!hasCpvRecordings(site.stpId, site.plantCode)) return undefined
+  return {
+    plantCode: site.plantCode,
+    stpId: site.stpId,
+    channel: cameraChannel(camera),
+    location: camera.location,
+  }
 }
 
 export default function CctvMonitoring() {
-  const [stpOptions, setStpOptions] = useState(() => toFilterPlantOptions([]))
+  const [stpOptions, setStpOptions] = useState(() => pinFilterPlantOptions(toFilterPlantOptions([])))
   const [stpId, setStpId] = useState(ALL_STP_FILTER_OPTION.id)
   const [openIds, setOpenIds] = useState<string[]>(() =>
-    toFilterPlantOptions([])
+    pinFilterPlantOptions(toFilterPlantOptions([]))
       .filter((option) => option.id !== ALL_STP_FILTER_OPTION.id)
       .map((option) => option.id),
   )
@@ -63,7 +107,7 @@ export default function CctvMonitoring() {
     async function loadPlants() {
       const plants = await fetchDashboardPlants()
       if (cancelled) return
-      const next = toFilterPlantOptions(plants)
+      const next = pinFilterPlantOptions(toFilterPlantOptions(plants))
       setStpOptions(next)
       setStpId((current) => (next.some((option) => option.id === current) ? current : ALL_STP_FILTER_OPTION.id))
 
@@ -119,11 +163,23 @@ export default function CctvMonitoring() {
 
   const liveFeeds = useMemo(
     () =>
-      sites.flatMap((site) =>
-        site.cameras
-          .filter((camera) => camera.status === 'Live' && Boolean((camera as LiveSiteCamera).streamUrl))
-          .map((camera) => ({ ...camera, siteName: site.name, siteId: site.id })),
-      ),
+      sites.flatMap((site) => {
+        const canRecord = hasCpvRecordings(site.stpId, site.plantCode)
+        return site.cameras
+          .filter((camera) => {
+            const hasLive = camera.status === 'Live' && Boolean((camera as LiveSiteCamera).streamUrl)
+            return hasLive || canRecord
+          })
+          .map((camera) => ({
+            ...camera,
+            siteName: site.name,
+            siteId: site.id,
+            plantCode: site.plantCode,
+            stpId: site.stpId,
+            channel: cameraChannel(camera as LiveSiteCamera),
+            recording: recordingFor(site, camera as LiveSiteCamera),
+          }))
+      }),
     [sites],
   )
   const activeFeed = liveFeeds[activeFeedIndex]
@@ -157,7 +213,7 @@ export default function CctvMonitoring() {
     setStpId(id)
     setActiveFeedIndex(0)
     if (id === 'all') {
-      setOpenIds(plantOptions.map((option) => option.id))
+      setOpenIds(sites.map((site) => site.id))
       return
     }
     setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
@@ -194,8 +250,8 @@ export default function CctvMonitoring() {
 
   return (
     <div className="flex flex-col gap-[14px] pb-[22px]">
-      <section className="overflow-hidden rounded-[16px] border border-[#DCE8F5] bg-white shadow-card">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E8EEF5] px-4 py-3 sm:px-5">
+      <section className="flex min-h-0 flex-col overflow-hidden rounded-[16px] border border-[#DCE8F5] bg-white shadow-card">
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#E8EEF5] px-4 py-3 sm:px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-[11px] bg-[#EAF4FF] text-[#0768D2]">
               <Video size={22} />
@@ -234,12 +290,16 @@ export default function CctvMonitoring() {
         </header>
 
         {view === 'carousel' ? (
-          <div className="grid grid-cols-1 gap-4 bg-[#F3F8FD] p-3 lg:grid-cols-[minmax(0,1fr)_280px] sm:p-4">
-            <div className="min-w-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-[#111C29] shadow-sm">
+          <div className="grid max-h-[min(72vh,760px)] grid-cols-1 gap-4 overflow-y-auto bg-[#F3F8FD] p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden">
+            <div className="min-h-0 min-w-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-[#111C29] shadow-sm">
               {activeFeed ? (
                 <>
                   <div ref={playerRef} className="relative aspect-video w-full bg-[#101923]">
-                    <CameraStill camera={activeFeed} sceneId={`carousel-${activeFeed.key}`} />
+                    <CameraStill
+                      camera={activeFeed}
+                      sceneId={`carousel-${activeFeed.key}`}
+                      recording={activeFeed.recording}
+                    />
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute left-0 top-0 z-[2] h-[34px] w-[248px] backdrop-blur-[7px]"
@@ -314,15 +374,15 @@ export default function CctvMonitoring() {
               )}
             </div>
 
-            <aside className="flex min-h-[250px] flex-col overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white">
-              <div className="flex items-center justify-between border-b border-[#E9EFF6] px-3 py-3">
+            <aside className="flex min-h-[280px] flex-col overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white lg:min-h-0">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#E9EFF6] px-3 py-3">
                 <div>
                   <h2 className="text-[13px] font-bold text-[#243955]">Camera queue</h2>
                   <p className="mt-0.5 text-[10px] text-[#7A8DA3]">{liveFeeds.length} playable feeds</p>
                 </div>
                 <Radio size={17} className="text-[#16A765]" />
               </div>
-              <div className="scroll-thin min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+              <div className="scroll-thin min-h-0 flex-1 space-y-1 overflow-y-scroll p-2 [scrollbar-gutter:stable]">
                 {liveFeeds.length ? (
                   liveFeeds.map((feed, index) => (
                     <button
@@ -348,30 +408,32 @@ export default function CctvMonitoring() {
             </aside>
           </div>
         ) : (
-          <div className="flex flex-col gap-[12px] p-3 sm:p-4">
-            <div className="flex items-center justify-between gap-3">
+          <div className="flex max-h-[min(72vh,760px)] min-h-0 flex-col gap-[12px] overflow-hidden p-3 sm:p-4">
+            <div className="flex shrink-0 items-center justify-between gap-3">
               <p className="text-[12px] text-[#7085A2]">
-                Browse every STP and camera. Offline or unconfigured cameras are shown in the site list but are excluded
-                from auto-rotation.
+                Browse every STP and camera. Auto view follows this same MLD order (live stream, or recording when live
+                is down).
               </p>
               {expandAllButton}
             </div>
-            {sites.map((site) => (
-              <CctvSiteCard
-                key={site.id}
-                site={site}
-                open={openIds.includes(site.id)}
-                onToggle={toggleSite}
-                onExpand={(camera) =>
-                  setExpanded({
-                    camera,
-                    siteName: site.name,
-                    plantCode: site.plantCode,
-                    stpId: site.stpId,
-                  })
-                }
-              />
-            ))}
+            <div className="scroll-thin min-h-0 flex-1 space-y-[12px] overflow-y-scroll pr-1 [scrollbar-gutter:stable]">
+              {sites.map((site) => (
+                <CctvSiteCard
+                  key={site.id}
+                  site={site}
+                  open={openIds.includes(site.id)}
+                  onToggle={toggleSite}
+                  onExpand={(camera) =>
+                    setExpanded({
+                      camera,
+                      siteName: site.name,
+                      plantCode: site.plantCode,
+                      stpId: site.stpId,
+                    })
+                  }
+                />
+              ))}
+            </div>
           </div>
         )}
       </section>

@@ -63,9 +63,18 @@ function ControlButton({ label, onClick, children }) {
   )
 }
 
-export default function MediaMtxWhepPlayer({ src, title }) {
+export default function MediaMtxWhepPlayer({
+  src,
+  title,
+  onError,
+}: {
+  src: string
+  title?: string
+  onError?: (message: string) => void
+}) {
   const videoRef = useRef(null)
   const frameRef = useRef(null)
+  const onErrorRef = useRef(onError)
   const [error, setError] = useState('')
   const [hovered, setHovered] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -76,12 +85,20 @@ export default function MediaMtxWhepPlayer({ src, title }) {
   const page = pageUrl(src)
   const showControls = hovered || menuOpen || paused
 
+  onErrorRef.current = onError
+
   useEffect(() => {
     let reader
     let cancelled = false
     const whepUrl = new URL('whep', page).toString()
 
     setError('')
+
+    const reportError = (message: string) => {
+      if (cancelled) return
+      setError(message)
+      onErrorRef.current?.(message)
+    }
 
     loadOfficialReader(page)
       .then((Reader) => {
@@ -90,8 +107,7 @@ export default function MediaMtxWhepPlayer({ src, title }) {
         reader = new Reader({
           url: whepUrl,
           onError: (err) => {
-            if (cancelled) return
-            setError(String(err).replace(/^Error:\s*/i, ''))
+            reportError(String(err).replace(/^Error:\s*/i, ''))
           },
           onTrack: (event) => {
             if (cancelled) return
@@ -110,7 +126,7 @@ export default function MediaMtxWhepPlayer({ src, title }) {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Unable to start camera')
+        reportError(err instanceof Error ? err.message : 'Unable to start camera')
       })
 
     return () => {

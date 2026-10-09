@@ -3,6 +3,7 @@ import { Maximize2, Minimize2, X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
 import PlantScene from './PlantScene'
+import RecordingVideo from './RecordingVideo'
 import type { CameraPlayer, PlaybackClip } from '../../api/cctv'
 
 const PinIcon = ico('fluent:location-20-filled')
@@ -139,14 +140,13 @@ export default function RecordingPlaybackModal({
           {showStream && feed.player === 'whep' ? (
             <MediaMtxWhepPlayer src={feed.streamUrl!} title={feed.location} />
           ) : showStream && (feed.player === 'mp4' || mp4Url) ? (
-            <video
+            <RecordingVideo
               key={mp4Url}
               title={feed.location}
               src={mp4Url}
               controls
               autoPlay
               playsInline
-              className="absolute inset-0 h-full w-full bg-[#07121e] object-contain"
               onEnded={() => {
                 if (clipIndex + 1 < clips.length) setClipIndex(clipIndex + 1)
               }}

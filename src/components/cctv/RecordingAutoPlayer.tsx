@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadPeriodRecording, type RecordingTarget } from '../../api/cctv'
+import RecordingVideo from './RecordingVideo'
 
 /** Period-matched CPV clip, used when the live stream is down or stopped. */
 export default function RecordingAutoPlayer({
@@ -57,7 +58,7 @@ export default function RecordingAutoPlayer({
   }
 
   return (
-    <video
+    <RecordingVideo
       key={src}
       title={title}
       src={src}
@@ -67,7 +68,6 @@ export default function RecordingAutoPlayer({
       playsInline
       controls
       preload="auto"
-      className="absolute inset-0 h-full w-full bg-[#07121e] object-contain"
       onCanPlay={(event) => {
         event.currentTarget.play().catch(() => {})
       }}

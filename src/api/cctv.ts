@@ -435,9 +435,18 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
   })
 }
 
+const CPV_RECORDING_PLANTS = new Set([
+  'jagjeetpur-68',
+  '68mldjag',
+  'sarai-14',
+  '14mldsarai',
+  'saliar-33',
+  '33mldsali',
+])
+
 export function hasCpvRecordings(stpId?: string, plantCode?: string) {
   const keys = [stpId, plantCode].map((value) => String(value ?? '').trim().toLowerCase())
-  return keys.some((key) => key === 'jagjeetpur-68' || key === '68mldjag')
+  return keys.some((key) => CPV_RECORDING_PLANTS.has(key))
 }
 
 export function toPlaybackCameras(cameras: LiveSiteCamera[]): CctvCamera[] {
