@@ -48,10 +48,10 @@ export const SECTION_THEME = {
     icon: DocumentGlyph,
     blurb: 'Monitor and manage STP contracts, timelines, and contractual obligations.',
   },
-  Compliance: {
+  Violation: {
     color: '#0768D2',
     icon: WarningGlyph,
-    blurb: 'Monitor STP compliance, regulatory requirements, and operational adherence',
+    blurb: 'Monitor STP violations, regulatory requirements, and operational adherence',
   },
   Billing: {
     color: '#0768D2',

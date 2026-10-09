@@ -29,7 +29,7 @@ export const STP_TAB_PATHS = stpSectionTabs.map(stpTabPath)
 
 /** Dashboard → STP Management › Compliance, with plant pre-selected in the dropdown. */
 export const stpCompliancePath = (plantCode: string) =>
-  `${stpTabPath('Compliance')}?plant=${encodeURIComponent(plantCode)}`
+  `${stpTabPath('Violation')}?plant=${encodeURIComponent(plantCode)}`
 
 /** Dashboard Live Data → STP Management › Realtime Parameter Values, plant synced. */
 export const stpRealtimePath = (plantCode: string) =>
@@ -61,7 +61,7 @@ export const REPORT_TABS: ReportTab[] = [
   { label: 'Inventory', path: '/reports/inventory' },
   { label: 'CCTV', path: '/reports/cctv-monitoring' },
   { label: 'Contracts', path: '/reports/contracts' },
-  { label: 'Compliance', path: '/reports/compliance' },
+  { label: 'Violation', path: '/reports/compliance' },
 ]
 
 export const REPORT_ITEMS: MenuItem[] = [
@@ -95,7 +95,7 @@ export const PAGE_TITLES: Record<string, PageTitle> = {
   '/stp-management': 'STP Management',
   ...Object.fromEntries(stpSectionTabs.map((label) => [stpTabPath(label), ['STP Management', label]])),
   '/contracts': 'Contracts',
-  '/compliance': 'Compliance',
+  '/compliance': 'Violation',
   '/manpower': 'Manpower',
   '/cctv-monitoring': 'Live Camera Feed',
   '/support-tickets': 'Support Tickets',

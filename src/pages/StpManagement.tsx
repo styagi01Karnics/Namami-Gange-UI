@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
 import DateRangeField from '../components/ui/DateRangeField'
+import MonthField from '../components/ui/MonthField'
 import StpHeaderCard from '../components/stp/StpHeaderCard'
 import AccordionCard from '../components/stp/AccordionCard'
 import LivePill from '../components/stp/LivePill'
@@ -12,6 +13,7 @@ import SectionTabs from '../components/stp/SectionTabs'
 import TabSectionHeader from '../components/stp/TabSectionHeader'
 import TabPlaceholder from '../components/stp/TabPlaceholder'
 import ManpowerTab from '../components/manpower/ManpowerTab'
+import { todayLabel } from '../components/manpower/todayManpower'
 import InventoryTab from '../components/inventory/InventoryTab'
 import CctvTab from '../components/cctv/CctvTab'
 import CalibrationTab from '../components/calibration/CalibrationTab'
@@ -38,7 +40,7 @@ const TAB_BODY = {
   'Remote Calibration': CalibrationTab,
   'Transaction Logs': TransactionLogsTab,
   Contracts: ContractsTab,
-  Compliance: ComplianceTab,
+  Violation: ComplianceTab,
   Billing: BillingTab,
 }
 
@@ -47,7 +49,18 @@ function resolvePlantId(options: PlantOption[], plantParam: string | null) {
   const byCode = options.find((option) => option.id === plantParam || option.plantCode === plantParam)
   if (byCode) return byCode.id
   const byStp = options.find((option) => option.stpId === plantParam)
-  return byStp?.id ?? null
+  return byStp?.id ?? plantParam
+}
+
+function currentInventoryMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function formatInventoryMonth(value: string) {
+  const [year, month] = value.split('-').map(Number)
+  if (!year || !month) return value
+  return new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
 }
 
 export default function StpManagement() {
@@ -61,7 +74,20 @@ export default function StpManagement() {
     () => resolvePlantId(FALLBACK_PLANT_OPTIONS, plantParam) ?? FALLBACK_PLANT_OPTIONS[0]?.id,
   )
   const [range, setRange] = useState(defaultDateRange)
+  const [inventoryMonth, setInventoryMonth] = useState(currentInventoryMonth)
+  const [inventoryMonthManuallySet, setInventoryMonthManuallySet] = useState(false)
   const [billingMonth, setBillingMonth] = useState('June 2026')
+  const previousMonth = useMemo(() => {
+    const today = new Date()
+    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const end = new Date(today.getFullYear(), today.getMonth(), 0)
+    const month = start.toLocaleString('en-US', { month: 'long' })
+    const shortMonth = start.toLocaleString('en-US', { month: 'short' })
+    return {
+      label: `${month} ${start.getFullYear()}`,
+      range: `1 ${shortMonth} ${start.getFullYear()} - ${end.getDate()} ${shortMonth} ${start.getFullYear()}`,
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -84,6 +110,16 @@ export default function StpManagement() {
     }
   }, [plantParam])
 
+  useEffect(() => {
+    if (inventoryMonthManuallySet) return undefined
+    const now = new Date()
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const timer = window.setTimeout(() => {
+      setInventoryMonth(currentInventoryMonth())
+    }, nextMonth.getTime() - now.getTime() + 1000)
+    return () => window.clearTimeout(timer)
+  }, [inventoryMonth, inventoryMonthManuallySet])
+
   // Apply deep-link plant selection whenever ?plant= changes.
   useEffect(() => {
     const matched = resolvePlantId(plantOptions, plantParam)
@@ -102,8 +138,22 @@ export default function StpManagement() {
   }
 
   const selectedPlant = useMemo(
-    () => plantOptions.find((option) => option.id === plantCode) ?? plantOptions[0],
-    [plantOptions, plantCode],
+    () => plantOptions.find((option) => option.id === plantCode)
+      ?? (plantParam
+        ? {
+            id: plantParam,
+            label: searchParams.get('name') ?? plantParam,
+            plantCode: plantParam,
+            stpId: plantParam,
+          }
+        : plantOptions[0]),
+    [plantOptions, plantCode, plantParam, searchParams],
+  )
+  const pickerOptions = useMemo(
+    () => selectedPlant && !plantOptions.some((option) => option.id === selectedPlant.id)
+      ? [...plantOptions, selectedPlant]
+      : plantOptions,
+    [plantOptions, selectedPlant],
   )
   const stp = resolveStpDetail(selectedPlant)
   const TabBody = TAB_BODY[tab]
@@ -111,7 +161,7 @@ export default function StpManagement() {
 
   // Focus Compliance section when arriving from dashboard non-performing / top links.
   useEffect(() => {
-    if (tab !== 'Compliance') return undefined
+    if (tab !== 'Violation') return undefined
     const timer = window.setTimeout(() => {
       document.getElementById('stp-section-compliance')?.scrollIntoView({
         behavior: 'smooth',
@@ -151,15 +201,45 @@ export default function StpManagement() {
           Generate Invoice
         </Button>
       </div>
+    ) : tab === 'Inventory' ? (
+      <MonthField
+        value={inventoryMonth}
+        onChange={(month) => {
+          setInventoryMonthManuallySet(true)
+          setInventoryMonth(month)
+        }}
+        className="w-[205px] shrink-0"
+      />
+    ) : tab === 'Manpower' ? (
+      <span className="shrink-0 whitespace-nowrap rounded-[10px] border border-[#C7DDFB] bg-[#F4F9FF] px-[14px] py-[7px] text-[13px] font-semibold text-[#003C7A]">
+        Today, {todayLabel()}
+      </span>
+    ) : tab === 'Violation' ? (
+      <span className="flex h-[32px] shrink-0 items-center whitespace-nowrap rounded-[9px] border border-line bg-white px-[14px] text-[13px] font-medium text-ink">
+        {previousMonth.label}
+      </span>
     ) : (
       <DateRangeField compact value={range} onChange={setRange} className="w-[236px] shrink-0" />
     )
 
   return (
-    <ExportMetaProvider value={stpExportMeta(stp, tab === 'Billing' ? billingMonth : range)}>
+    <ExportMetaProvider
+      value={stpExportMeta(
+        stp,
+        tab === 'Billing'
+          ? billingMonth
+          : tab === 'Inventory'
+            ? formatInventoryMonth(inventoryMonth)
+          : tab === 'Manpower'
+            ? `Today, ${todayLabel()}`
+            : tab === 'Violation'
+              ? previousMonth.range
+              : range,
+      )}
+    >
       <div className="flex flex-col gap-[15px] pb-[22px]">
         <Select
-          options={plantOptions}
+          options={pickerOptions}
           value={selectedPlant?.id}
           onChange={onPlantChange}
           className="w-1/2 self-end"
@@ -180,14 +260,14 @@ export default function StpManagement() {
         <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />
 
         <Card
-          id={tab === 'Compliance' ? 'stp-section-compliance' : undefined}
+          id={tab === 'Violation' ? 'stp-section-compliance' : undefined}
           className="mt-[2px] scroll-mt-[24px] rounded-[12px] border-0 p-[16px] shadow-card"
         >
           <TabSectionHeader tab={tab} right={headerControls} />
 
           <div className="mt-[16px]">
             {TabBody ? (
-              tab === 'Compliance' ? (
+              tab === 'Violation' ? (
                 <ComplianceTab
                   plantCode={selectedPlant?.plantCode}
                   exportLabel={
@@ -195,7 +275,7 @@ export default function StpManagement() {
                     selectedPlant?.label ||
                     stp.name
                   }
-                  dateRangeLabel={range}
+                  dateRangeLabel={previousMonth.range}
                   stpManagementPdf
                 />
               ) : (

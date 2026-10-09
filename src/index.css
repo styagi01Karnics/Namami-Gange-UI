@@ -61,6 +61,21 @@ body {
   background: transparent;
 }
 
+/* Custom GIS callouts extend beyond the exact-coordinate marker. */
+.leaflet-marker-icon.stp-map-label-marker {
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+.stp-map-label-marker .stp-map-callout {
+  overflow: visible;
+  pointer-events: none;
+}
+.stp-map-label-marker .stp-map-callout-label,
+.stp-map-label-marker .stp-map-marker-dot {
+  pointer-events: auto;
+}
+
 /* dashed separator used inside the compliance card */
 .dashed-divider {
   border-top: 1px dashed #DCE6F1;

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Maximize2, Minimize2, X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
 import PlantScene from './PlantScene'
@@ -11,21 +11,16 @@ export type PlaybackFeed = {
   cameraId?: number | string
   id: string
   location: string
+  recordingDate?: string
+  startTime?: string
+  endTime?: string
   streamUrl?: string
   player?: CameraPlayer
   status?: string
   clips?: PlaybackClip[]
 }
 
-function formatTimestamp(date: Date) {
-  const h = date.getHours() % 12 || 12
-  const m = String(date.getMinutes()).padStart(2, '0')
-  const s = String(date.getSeconds()).padStart(2, '0')
-  const cs = String(Math.floor(date.getMilliseconds() / 10)).padStart(2, '0')
-  return `${h}:${m}:${s}:${cs}`
-}
-
-/** Live / playback viewer opened from Recording Playback → Play Recording. */
+/** Playback viewer opened from Recording Playback → Play Recording. */
 export default function RecordingPlaybackModal({
   feed,
   onClose,
@@ -33,12 +28,20 @@ export default function RecordingPlaybackModal({
   feed: PlaybackFeed
   onClose: () => void
 }) {
-  const [timestamp, setTimestamp] = useState(() => formatTimestamp(new Date()))
+  const playerRef = useRef<HTMLDivElement>(null)
   const [clipIndex, setClipIndex] = useState(0)
+  const [fullscreen, setFullscreen] = useState(false)
   const clips = feed.clips ?? []
   const activeClip = clips[clipIndex]
   const mp4Url = activeClip?.streamUrl ?? (feed.player === 'mp4' ? feed.streamUrl : undefined)
   const showStream = Boolean(mp4Url || feed.streamUrl) && feed.status !== 'Offline'
+  const recordingDateLabel = feed.recordingDate
+    ? new Date(`${feed.recordingDate}T00:00:00`).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : 'Selected date'
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -47,9 +50,36 @@ export default function RecordingPlaybackModal({
   }, [onClose])
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTimestamp(formatTimestamp(new Date())), 80)
-    return () => window.clearInterval(timer)
+    setClipIndex(0)
+  }, [feed.id, feed.recordingDate, feed.startTime, feed.streamUrl])
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      setFullscreen(document.fullscreenElement === playerRef.current)
+    }
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
   }, [])
+
+  const toggleFullscreen = async () => {
+    if (fullscreen) {
+      if (document.fullscreenElement === playerRef.current) {
+        await document.exitFullscreen().catch(() => setFullscreen(false))
+      } else {
+        setFullscreen(false)
+      }
+      return
+    }
+
+    if (playerRef.current?.requestFullscreen) {
+      await playerRef.current
+        .requestFullscreen()
+        .then(() => setFullscreen(true))
+        .catch(() => setFullscreen(true))
+    } else {
+      setFullscreen((value) => !value)
+    }
+  }
 
   return (
     <div
@@ -60,33 +90,52 @@ export default function RecordingPlaybackModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={`Camera ${feed.id} recording playback`}
+        aria-label={`${feed.location} recording playback`}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[720px] rounded-[18px] bg-white p-[18px] shadow-pop"
+        className={`w-full rounded-[18px] bg-white p-[18px] shadow-pop ${fullscreen ? 'fixed inset-0 z-[60] flex h-dvh max-w-none flex-col rounded-none p-0' : 'max-w-[720px]'}`}
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className={`flex shrink-0 items-start justify-between gap-4 ${fullscreen ? 'px-5 py-3' : ''}`}>
           <div className="min-w-0">
-            <h3 className="text-[16px] font-semibold leading-5 text-ink">
-              CAM ID:{' '}
-              <span className="text-brand-link">{feed.cameraId ?? feed.id}</span>
-            </h3>
+            <h3 className="text-[16px] font-semibold leading-5 text-ink">Recording Playback</h3>
             <p className="mt-[6px] flex items-center gap-[5px] text-[13px] font-semibold leading-4 text-orange">
               <PinIcon size={15} className="text-orange" />
               {feed.location}
             </p>
+            {(feed.startTime || feed.endTime || recordingDateLabel) && (
+              <p className="mt-[4px] text-[12px] font-medium text-ink-soft">
+                {recordingDateLabel}
+                {feed.startTime || feed.endTime
+                  ? ` · ${feed.startTime ?? ''}${feed.startTime && feed.endTime ? ' – ' : ''}${feed.endTime ?? ''}`
+                  : ''}
+              </p>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close recording playback"
-            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] text-ink transition-colors hover:bg-[#F3F7FC]"
-          >
-            <X size={18} strokeWidth={2.2} />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              aria-label={fullscreen ? 'Exit fullscreen recording' : 'Expand recording to fullscreen'}
+              title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] text-ink transition-colors hover:bg-[#F3F7FC]"
+            >
+              {fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close recording playback"
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] text-ink transition-colors hover:bg-[#F3F7FC]"
+            >
+              <X size={18} strokeWidth={2.2} />
+            </button>
+          </div>
         </div>
 
-        <div className="relative mt-[14px] aspect-[16/10] w-full overflow-hidden rounded-[22px] bg-[#07121e]">
+        <div
+          ref={playerRef}
+          className={`relative w-full overflow-hidden bg-[#07121e] ${fullscreen ? 'min-h-0 flex-1 rounded-none' : 'mt-[14px] aspect-[16/10] rounded-[22px]'}`}
+        >
           {showStream && feed.player === 'whep' ? (
             <MediaMtxWhepPlayer src={feed.streamUrl!} title={feed.location} />
           ) : showStream && (feed.player === 'mp4' || mp4Url) ? (
@@ -113,12 +162,10 @@ export default function RecordingPlaybackModal({
             <PlantScene id={`playback-${feed.id}`} />
           )}
 
-          {feed.player !== 'mp4' && (
-            <span className="pointer-events-none absolute bottom-[14px] left-1/2 inline-flex -translate-x-1/2 items-center gap-[6px] text-[13px] font-semibold leading-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
-              <span className="h-[7px] w-[7px] rounded-full bg-danger" />
-              {timestamp}
-            </span>
-          )}
+          <div className="pointer-events-none absolute left-0 top-0 z-20 inline-flex items-center gap-[6px] rounded-br-[8px] bg-[#07121E]/95 px-[10px] py-[6px] text-[11px] font-semibold leading-4 text-white shadow-md">
+            <span className="size-[7px] rounded-full bg-[#35D07F] shadow-[0_0_6px_#35D07F]" />
+            Recording Video
+          </div>
         </div>
       </div>
     </div>

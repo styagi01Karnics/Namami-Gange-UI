@@ -25,15 +25,6 @@ function formatElapsed(seconds) {
   return `${minutes}:${String(rest).padStart(2, '0')}`
 }
 
-function formatLiveClock(date) {
-  return date.toLocaleTimeString('en-GB', {
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-}
-
 function loadOfficialReader(page) {
   if (window.MediaMTXWebRTCReader) {
     return Promise.resolve(window.MediaMTXWebRTCReader)
@@ -80,7 +71,6 @@ export default function MediaMtxWhepPlayer({ src, title }) {
   const [paused, setPaused] = useState(false)
   const [muted, setMuted] = useState(true)
   const [elapsed, setElapsed] = useState(0)
-  const [liveClock, setLiveClock] = useState(() => formatLiveClock(new Date()))
   const [fullscreen, setFullscreen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const page = pageUrl(src)
@@ -149,11 +139,6 @@ export default function MediaMtxWhepPlayer({ src, title }) {
       video.removeEventListener('pause', onPause)
       video.removeEventListener('volumechange', onVolume)
     }
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setLiveClock(formatLiveClock(new Date())), 1000)
-    return () => window.clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -252,11 +237,6 @@ export default function MediaMtxWhepPlayer({ src, title }) {
             {paused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
           </ControlButton>
           <span className="min-w-[2.25rem] px-1 text-[12px] font-medium tabular-nums">{formatElapsed(elapsed)}</span>
-
-          <span className="pointer-events-none absolute left-1/2 inline-flex -translate-x-1/2 items-center gap-[5px] text-[11px] font-medium">
-            <span className="h-[5px] w-[5px] rounded-full bg-danger" />
-            {liveClock}
-          </span>
 
           <span className="ml-auto" />
           <ControlButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute}>

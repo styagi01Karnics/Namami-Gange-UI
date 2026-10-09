@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
-import DateRangeField from '../components/ui/DateRangeField'
 import StpHeaderCard from '../components/stp/StpHeaderCard'
 import ManpowerTab from '../components/manpower/ManpowerTab'
+import { todayLabel } from '../components/manpower/todayManpower'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
-import { defaultDateRange, stpDetails, stpOptions } from '../data/mockData'
+import { stpDetails, stpOptions } from '../data/mockData'
 
 /**
  * Standalone Manpower section. Renders the same widget set as the Manpower tab
@@ -13,21 +13,20 @@ import { defaultDateRange, stpDetails, stpOptions } from '../data/mockData'
  */
 export default function Manpower() {
   const [stpId, setStpId] = useState(stpOptions[0].id)
-  const [range, setRange] = useState(defaultDateRange)
   const stp = stpDetails[stpId]
 
   return (
-    <ExportMetaProvider value={stpExportMeta(stp, range)}>
+    <ExportMetaProvider value={stpExportMeta(stp, `Today, ${todayLabel()}`)}>
       <div className="flex flex-col gap-[15px] pb-[22px]">
         <Select options={stpOptions} value={stpId} onChange={setStpId} className="w-1/2 self-end" align="right" />
 
         <StpHeaderCard stp={stp} />
 
         <Card className="p-[15px]">
-          <DateRangeField value={range} onChange={setRange} className="ml-auto w-[54%]" />
+          <p className="ml-auto w-fit text-[13px] font-semibold text-[#003C7A]">Today, {todayLabel()}</p>
 
           <div className="mt-[15px]">
-            <ManpowerTab />
+            <ManpowerTab stpId={stpId} />
           </div>
         </Card>
       </div>

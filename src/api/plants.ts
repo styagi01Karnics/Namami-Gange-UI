@@ -110,9 +110,12 @@ export function resolveStpDetail(option: PlantOption | undefined) {
     ...fallback,
     name: option.label,
     address: '—',
-    status: 'Online',
+    status: '—',
     createdOn: '—',
     lastSeen: '—',
+    inCharge: { name: '—', phone: '—', email: '—', role: '—' },
+    vendor: { name: '—', prefixId: option.plantCode },
+    site: { state: '—', city: '—', zip: '—', lat: '—', lng: '—' },
     penalty: { amount: '₹0', reason: 'No active penalty' },
   }
 }

@@ -88,7 +88,7 @@ export default function CameraTile({ camera, onExpand, onPlayRecording, recordin
         {!hideTags && (
           <span className="inline-flex shrink-0 items-center gap-[6px] rounded-full bg-white px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-ink">
             <span className={`h-[7px] w-[7px] rounded-full ${STATUS_DOT[camera.status] ?? 'bg-ink-muted'}`} />
-            {camera.status}
+            {camera.status === 'Live' ? 'Online' : camera.status}
           </span>
         )}
       </div>

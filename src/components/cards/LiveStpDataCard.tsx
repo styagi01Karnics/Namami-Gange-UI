@@ -9,7 +9,7 @@ export default function LiveStpDataCard() {
   const [page, setPage] = useState(0)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
   const autoScrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pages = Math.max(1, liveStpData.length - 2)
+  const pages = liveStpData.length
 
   const scrollTo = (index: number) => {
     const el = scrollerRef.current
@@ -36,7 +36,7 @@ export default function LiveStpDataCard() {
           el.scrollTo({ left: nextPage * width, behavior: 'smooth' })
           return nextPage
         })
-      }, 3000) // Change slide every 3 seconds
+      }, 5000) // Change STP every five seconds
     }
 
     startAutoScroll()
@@ -67,14 +67,15 @@ export default function LiveStpDataCard() {
           if (!el) return
           const card = el.querySelector<HTMLElement>('[data-live-card]')
           const width = card ? card.offsetWidth + 12 : 320
-          setPage(Math.round(el.scrollLeft / width))
+          const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 8
+          setPage(atEnd ? liveStpData.length - 1 : Math.min(liveStpData.length - 1, Math.round(el.scrollLeft / width)))
         }}
       >
         {liveStpData.map((stp) => (
           <div
             key={stp.id}
             data-live-card
-            className="flex h-[88px] w-[min(300px,80%)] shrink-0 gap-[10px] rounded-[8px] bg-[#F3F9FF] p-[10px]"
+            className={`flex h-[88px] w-[min(300px,80%)] shrink-0 gap-[10px] rounded-[8px] p-[10px] transition-colors ${page === liveStpData.indexOf(stp) ? 'bg-[#E8F3FF] ring-1 ring-[#B8D9FA]' : 'bg-[#F3F9FF]'}`}
           >
             <img
               src={stp.image}
@@ -84,13 +85,17 @@ export default function LiveStpDataCard() {
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-[8px]">
                 <Link
-                  to={stpRealtimePath(stp.plantCode)}
+                  to={`${stpRealtimePath(stp.plantCode)}&name=${encodeURIComponent(stp.name)}`}
                   className="truncate text-[14px] font-bold leading-5 text-[#0768D2] underline"
+                  title={`${stp.name} · ${stp.operator}`}
                 >
                   {stp.name}
                 </Link>
-                <span className="inline-flex h-[20px] shrink-0 items-center rounded-full bg-[#EAF3EC] px-[6px] text-[11px] font-semibold text-[#168E3F]">
-                  {stp.status}
+                <span
+                  title={stp.operator}
+                  className={`inline-flex h-[22px] max-w-[112px] shrink-0 items-center truncate rounded-full px-[7px] text-[10px] font-semibold ${stp.status === 'Active' ? 'bg-[#EAF3EC] text-[#168E3F]' : 'bg-[#F1F4F7] text-[#667085]'}`}
+                >
+                  {stp.operator} · {stp.status === 'Active' ? 'Online' : stp.status}
                 </span>
               </div>
               <div className="mt-[6px] flex gap-[16px]">
@@ -117,7 +122,6 @@ export default function LiveStpDataCard() {
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => {
               scrollTo(i)
-              setIsAutoScrolling(false) // Pause auto-scroll on manual click
             }}
             className={`h-[7px] rounded-full transition-all ${
               page === i ? 'w-[18px] bg-[#0768D2]' : 'w-[7px] bg-[#B7D4F5]'

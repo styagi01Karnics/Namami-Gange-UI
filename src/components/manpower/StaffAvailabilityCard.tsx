@@ -8,22 +8,35 @@ import IconToggle from '../ui/IconToggle'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { useTableExport } from '../export/useTableExport'
 import { staffAvailability, staffStatusFilterMap } from '../../data/mockData'
+import type { TodayStaffRow } from './todayManpower'
 
 const STAFF_COLUMNS = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Employee' },
   { key: 'role', label: 'Role' },
   { key: 'dept', label: 'Department' },
+  { key: 'date', label: 'Date' },
+  { key: 'punchTime', label: 'Punch Time' },
   { key: 'status', label: 'Status' },
 ]
 
-export default function StaffAvailabilityCard({ open = true, onToggle }) {
+export default function StaffAvailabilityCard({
+  rows: staffRows,
+  dateLabel,
+  open = true,
+  onToggle,
+}: {
+  rows: TodayStaffRow[]
+  dateLabel: string
+  open?: boolean
+  onToggle?: () => void
+}) {
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [sortDir, setSortDir] = useState(null)
   const { exportPdf, exportCsv, printNode } = useTableExport({
-    title: 'Staff Availability',
-    fileName: 'staff-availability',
+    title: `Staff Availability — ${dateLabel}`,
+    fileName: `staff-availability-${new Date().toISOString().slice(0, 10)}`,
     columns: STAFF_COLUMNS,
   })
 
@@ -31,7 +44,7 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
     const wanted = staffStatusFilterMap[filter]
     const q = query.trim().toLowerCase()
 
-    const list = staffAvailability.rows.filter((r) => {
+    const list = staffRows.filter((r) => {
       const matchesStatus = !wanted || r.status === wanted
       const matchesQuery =
         !q ||
@@ -43,7 +56,7 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
     return [...list].sort((a, b) =>
       sortDir === 'asc' ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status),
     )
-  }, [filter, query, sortDir])
+  }, [staffRows, filter, query, sortDir])
 
   return (
     <section className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
@@ -77,19 +90,22 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
             <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
               <thead className="sticky top-0 z-[1]">
                 <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF] [&>th]:bg-[#EFF7FF]">
-                  <th className="w-[14%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[12%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     ID
                   </th>
-                  <th className="w-[26%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[22%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     Employee
                   </th>
-                  <th className="w-[22%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     Role
                   </th>
-                  <th className="w-[20%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     Department
                   </th>
-                  <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Punch Time
+                  </th>
+                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     <button
                       type="button"
                       onClick={() => setSortDir((v) => (v === 'asc' ? 'desc' : 'asc'))}
@@ -108,7 +124,9 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
                 {rows.map((r, index) => (
                   <tr
                     key={r.id}
-                    className={`border border-[#D8EDFF] ${index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'}`}
+                    className={`border border-[#D8EDFF] ${
+                      r.status === 'Absent' ? 'bg-[#FFF5F5]' : index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                    }`}
                   >
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#0768D2] underline">
                       {r.id}
@@ -125,6 +143,9 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
                       {r.dept}
                     </td>
+                    <td className={`px-[16px] py-[18px] text-[14px] font-medium leading-[22px] ${r.status === 'Absent' ? 'text-[#B42318]' : 'text-[#07121E]'}`}>
+                      {r.punchTime}
+                    </td>
                     <td className="px-[16px] py-[18px]">
                       <StatusPill
                         tone={statusTone(r.status)}
@@ -137,7 +158,7 @@ export default function StaffAvailabilityCard({ open = true, onToggle }) {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-[16px] py-[36px] text-center text-[14px] text-[#646464]">
+                    <td colSpan={6} className="px-[16px] py-[36px] text-center text-[14px] text-[#646464]">
                       No staff match this filter.
                     </td>
                   </tr>
