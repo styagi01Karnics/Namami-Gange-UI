@@ -94,6 +94,11 @@ export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: Cctv
   const openPlayback = () => {
     const match =
       cameras.find((camera) => cameraLocationLabel(camera) === location) ?? cameras[0]
+    const recordingWindow = {
+      recordingDate: date,
+      startTime: `${startH}:00 ${startAp}`,
+      endTime: endOfHour(startH, startAp),
+    }
 
     if (match) {
       const siteCode = getCameraSiteCode(match)
@@ -102,6 +107,7 @@ export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: Cctv
         cameraId: match.id,
         id: match.name || String(match.id),
         location: waterLabel(cameraLocationLabel(match)),
+        ...recordingWindow,
         streamUrl: getStreamUrl(siteCode, match.channel, match),
         player: match.player,
         status: online ? 'Live' : 'Offline',
@@ -114,6 +120,7 @@ export default function RecordingPlaybackCard({ cameras = [] }: { cameras?: Cctv
       cameraId: '123456',
       id: 'CAM-IN',
       location: waterLabel(location),
+      ...recordingWindow,
       status: 'Offline',
     })
   }

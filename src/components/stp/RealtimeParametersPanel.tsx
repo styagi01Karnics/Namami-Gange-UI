@@ -48,6 +48,16 @@ export default function RealtimeParametersPanel({
       {stpStreams.map((stream) => {
         const data = realtime[stream.key]
         const surface = STREAM_SURFACE[stream.tone] ?? STREAM_SURFACE.brand
+        const params = data.params.map((param) => param.key === 'totalizer'
+          ? {
+              key: 'flow',
+              label: 'Flow',
+              icon: 'flow',
+              value: `${data.flow.value} ${data.flow.unit}`,
+              tone: 'ink' as const,
+            }
+          : param,
+        )
 
         return (
           <div
@@ -64,7 +74,7 @@ export default function RealtimeParametersPanel({
               </p>
 
               <div className="mt-[16px] grid grid-cols-3 gap-[12px]">
-                {data.params.map((p) => (
+                {params.map((p) => (
                   <ParamTile key={p.key} param={p} />
                 ))}
               </div>
