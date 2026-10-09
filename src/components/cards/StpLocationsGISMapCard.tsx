@@ -63,40 +63,47 @@ const PLANT_POINTS: MappedPlant[] = [
 ]
 
 const LABEL_LAYOUT: Record<string, { x: number; y: number }> = {
-  // Individual callout lanes keep even nearby sites in separate rows.
-  'map-mothorowala-1-20': { x: -100, y: -123 },
-  'map-mothorowala-2-20': { x: -100, y: 37 },
-  'map-kargi-68': { x: 100, y: -120 },
-  'map-sarai-14': { x: -100, y: -121 },
-  'map-sarai-upgrade-18': { x: -100, y: -41 },
-  'map-jagjeetpur-68': { x: 100, y: -121 },
-  'map-jagjeetpur-upgrade-27': { x: 100, y: -81 },
-  'map-jagjeetpur-18': { x: 100, y: -41 },
-  'map-lakkarghat-26': { x: 100, y: 3 },
-  'map-bazpur-10': { x: 100, y: -39 },
-  'map-kashipur-10': { x: -220, y: -33 },
-  'map-haldwani-28': { x: -250, y: 8 },
-  'map-saliyar-33': { x: -100, y: -81 },
+  // Haridwar plants share the left callout lane, each in its own row.
+  'map-sarai-14': { x: -100, y: -125 },
+  'map-jagjeetpur-68': { x: -100, y: -75 },
+  'map-jagjeetpur-upgrade-27': { x: -100, y: -25 },
+  'map-sarai-upgrade-18': { x: -100, y: 25 },
+  'map-jagjeetpur-18': { x: -100, y: 75 },
+  // Dehradun plants align in a separate right-side lane.
+  'map-kargi-68': { x: 100, y: -65 },
+  'map-mothorowala-1-20': { x: 100, y: -15 },
+  'map-mothorowala-2-20': { x: 100, y: 35 },
+  // Remaining cities use their own staggered lanes around the markers.
+  'map-lakkarghat-26': { x: 100, y: 15 },
+  'map-haldwani-28': { x: -250, y: -85 },
+  'map-kashipur-10': { x: -220, y: -35 },
+  'map-bazpur-10': { x: 100, y: 15 },
+  'map-saliyar-33': { x: 100, y: -105 },
 }
 
 const MAP_LABELS: Record<string, string> = {
-  'map-sarai-14': '14 MLD Sarai',
-  'map-jagjeetpur-68': '68 MLD Jagjeetpur',
-  'map-jagjeetpur-upgrade-27': '27 MLD Jagjeetpur',
-  'map-sarai-upgrade-18': '18 MLD Sarai',
-  'map-jagjeetpur-18': '18 MLD Jagjeetpur',
-  'map-lakkarghat-26': '26 MLD Lakkarghat',
-  'map-haldwani-28': '28 MLD Indira Nagar',
-  'map-mothorowala-1-20': '20 MLD Mothorowala-1',
-  'map-kargi-68': '68 MLD Kargi Chowk',
-  'map-mothorowala-2-20': '20 MLD Mothorowala-2',
-  'map-saliyar-33': '33 MLD Saliyar',
+  'map-sarai-14': '14 MLD Sarai, Haridwar',
+  'map-jagjeetpur-68': '68 MLD Jagjeetpur, Haridwar',
+  'map-jagjeetpur-upgrade-27': '27 MLD Jagjeetpur, Haridwar',
+  'map-sarai-upgrade-18': '18 MLD Sarai, Haridwar',
+  'map-jagjeetpur-18': '18 MLD Jagjeetpur, Haridwar',
+  'map-lakkarghat-26': '26 MLD Lakkarghat, Rishikesh',
+  'map-haldwani-28': '28 MLD Indira Nagar, Haldwani',
+  'map-mothorowala-1-20': '20 MLD Mothorowala-1, Dehradun',
+  'map-kargi-68': '68 MLD Kargi Chowk, Dehradun',
+  'map-mothorowala-2-20': '20 MLD Mothorowala-2, Dehradun',
+  'map-saliyar-33': '33 MLD Saliyar, Roorkee',
   'map-bazpur-10': '10 MLD Bazpur',
   'map-kashipur-10': '10 MLD Kashipur',
 }
 
 function displayName(point: StpMapPoint) {
   return point.label.replace(/\s+STP(?:-\d+)?[,]?\s*/i, ' ').trim()
+}
+
+function labelWidthFor(point: StpMapPoint) {
+  const label = MAP_LABELS[point.id] ?? displayName(point)
+  return Math.max(112, Math.min(250, label.length * 6.2 + 38))
 }
 
 function escapeHtml(value: string) {
@@ -113,18 +120,118 @@ function plantLabelIcon(point: StpMapPoint) {
   const color = RISK_COLOR[point.risk]
   const offset = LABEL_LAYOUT[point.id] ?? { x: 100, y: 0 }
   const label = escapeHtml(MAP_LABELS[point.id] ?? displayName(point))
-  const labelWidth = Math.max(84, Math.min(194, label.length * 6.2 + 18))
+  const labelWidth = labelWidthFor(point)
   const labelLeft = offset.x < 0 ? offset.x - labelWidth : offset.x
   const lineEndX = offset.x
   const labelTop = offset.y - 13
   const linePath = `M 11 11 H ${lineEndX + 11} V ${offset.y + 11}`
+  const locationPin = '<svg aria-hidden="true" viewBox="0 0 24 24" width="13" height="13" style="flex:none;color:' + color + '"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
   return L.divIcon({
     className: 'stp-map-label-marker',
-    html: `<div class="stp-map-callout" style="position:relative;width:22px;height:22px;overflow:visible;pointer-events:none;"><svg aria-hidden="true" style="position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;"><path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg><span class="stp-map-marker-dot" style="position:absolute;left:0;top:0;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 5px #172b4d66;color:#fff;font-size:10px;font-weight:700;pointer-events:auto;">●</span><button class="stp-map-callout-label" type="button" style="position:absolute;left:${labelLeft}px;top:${labelTop}px;width:${labelWidth}px;box-sizing:border-box;padding:4px 8px;border:1.5px solid ${color};border-radius:8px;background:#fff;box-shadow:0 2px 7px #172b4d30;color:#172b4d;font:600 11px/16px Inter,system-ui,sans-serif;white-space:nowrap;text-align:center;pointer-events:auto;cursor:pointer;">${label}</button></div>`,
+    html: `<div class="stp-map-callout" style="position:relative;width:22px;height:22px;overflow:visible;pointer-events:none;"><svg aria-hidden="true" style="position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;"><path class="stp-map-callout-connector" d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg><span class="stp-map-marker-dot" style="position:absolute;left:0;top:0;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 5px #172b4d66;color:#fff;font-size:10px;font-weight:700;pointer-events:auto;">●</span><button class="stp-map-callout-label" type="button" style="position:absolute;left:${labelLeft}px;top:${labelTop}px;width:${labelWidth}px;box-sizing:border-box;padding:4px 8px;border:1.5px solid ${color};border-radius:8px;background:#fff;box-shadow:0 2px 7px #172b4d30;color:#172b4d;font:600 11px/16px Inter,system-ui,sans-serif;white-space:nowrap;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;pointer-events:auto;cursor:pointer;">${locationPin}<span>${label}</span></button></div>`,
     iconSize: [22, 22],
     iconAnchor: [11, 11],
     popupAnchor: [0, -12],
   })
+}
+
+function MapCalloutLayout({
+  points,
+  markers,
+}: {
+  points: StpMapPoint[]
+  markers: Map<string, L.Marker>
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    const updateLayout = () => {
+      const mapSize = map.getSize()
+      const occupied: Array<{ left: number; top: number; right: number; bottom: number }> = []
+      const nextLayout: Record<string, { x: number; y: number }> = {}
+      const rowSpacing = 34
+      const topLimit = 8
+      const bottomLimit = Math.max(topLimit, mapSize.y - 36)
+
+      for (const point of points) {
+        const markerPosition = map.latLngToContainerPoint([point.lat, point.lng])
+        const markerLeft = markerPosition.x - 11
+        const markerTop = markerPosition.y - 11
+        const preferred = LABEL_LAYOUT[point.id] ?? { x: 100, y: 0 }
+        const width = labelWidthFor(point)
+        const preferredLeft = preferred.x < 0
+          ? markerLeft + preferred.x - width
+          : markerLeft + preferred.x
+        const preferredLeftPositions = preferred.x < 0
+          ? [preferredLeft, preferredLeft - width - 10, preferredLeft - (width + 10) * 2]
+          : [preferredLeft, preferredLeft + width + 10, preferredLeft + (width + 10) * 2]
+        const leftPositions = preferredLeftPositions
+          .map((left) => Math.max(8, Math.min(mapSize.x - width - 8, left)))
+          .filter((left, index, candidates) => candidates.indexOf(left) === index)
+        const preferredTop = markerTop + preferred.y - 13
+        const baseTop = Math.max(topLimit, Math.min(bottomLimit, preferredTop))
+        const topPositions = Array.from({ length: Math.floor((bottomLimit - topLimit) / rowSpacing) + 1 }, (_, index) => topLimit + index * rowSpacing)
+          .sort((left, right) => Math.abs(left - baseTop) - Math.abs(right - baseTop))
+
+        let chosen: { left: number; top: number } | undefined
+        for (const left of leftPositions) {
+          for (const top of topPositions) {
+            const candidate = { left, top, right: left + width, bottom: top + 28 }
+            const overlaps = occupied.some((box) =>
+              candidate.left < box.right + 6
+              && candidate.right + 6 > box.left
+              && candidate.top < box.bottom + 4
+              && candidate.bottom + 4 > box.top,
+            )
+            if (!overlaps) {
+              chosen = { left, top }
+              occupied.push(candidate)
+              break
+            }
+          }
+          if (chosen) break
+        }
+
+        if (!chosen) {
+          const left = leftPositions[0] ?? 8
+          const top = baseTop
+          chosen = { left, top }
+          occupied.push({ left, top, right: left + width, bottom: top + 28 })
+        }
+
+        nextLayout[point.id] = { x: chosen.left, y: chosen.top }
+      }
+
+      for (const point of points) {
+        const position = nextLayout[point.id]
+        const marker = markers.get(point.id)
+        const element = marker?.getElement()
+        const label = element?.querySelector<HTMLButtonElement>('.stp-map-callout-label')
+        const connector = element?.querySelector<SVGPathElement>('.stp-map-callout-connector')
+        if (!position || !label || !connector) continue
+
+        const markerPosition = map.latLngToContainerPoint([point.lat, point.lng])
+        const markerLeft = markerPosition.x - 11
+        const markerTop = markerPosition.y - 11
+        const labelLeft = position.x - markerLeft
+        const labelTop = position.y - markerTop
+        const width = labelWidthFor(point)
+        const lineEndX = labelLeft < 0 ? labelLeft + width : labelLeft
+        label.style.left = `${labelLeft}px`
+        label.style.top = `${labelTop}px`
+        connector.setAttribute('d', `M 11 11 H ${lineEndX + 11} V ${labelTop + 14}`)
+      }
+    }
+
+    const initialFrame = window.requestAnimationFrame(updateLayout)
+    map.on('moveend zoomend resize', updateLayout)
+    return () => {
+      window.cancelAnimationFrame(initialFrame)
+      map.off('moveend zoomend resize', updateLayout)
+    }
+  }, [map, markers, points])
+
+  return null
 }
 
 function MapInvalidateSize() {
@@ -410,6 +517,7 @@ export default function StpLocationsGISMapCard() {
           <MapInvalidateSize />
           <MapInitialBounds />
           <MapFocus point={focusPoint} />
+          <MapCalloutLayout points={visiblePoints} markers={markerRefs.current} />
           <MapPopupController selectedId={stpId} markers={markerRefs.current} />
           <MapPopupCloseReset
             markers={markerRefs.current}
