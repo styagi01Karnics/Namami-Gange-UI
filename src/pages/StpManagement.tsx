@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
 import DateRangeField from '../components/ui/DateRangeField'
+import MonthField from '../components/ui/MonthField'
 import StpHeaderCard from '../components/stp/StpHeaderCard'
 import AccordionCard from '../components/stp/AccordionCard'
 import LivePill from '../components/stp/LivePill'
@@ -51,6 +52,17 @@ function resolvePlantId(options: PlantOption[], plantParam: string | null) {
   return byStp?.id ?? plantParam
 }
 
+function currentInventoryMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function formatInventoryMonth(value: string) {
+  const [year, month] = value.split('-').map(Number)
+  if (!year || !month) return value
+  return new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+}
+
 export default function StpManagement() {
   const { tab: slug } = useParams()
   const navigate = useNavigate()
@@ -62,6 +74,8 @@ export default function StpManagement() {
     () => resolvePlantId(FALLBACK_PLANT_OPTIONS, plantParam) ?? FALLBACK_PLANT_OPTIONS[0]?.id,
   )
   const [range, setRange] = useState(defaultDateRange)
+  const [inventoryMonth, setInventoryMonth] = useState(currentInventoryMonth)
+  const [inventoryMonthManuallySet, setInventoryMonthManuallySet] = useState(false)
   const [billingMonth, setBillingMonth] = useState('June 2026')
   const previousMonth = useMemo(() => {
     const today = new Date()
@@ -95,6 +109,16 @@ export default function StpManagement() {
       cancelled = true
     }
   }, [plantParam])
+
+  useEffect(() => {
+    if (inventoryMonthManuallySet) return undefined
+    const now = new Date()
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const timer = window.setTimeout(() => {
+      setInventoryMonth(currentInventoryMonth())
+    }, nextMonth.getTime() - now.getTime() + 1000)
+    return () => window.clearTimeout(timer)
+  }, [inventoryMonth, inventoryMonthManuallySet])
 
   // Apply deep-link plant selection whenever ?plant= changes.
   useEffect(() => {
@@ -177,6 +201,15 @@ export default function StpManagement() {
           Generate Invoice
         </Button>
       </div>
+    ) : tab === 'Inventory' ? (
+      <MonthField
+        value={inventoryMonth}
+        onChange={(month) => {
+          setInventoryMonthManuallySet(true)
+          setInventoryMonth(month)
+        }}
+        className="w-[205px] shrink-0"
+      />
     ) : tab === 'Manpower' ? (
       <span className="shrink-0 whitespace-nowrap rounded-[10px] border border-[#C7DDFB] bg-[#F4F9FF] px-[14px] py-[7px] text-[13px] font-semibold text-[#003C7A]">
         Today, {todayLabel()}
@@ -195,6 +228,8 @@ export default function StpManagement() {
         stp,
         tab === 'Billing'
           ? billingMonth
+          : tab === 'Inventory'
+            ? formatInventoryMonth(inventoryMonth)
           : tab === 'Manpower'
             ? `Today, ${todayLabel()}`
             : tab === 'Violation'

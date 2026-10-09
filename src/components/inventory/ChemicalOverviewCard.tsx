@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Beaker, Droplet, FlaskConical } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Beaker, Droplet, FlaskConical, X } from 'lucide-react'
+import { chemicalInventory } from '../../data/mockData'
 
 const STOCK = {
   total: 10000,
@@ -19,6 +20,77 @@ const REMAINING_PERCENT = 100 - USED_PERCENT
 const CATEGORY_TOTAL = STOCK.categories.reduce((sum, item) => sum + item.amount, 0)
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 66
 const formatLitres = (value: number) => `${value.toLocaleString('en-IN')} L`
+
+function ChemicalListModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      role="presentation"
+      onClick={onClose}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#10233E]/55 p-4"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chemical-list-title"
+        onClick={(event) => event.stopPropagation()}
+        className="flex max-h-[min(80vh,680px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(9,35,71,0.3)]"
+      >
+        <header className="flex items-center justify-between gap-4 border-b border-[#E5EEF8] px-5 py-4">
+          <div>
+            <h2 id="chemical-list-title" className="text-[17px] font-bold text-[#16345B]">Chemical Inventory List</h2>
+            <p className="mt-1 text-[12px] text-[#71829A]">{chemicalInventory.rows.length} chemical records available</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close chemical inventory list"
+            className="grid size-9 shrink-0 place-items-center rounded-[8px] text-[#526783] hover:bg-[#F2F7FC]"
+          >
+            <X size={18} />
+          </button>
+        </header>
+        <div className="min-h-0 overflow-auto p-4">
+          <table className="w-full min-w-[620px] border-collapse text-left text-[12px]">
+            <thead className="sticky top-0 bg-[#F2F7FC] text-[#536987]">
+              <tr>
+                <th className="px-3 py-3 font-semibold">Chemical Name</th>
+                <th className="px-3 py-3 font-semibold">Category</th>
+                <th className="px-3 py-3 font-semibold">Current Qty</th>
+                <th className="px-3 py-3 font-semibold">Required Qty</th>
+                <th className="px-3 py-3 font-semibold">Days Left</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chemicalInventory.rows.map((chemical) => (
+                <tr key={chemical.name} className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]">
+                  <td className="px-3 py-3 font-semibold text-[#254064]">{chemical.name}</td>
+                  <td className="px-3 py-3 text-[#526783]">{chemical.category}</td>
+                  <td className="px-3 py-3 text-[#254064]">{chemical.currentQty}</td>
+                  <td className="px-3 py-3 text-[#254064]">{chemical.requiredQty}</td>
+                  <td className="px-3 py-3 text-[#254064]">{chemical.daysLeft} days</td>
+                  <td className="px-3 py-3">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${chemical.status === 'Adequate' ? 'bg-[#E8F8EF] text-[#168849]' : chemical.status === 'Low Stock' ? 'bg-[#FFF5E5] text-[#B66A00]' : 'bg-[#FFF0F0] text-[#D6333F]'}`}>
+                      {chemical.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  )
+}
 
 function ChemicalStockOverview() {
   return (
@@ -108,8 +180,7 @@ function ChemicalUsageDetails() {
         </div>
       </header>
 
-      <div className="grid min-w-0 grid-cols-1 gap-2 p-[14px] md:grid-cols-[minmax(210px,0.9fr)_minmax(190px,1fr)] md:items-center">
-        <div className="flex justify-center">
+      <div className="flex justify-center p-[14px]">
           <div className="relative size-[220px] shrink-0">
             <svg viewBox="0 0 180 180" className="size-full -rotate-90" role="img" aria-label={`Chemical category usage totaling ${formatLitres(CATEGORY_TOTAL)}`}>
               <circle cx="90" cy="90" r="66" fill="none" stroke="#EEF3F8" strokeWidth="27" />
@@ -150,24 +221,6 @@ function ChemicalUsageDetails() {
               )}
             </div>
           </div>
-        </div>
-
-        <div className="min-w-0 space-y-[7px]">
-          {STOCK.categories.map((category) => (
-            <div
-              key={category.id}
-              className={`flex cursor-default items-center gap-2 rounded-[8px] border-b border-[#EDF2F8] px-2 py-[7px] transition-colors ${hoveredCategoryId === category.id ? 'bg-[#F5F9FF]' : ''}`}
-              onMouseEnter={() => setHoveredCategoryId(category.id)}
-              onMouseLeave={() => setHoveredCategoryId(null)}
-              title={`${category.label}: ${formatLitres(category.amount)} (${category.percent}%)`}
-            >
-              <span className="size-[9px] shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
-              <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[#254064]">{category.label}</span>
-              <span className="whitespace-nowrap text-[10px] font-semibold text-[#19355B]">{formatLitres(category.amount)}</span>
-              <span className="min-w-[38px] rounded-full px-2 py-1 text-center text-[9px] font-semibold" style={{ color: category.color, backgroundColor: `${category.color}14` }}>{category.percent}%</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="border-t border-[#E8F0F8] p-[14px] pt-[11px]">
@@ -209,6 +262,8 @@ function ChemicalUsageDetails() {
 }
 
 export default function ChemicalOverviewCard() {
+  const [chemicalListOpen, setChemicalListOpen] = useState(false)
+
   return (
     <div className="grid grid-cols-1 items-stretch gap-[14px] lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.45fr)]">
       <div className="flex min-w-0 flex-col gap-[12px]">
@@ -217,7 +272,14 @@ export default function ChemicalOverviewCard() {
           <div className="min-w-0">
             <h3 className="text-[13px] font-semibold text-[#526783]">Total Chemicals</h3>
             <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-[24px] font-bold leading-7 text-[#1677F2]">98</span>
+              <button
+                type="button"
+                onClick={() => setChemicalListOpen(true)}
+                aria-label="View chemical inventory list"
+                className="text-[24px] font-bold leading-7 text-[#1677F2] underline decoration-2 underline-offset-2 hover:text-[#0055B8] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1677F2]"
+              >
+                98
+              </button>
               <span className="text-[11px] text-[#71829A]">Types of chemicals in inventory</span>
             </div>
           </div>
@@ -225,6 +287,7 @@ export default function ChemicalOverviewCard() {
         <ChemicalStockOverview />
       </div>
       <ChemicalUsageDetails />
+      {chemicalListOpen && <ChemicalListModal onClose={() => setChemicalListOpen(false)} />}
     </div>
   )
 }
