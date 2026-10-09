@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Boxes, Cog, Fan, Gauge, Waves, Wind } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Boxes, Cog, Fan, Gauge, Waves, Wind, X } from 'lucide-react'
+import { equipmentInventory } from '../../data/mockData'
 
 const EQUIPMENT = {
   total: 48,
@@ -18,6 +19,75 @@ const OPERATIONAL_PERCENT = (EQUIPMENT.operational / EQUIPMENT.total) * 100
 const NON_OPERATIONAL_PERCENT = (EQUIPMENT.nonOperational / EQUIPMENT.total) * 100
 const CATEGORY_TOTAL = EQUIPMENT.categories.reduce((sum, category) => sum + category.working, 0)
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 66
+
+function EquipmentListModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      role="presentation"
+      onClick={onClose}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#10233E]/55 p-4"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="equipment-list-title"
+        onClick={(event) => event.stopPropagation()}
+        className="flex max-h-[min(80vh,680px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(9,35,71,0.3)]"
+      >
+        <header className="flex items-center justify-between gap-4 border-b border-[#E5EEF8] px-5 py-4">
+          <div>
+            <h2 id="equipment-list-title" className="text-[17px] font-bold text-[#16345B]">Equipment Inventory List</h2>
+            <p className="mt-1 text-[12px] text-[#71829A]">{equipmentInventory.rows.length} equipment records available</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close equipment inventory list"
+            className="grid size-9 shrink-0 place-items-center rounded-[8px] text-[#526783] hover:bg-[#F2F7FC]"
+          >
+            <X size={18} />
+          </button>
+        </header>
+        <div className="min-h-0 overflow-auto p-4">
+          <table className="w-full min-w-[560px] border-collapse text-left text-[12px]">
+            <thead className="sticky top-0 bg-[#F2F7FC] text-[#536987]">
+              <tr>
+                <th className="px-3 py-3 font-semibold">Equipment Name</th>
+                <th className="px-3 py-3 font-semibold">Category</th>
+                <th className="px-3 py-3 font-semibold">Current Qty</th>
+                <th className="px-3 py-3 font-semibold">Required Qty</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {equipmentInventory.rows.map((item) => (
+                <tr key={item.name} className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]">
+                  <td className="px-3 py-3 font-semibold text-[#254064]">{item.name}</td>
+                  <td className="px-3 py-3 text-[#526783]">{item.category}</td>
+                  <td className="px-3 py-3 text-[#254064]">{item.currentQty}</td>
+                  <td className="px-3 py-3 text-[#254064]">{item.requiredQty}</td>
+                  <td className="px-3 py-3">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${item.status === 'Adequate' ? 'bg-[#E8F8EF] text-[#168849]' : item.status === 'Low Stock' ? 'bg-[#FFF5E5] text-[#B66A00]' : 'bg-[#FFF0F0] text-[#D6333F]'}`}>
+                      {item.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  )
+}
 
 function EquipmentAvailabilityGauge() {
   return (
@@ -208,6 +278,8 @@ function EquipmentCategoryDetails() {
 }
 
 export default function EquipmentOverviewCard() {
+  const [equipmentListOpen, setEquipmentListOpen] = useState(false)
+
   return (
     <div className="grid grid-cols-1 items-stretch gap-[14px] lg:grid-cols-[minmax(300px,0.9fr)_minmax(0,1.5fr)]">
       <div className="flex min-w-0 flex-col gap-[12px]">
@@ -218,7 +290,14 @@ export default function EquipmentOverviewCard() {
           <div className="min-w-0">
             <h3 className="text-[13px] font-semibold text-[#526783]">Total Equipment</h3>
             <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-[24px] font-bold leading-7 text-[#1677F2]">{EQUIPMENT.total}</span>
+              <button
+                type="button"
+                onClick={() => setEquipmentListOpen(true)}
+                aria-label="View equipment inventory list"
+                className="text-[24px] font-bold leading-7 text-[#1677F2] underline decoration-2 underline-offset-2 hover:text-[#0055B8] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1677F2]"
+              >
+                {EQUIPMENT.total}
+              </button>
               <span className="text-[11px] text-[#71829A]">Total installed equipment</span>
             </div>
           </div>
@@ -226,6 +305,7 @@ export default function EquipmentOverviewCard() {
         <EquipmentAvailabilityGauge />
       </div>
       <EquipmentCategoryDetails />
+      {equipmentListOpen && <EquipmentListModal onClose={() => setEquipmentListOpen(false)} />}
     </div>
   )
 }
