@@ -32,7 +32,12 @@ export default function RecordingAutoPlayer({
       })
       .catch((error) => {
         if (!cancelled) {
-          setLabel(error instanceof Error ? error.message : 'Unable to play recording')
+          const raw = error instanceof Error ? error.message : 'Unable to play recording'
+          if (/authorization|token|unauthorized/i.test(raw)) {
+            setLabel('Connecting to recording server…')
+          } else {
+            setLabel(raw)
+          }
         }
       })
 
@@ -66,8 +71,8 @@ export default function RecordingAutoPlayer({
       muted
       loop
       playsInline
-      controls
       preload="auto"
+      className="pointer-events-none"
       onCanPlay={(event) => {
         event.currentTarget.play().catch(() => {})
       }}
