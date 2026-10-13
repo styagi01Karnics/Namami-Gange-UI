@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import SoftStatCardsRow from '../ui/SoftStatCard'
 import ViolationsTable from './ViolationsTable'
 import { toPenaltyRangeFromLabel } from '../ui/DateRangeField'
-import { complianceSummary, violations as mockViolations } from '../../data/mockData'
+import {
+  complianceSummary,
+  monthlyComplianceSummary,
+  monthlyViolations,
+  type StpMonthlyViolation,
+} from '../../data/mockData'
 import {
   defaultOccurrencesRange,
   fetchPenaltyOccurrences,
@@ -32,15 +37,20 @@ export default function ComplianceTab({
   /** STP Management → Compliance PDF layout only. */
   stpManagementPdf?: boolean
 } = {}) {
-  const [rows, setRows] = useState<ViolationListItem[]>(() =>
-    plantCode ? [] : (mockViolations as unknown as ViolationListItem[]),
-  )
+  const [rows, setRows] = useState<Array<StpMonthlyViolation | ViolationListItem>>(() => {
+    if (!plantCode) return monthlyViolations
+    return monthlyViolations.filter(
+      (v) =>
+        v.plantCode === plantCode ||
+        (exportLabel && v.stpName?.toLowerCase().includes(exportLabel.toLowerCase())),
+    )
+  })
   const [totalAssessedAmount, setTotalAssessedAmount] = useState<number | null>(null)
   const [loading, setLoading] = useState(Boolean(plantCode))
 
   useEffect(() => {
     if (!plantCode) {
-      setRows(mockViolations as unknown as ViolationListItem[])
+      setRows(monthlyViolations)
       setTotalAssessedAmount(null)
       setLoading(false)
       return undefined
@@ -49,7 +59,6 @@ export default function ComplianceTab({
     const code = plantCode
     let cancelled = false
     setLoading(true)
-    setRows([])
     setTotalAssessedAmount(null)
 
     async function loadCompliance() {
@@ -60,21 +69,46 @@ export default function ComplianceTab({
       // Calendar selection → day bounds (00:00:00 → 23:59:59); else API default window.
       const apiRange = selectedRange ?? defaultOccurrencesRange()
 
-      const [nextRows, summary] = await Promise.all([
-        fetchPenaltyOccurrences(code, apiRange, {
-          plantNameByCode,
-          plantName,
-        }),
-        fetchPenaltySummary(code, apiRange),
-      ])
+      let nextRows: ViolationListItem[] = []
+      let penaltySummaryData: { totalAssessedAmount: number } | null = null
+
+      try {
+        const [apiRows, apiSummary] = await Promise.all([
+          fetchPenaltyOccurrences(code, apiRange, {
+            plantNameByCode,
+            plantName,
+          }),
+          fetchPenaltySummary(code, apiRange),
+        ])
+        nextRows = apiRows
+        penaltySummaryData = apiSummary
+      } catch {
+        nextRows = []
+      }
+
       if (cancelled) return
-      setRows(
-        nextRows.map((row) => ({
-          ...row,
-          stp: row.stp || plantName || code,
-        })),
-      )
-      setTotalAssessedAmount(summary ? summary.totalAssessedAmount : null)
+
+      if (nextRows.length > 0) {
+        setRows(
+          nextRows.map((row) => ({
+            ...row,
+            stp: row.stp || plantName || code,
+          })),
+        )
+      } else {
+        // Fallback to mock violations for THIS selected plant only
+        const matchingMock = monthlyViolations.filter(
+          (v) =>
+            v.plantCode === code ||
+            (v.stpName && (
+              v.stpName.toLowerCase().includes(code.toLowerCase()) ||
+              (plantName && v.stpName.toLowerCase().includes(plantName.toLowerCase()))
+            )),
+        )
+        setRows(matchingMock)
+      }
+
+      setTotalAssessedAmount(penaltySummaryData ? penaltySummaryData.totalAssessedAmount : null)
       setLoading(false)
     }
 
@@ -85,10 +119,24 @@ export default function ComplianceTab({
   }, [plantCode, showStpColumn, dateRangeLabel, exportLabel])
 
   const summary = useMemo(() => {
-    if (!plantCode) return complianceSummary
+    if (!plantCode) {
+      const uniqueStps = new Set(monthlyViolations.map((r) => r.stpName)).size
+      return monthlyComplianceSummary.map((item) => {
+        if (item.key === 'noncomplying') {
+          return { ...item, value: String(uniqueStps) }
+        }
+        return item
+      })
+    }
 
     const totalPenalty = rows.reduce((sum, row) => {
-      const raw = row.penalty?.total?.replace(/[₹,\s]/g, '') ?? '0'
+      let penaltyStr = ''
+      if ('penalty' in row && row.penalty?.total) {
+        penaltyStr = row.penalty.total
+      } else if ('totalPenalty' in row && (row as StpMonthlyViolation).totalPenalty) {
+        penaltyStr = (row as StpMonthlyViolation).totalPenalty!
+      }
+      const raw = penaltyStr.replace(/[₹,\s]/g, '') || '0'
       const amount = Number(raw)
       return sum + (Number.isFinite(amount) ? amount : 0)
     }, 0)
@@ -108,7 +156,12 @@ export default function ComplianceTab({
       if (item.key === 'payable') {
         return {
           ...item,
-          value: totalAssessedAmount == null ? '—' : formatPenaltyAmount(totalAssessedAmount),
+          value:
+            totalAssessedAmount == null
+              ? totalPenalty > 0
+                ? `₹${totalPenalty.toLocaleString('en-IN')}`
+                : '—'
+              : formatPenaltyAmount(totalAssessedAmount),
         }
       }
       return item
@@ -117,16 +170,21 @@ export default function ComplianceTab({
 
   return (
     <div className="space-y-[16px]">
-      <SoftStatCardsRow items={summary} columns={3} gap={16} />
+      <SoftStatCardsRow
+        items={summary}
+        columns={plantCode ? 3 : 5}
+        gap={16}
+      />
       <ViolationsTable
-        key={plantCode || 'mock'}
+        key={plantCode || 'all-stps-month'}
         rows={rows}
         loading={loading}
         source={plantCode ? 'api' : 'mock'}
         showDetails={showDetails}
         showStpColumn={showStpColumn}
-        exportLabel={exportLabel || rows[0]?.stp}
+        exportLabel={exportLabel || (rows[0] as StpMonthlyViolation)?.stpName}
         stpManagementPdf={stpManagementPdf}
+        plantCode={plantCode}
       />
     </div>
   )

@@ -124,7 +124,7 @@ function Shell() {
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Topbar title={title} variant="dashboard" />
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-visible">
           <Sidebar
             collapsed={collapsed}
             onToggleCollapse={() => setCollapsed((v) => !v)}

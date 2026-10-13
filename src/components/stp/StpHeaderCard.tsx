@@ -49,11 +49,9 @@ type StpInfo = {
 function DetailsPanel({
   stp,
   vendorName,
-  prefixId,
 }: {
   stp: StpInfo
   vendorName?: string | null
-  prefixId?: string | null
 }) {
   const { inCharge, vendor, site } = stp
   const capacity = stp.name.match(/[\d.]+\s*MLD/i)?.[0]
@@ -96,10 +94,6 @@ function DetailsPanel({
           ['Contact Person', vendor.contactPerson],
           ['Mobile', vendor.phone],
           ['Email', vendor.email],
-          ['Prefix ID', prefixId || vendor.prefixId],
-          ['AMC Start Date', vendor.amcStart],
-          ['AMC End Date', vendor.amcEnd],
-          ['Service Type', vendor.serviceType],
           ['Address', vendor.address],
         ]}
       />
@@ -175,7 +169,7 @@ export default function StpHeaderCard({
       </div>
 
       {showDetails && (
-        <DetailsPanel stp={stp} vendorName={vendorName} prefixId={plantCode ?? stp.vendor.prefixId} />
+        <DetailsPanel stp={stp} vendorName={vendorName} />
       )}
     </Card>
   )

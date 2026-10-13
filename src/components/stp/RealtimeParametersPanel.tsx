@@ -25,15 +25,19 @@ export default function RealtimeParametersPanel({
 
   // All STPs (including 68mldjag) → REST /api/dashboard/{plantCode}/live
   useEffect(() => {
-    if (!plantCode || refreshTick < 1) return undefined
+    if (!plantCode) return undefined
 
     let cancelled = false
 
     async function loadLive() {
-      if (refreshTick === 1) setLoading(true)
+      setLoading(true)
       const next = await fetchStpLive(plantCode!)
       if (cancelled) return
-      if (next) setRealtime(next)
+      if (next) {
+        setRealtime(next)
+      } else {
+        setRealtime(getFallbackRealtime())
+      }
       setLoading(false)
     }
 
@@ -48,16 +52,12 @@ export default function RealtimeParametersPanel({
       {stpStreams.map((stream) => {
         const data = realtime[stream.key]
         const surface = STREAM_SURFACE[stream.tone] ?? STREAM_SURFACE.brand
-        const params = data.params.map((param) => param.key === 'totalizer'
-          ? {
-              key: 'flow',
-              label: 'Flow',
-              icon: 'flow',
-              value: `${data.flow.value} ${data.flow.unit}`,
-              tone: 'ink' as const,
-            }
-          : param,
-        )
+        // Remove flow/totalizer subcard so Temperature is displayed in its place.
+        // For nitrogen: NH4-N has priority over NO3-N if present.
+        const hasNh4n = data.params.some((p) => p.key === 'nh4n' && p.value !== '—')
+        const params = data.params
+          .filter((param) => param.key !== 'flow' && param.key !== 'totalizer')
+          .filter((param) => !hasNh4n || param.key !== 'no3n')
 
         return (
           <div

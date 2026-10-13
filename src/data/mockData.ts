@@ -1293,7 +1293,7 @@ export const stpRealtime = {
     params: [
       { key: 'bod', label: 'BOD', icon: 'bod', value: '394.74 mg/L', tone: 'breach', note: 'Ideal: 0 – 10' },
       { key: 'ph', label: 'pH', icon: 'ph', value: '7.48 pH', tone: 'breach', note: 'Ideal: 5.5 - 9' },
-      { key: 'totalizer', label: 'Totalizer', icon: 'totalizer', value: '7577.16 m³', tone: 'ok', note: '(54.12%)' },
+      { key: 'temp', label: 'Temperature', icon: 'temp', value: '24.8 °C', tone: 'ok', note: 'Ideal: 15 – 35' },
       { key: 'tss', label: 'TSS', icon: 'tss', value: '114.34 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
       { key: 'cod', label: 'COD', icon: 'cod', value: '852.44 mg/L', tone: 'breach', note: 'Ideal: 0 – 50' },
       { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
@@ -1304,7 +1304,7 @@ export const stpRealtime = {
     params: [
       { key: 'bod', label: 'BOD', icon: 'bod', value: '4.51 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
       { key: 'ph', label: 'pH', icon: 'ph', value: '7.6 pH', tone: 'ok', note: 'Ideal: 5.5 - 9' },
-      { key: 'totalizer', label: 'Totalizer', icon: 'totalizer', value: '7577.16 m³', tone: 'ok', note: '(54.12%)' },
+      { key: 'temp', label: 'Temperature', icon: 'temp', value: '25.2 °C', tone: 'ok', note: 'Ideal: 15 – 35' },
       { key: 'tss', label: 'TSS', icon: 'tss', value: '134 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
       { key: 'cod', label: 'COD', icon: 'cod', value: '24.12 mg/L', tone: 'ok', note: 'Ideal: 0 – 50' },
       { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
@@ -1779,6 +1779,362 @@ export const contracts = [
 /* ==========================================================================
    5. COMPLIANCE
    ========================================================================== */
+
+export type StpViolationParameter = {
+  name: string
+  observedValue: number | string
+  range: string
+}
+
+export type StpMonthlyViolation = {
+  id: string
+  sn: number
+  date?: string
+  stpName: string
+  plantCode?: string
+  capacity: number | string
+  district: string
+  omDepartment: string
+  parameters: StpViolationParameter[]
+  nonComplianceTime: string
+  totalPenalty?: string
+}
+
+export const monthlyViolationColumns = [
+  { key: 'sn', label: 'S/N', width: '5%' },
+  { key: 'stpName', label: 'Name of STP', width: '22%' },
+  { key: 'capacity', label: 'Capacity (MLD)', width: '10%' },
+  { key: 'district', label: 'District', width: '12%' },
+  { key: 'omDepartment', label: 'O&M department', width: '17%' },
+  { key: 'parameters', label: 'Non-complying parameters', width: '15%' },
+  { key: 'range', label: 'Range', width: '9%' },
+  { key: 'nonComplianceTime', label: 'Non-compliance time', width: '10%' },
+]
+
+export const monthlyComplianceSummary = [
+  { key: 'ocems', label: 'Total STPs with OCEMS', value: '42', tone: 'brand' as const },
+  { key: 'active', label: 'Active STPs', value: '38', tone: 'ok' as const },
+  { key: 'inactive', label: 'In-active STPs', value: '4', tone: 'warn' as const },
+  { key: 'noncomplying', label: 'Non-complying STPs', value: '5', tone: 'danger' as const },
+  { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', tone: 'violet' as const },
+]
+
+export const monthlyViolations: StpMonthlyViolation[] = [
+  {
+    id: 'VIO-2026-10-01',
+    sn: 1,
+    date: '03/10/2026',
+    stpName: '14 MLD STP, Sarai, Haridwar',
+    plantCode: '14mldsarai',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [
+      { name: 'TSS', observedValue: '37.34', range: '0 – 20' },
+      { name: 'COD', observedValue: '52.21', range: '0 – 50' },
+    ],
+    nonComplianceTime: '12:15 AM to 8:30 AM',
+    totalPenalty: '₹12,500',
+  },
+  {
+    id: 'VIO-2026-10-02',
+    sn: 2,
+    date: '03/10/2026',
+    stpName: '20 MLD STP -I, Mothrowala, Dehradun',
+    plantCode: '20mldmothorowala',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'NO3-N', observedValue: '66.1', range: '0 – 10' },
+      { name: 'pH', observedValue: '4.21', range: '5.5 – 9' },
+    ],
+    nonComplianceTime: '12:15 PM',
+    totalPenalty: '₹8,000',
+  },
+  {
+    id: 'VIO-2026-10-03',
+    sn: 3,
+    date: '03/10/2026',
+    stpName: '20 MLD STP -II, Mothrowala, Dehradun',
+    plantCode: '20mldmoth_2',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'NO3N', observedValue: '5426.6', range: '0 – 10' },
+      { name: 'NH4N', observedValue: '156.84', range: '0 – 10' },
+      { name: 'pH', observedValue: '11.12', range: '5.5 – 9' },
+    ],
+    nonComplianceTime: '2:15 PM',
+    totalPenalty: '₹15,000',
+  },
+  {
+    id: 'VIO-2026-10-04',
+    sn: 4,
+    date: '03/10/2026',
+    stpName: '1 MLD STP, Gangotri',
+    plantCode: '1mldgangotri',
+    capacity: 1,
+    district: 'Uttarkashi',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'pH', observedValue: '9.14', range: '5.5 – 9.0' },
+    ],
+    nonComplianceTime: '2:45 PM to 5:15 PM',
+    totalPenalty: '₹4,500',
+  },
+  {
+    id: 'VIO-2026-10-05',
+    sn: 5,
+    date: '03/10/2026',
+    stpName: '3.5 MLD STP, Tapovan',
+    plantCode: '3.5mldtapovan',
+    capacity: 3.5,
+    district: 'Tehri Garhwal',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'COD', observedValue: '59.22', range: '0 – 50' },
+    ],
+    nonComplianceTime: '11:15 AM to 12:30 PM',
+    totalPenalty: '₹5,000',
+  },
+  {
+    id: 'VIO-2026-09-06',
+    sn: 6,
+    date: '28/09/2026',
+    stpName: '68 MLD STP, Jagjeetpur, Haridwar',
+    plantCode: '68mldjag',
+    capacity: 68,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [
+      { name: 'BOD', observedValue: '34.50', range: '0 – 30' },
+      { name: 'TSS', observedValue: '25.80', range: '0 – 20' },
+    ],
+    nonComplianceTime: '01:30 AM to 06:00 AM',
+    totalPenalty: '₹14,000',
+  },
+  {
+    id: 'VIO-2026-09-07',
+    sn: 7,
+    date: '24/09/2026',
+    stpName: '26 MLD STP, Lakkar Ghat, Rishikesh',
+    plantCode: '26mldlkgt2',
+    capacity: 26,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [
+      { name: 'pH', observedValue: '9.35', range: '5.5 – 9.0' },
+    ],
+    nonComplianceTime: '03:00 PM to 05:30 PM',
+    totalPenalty: '₹6,000',
+  },
+  {
+    id: 'VIO-2026-09-08',
+    sn: 8,
+    date: '19/09/2026',
+    stpName: '33 MLD STP, Saliyar, Roorkee',
+    plantCode: '33mldsali',
+    capacity: 33,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'COD', observedValue: '58.40', range: '0 – 50' },
+    ],
+    nonComplianceTime: '09:15 AM to 11:45 AM',
+    totalPenalty: '₹7,500',
+  },
+  {
+    id: 'VIO-2026-09-09',
+    sn: 9,
+    date: '15/09/2026',
+    stpName: '28 MLD STP, Haldwani',
+    plantCode: 'map-haldwani-28',
+    capacity: 28,
+    district: 'Nainital',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [
+      { name: 'BOD', observedValue: '36.20', range: '0 – 30' },
+      { name: 'COD', observedValue: '62.10', range: '0 – 50' },
+    ],
+    nonComplianceTime: '04:30 PM to 08:00 PM',
+    totalPenalty: '₹11,000',
+  },
+  {
+    id: 'VIO-2026-09-10',
+    sn: 10,
+    date: '08/09/2026',
+    stpName: '10 MLD STP, Kashipur',
+    plantCode: 'map-kashipur-10',
+    capacity: 10,
+    district: 'Udham Singh Nagar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [
+      { name: 'pH', observedValue: '4.80', range: '5.5 – 9.0' },
+    ],
+    nonComplianceTime: '01:00 PM to 03:15 PM',
+    totalPenalty: '₹5,500',
+  },
+]
+
+export const PLANT_METADATA: Record<string, {
+  name: string
+  capacity: number | string
+  district: string
+  omDepartment: string
+}> = {
+  '14mldsarai': {
+    name: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'sarai-14': {
+    name: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  '68mldjag': {
+    name: '68 MLD STP, Jagjeetpur, Haridwar',
+    capacity: 68,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'jagjeetpur-68': {
+    name: '68 MLD STP, Jagjeetpur, Haridwar',
+    capacity: 68,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  '20mldmothorowala': {
+    name: '20 MLD STP -I, Mothrowala, Dehradun',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'mothorowala-20': {
+    name: '20 MLD STP -I, Mothrowala, Dehradun',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '20mldmoth_2': {
+    name: '20 MLD STP -II, Mothrowala, Dehradun',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'mothorowala-20-2': {
+    name: '20 MLD STP -II, Mothrowala, Dehradun',
+    capacity: 20,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '1mldgangotri': {
+    name: '1 MLD STP, Gangotri',
+    capacity: 1,
+    district: 'Uttarkashi',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '3.5mldtapovan': {
+    name: '3.5 MLD STP, Tapovan',
+    capacity: 3.5,
+    district: 'Tehri Garhwal',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '33mldsali': {
+    name: '33 MLD STP, Saliyar, Roorkee',
+    capacity: 33,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'saliar-33': {
+    name: '33 MLD STP, Saliyar, Roorkee',
+    capacity: 33,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '26mldlkgt2': {
+    name: '26 MLD STP, Lakkar Ghat, Rishikesh',
+    capacity: 26,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'lakkar-ghat-26': {
+    name: '26 MLD STP, Lakkar Ghat, Rishikesh',
+    capacity: 26,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  '68mldkargi': {
+    name: '68 MLD STP, Kargi Chowk',
+    capacity: 68,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'kargi-68': {
+    name: '68 MLD STP, Kargi Chowk',
+    capacity: 68,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '18mldjag': {
+    name: '18 MLD STP, Sarai',
+    capacity: 18,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'sarai-18': {
+    name: '18 MLD STP, Sarai',
+    capacity: 18,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '27mldknh4': {
+    name: '27 MLD STP, Kankhal',
+    capacity: 27,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  'kankhal-27': {
+    name: '27 MLD STP, Kankhal',
+    capacity: 27,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+  },
+  '5mldbgp6': {
+    name: '5 MLD STP, Bhagwanpur',
+    capacity: 5,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'bhagwanpur-5': {
+    name: '5 MLD STP, Bhagwanpur',
+    capacity: 5,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'map-haldwani-28': {
+    name: '28 MLD STP, Haldwani',
+    capacity: 28,
+    district: 'Nainital',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'map-kashipur-10': {
+    name: '10 MLD STP, Kashipur',
+    capacity: 10,
+    district: 'Udham Singh Nagar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+  'map-bazpur-10': {
+    name: '10 MLD STP, Bazpur',
+    capacity: 10,
+    district: 'Udham Singh Nagar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+  },
+}
 
 export const complianceSummary = [
   { key: 'violations', label: 'Total Violations', value: '10', tone: 'brand' as const },
@@ -2524,7 +2880,7 @@ const influentReading = {
   params: [
     { key: 'bod', label: 'BOD', icon: 'bod', value: '394.74 mg/L', tone: 'breach', note: 'Ideal: 0 – 10' },
     { key: 'ph', label: 'pH', icon: 'ph', value: '7.48 pH', tone: 'ok', note: 'Ideal: 5.5 – 9' },
-    { key: 'totalizer', label: 'Totalizer', icon: 'totalizer', value: '7577.16 m³', tone: 'ink', note: '(54.12%)' },
+    { key: 'temp', label: 'Temperature', icon: 'temp', value: '24.8 °C', tone: 'ink', note: 'Ideal: 15 – 35' },
     { key: 'tss', label: 'TSS', icon: 'tss', value: '114.34 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
     { key: 'cod', label: 'COD', icon: 'cod', value: '852.44 mg/L', tone: 'breach', note: 'Ideal: 0 – 50' },
     { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
@@ -2537,7 +2893,7 @@ const effluentReading = {
   params: [
     { key: 'bod', label: 'BOD', icon: 'bod', value: '4.51 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
     { key: 'ph', label: 'pH', icon: 'ph', value: '7.6 pH', tone: 'ok', note: 'Ideal: 5.5 – 9' },
-    { key: 'totalizer', label: 'Totalizer', icon: 'totalizer', value: '7577.16 m³', tone: 'ink', note: '(54.12%)' },
+    { key: 'temp', label: 'Temperature', icon: 'temp', value: '25.2 °C', tone: 'ink', note: 'Ideal: 15 – 35' },
     { key: 'tss', label: 'TSS', icon: 'tss', value: '134 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
     { key: 'cod', label: 'COD', icon: 'cod', value: '24.12 mg/L', tone: 'ok', note: 'Ideal: 0 – 50' },
     { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
