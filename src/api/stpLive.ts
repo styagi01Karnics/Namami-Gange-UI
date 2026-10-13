@@ -49,12 +49,15 @@ const PARAM_DEFS = [
     outletKeys: ['ph_outlet', 'ph__outlet'],
   },
   {
-    key: 'totalizer',
-    label: 'Totalizer',
-    icon: 'totalizer',
-    unit: 'm³',
-    inletKeys: ['inlet_totalizer', 'cm_inlet', 'cm__inlet'],
-    outletKeys: ['outlet_totalizer', 'cm_outlet', 'cm__outlet'],
+    key: 'temp',
+    label: 'Temperature',
+    icon: 'temp',
+    unit: '°C',
+    note: 'Ideal: 15 – 35',
+    min: 15,
+    max: 35,
+    inletKeys: ['temperature_inlet', 'temp_inlet', 'temperature__inlet', 'temp__inlet', 'temperature', 'temp'],
+    outletKeys: ['temperature_outlet', 'temp_outlet', 'temperature__outlet', 'temp__outlet', 'temperature', 'temp'],
   },
   {
     key: 'tss',
@@ -77,17 +80,6 @@ const PARAM_DEFS = [
     max: 50,
     inletKeys: ['cod_inlet', 'cod__inlet'],
     outletKeys: ['cod_outlet', 'cod__outlet'],
-  },
-  {
-    key: 'no3n',
-    label: 'NO₃-N',
-    icon: 'no3n',
-    unit: 'mg/L',
-    note: 'Ideal: 0 – 10',
-    min: 0,
-    max: 10,
-    inletKeys: ['tna_inlet', 'tna__inlet', 'no3n_inlet', 'no3_inlet'],
-    outletKeys: ['tna_outlet', 'tna__outlet', 'no3n_outlet', 'no3_outlet'],
   },
 ] as const
 
@@ -156,27 +148,62 @@ function buildStream(
     side === 'inlet' ? (['inlet_flow', 'flow_inlet'] as const) : (['outlet_flow', 'flow_outlet'] as const)
   const flow = pickNumber(merged, flowKeys)
 
+  // Nitrogen subcard priority: NH4-N comes first if present in the API; otherwise fallback to NO3-N.
+  const nh4Keys =
+    side === 'inlet'
+      ? (['nh4n_inlet', 'nh4_inlet', 'nh4__inlet', 'nh4n__inlet'] as const)
+      : (['nh4n_outlet', 'nh4_outlet', 'nh4__outlet', 'nh4n__outlet'] as const)
+  const no3Keys =
+    side === 'inlet'
+      ? (['tna_inlet', 'tna__inlet', 'no3n_inlet', 'no3_inlet', 'no3n__inlet'] as const)
+      : (['tna_outlet', 'tna__outlet', 'no3n_outlet', 'no3_outlet', 'no3n__outlet'] as const)
+
+  const nh4Val = pickNumber(merged, nh4Keys)
+  const no3Val = pickNumber(merged, no3Keys)
+
+  const nitrogenParam: LiveParam =
+    nh4Val != null
+      ? {
+          key: 'nh4n',
+          label: 'NH₄-N',
+          icon: 'nh4n',
+          value: `${formatNumber(nh4Val)} mg/L`,
+          tone: isBreach(nh4Val, 0, 10) ? 'breach' : 'ok',
+          note: 'Ideal: 0 – 10',
+        }
+      : {
+          key: 'no3n',
+          label: 'NO₃-N',
+          icon: 'no3n',
+          value: no3Val == null ? '—' : `${formatNumber(no3Val)} mg/L`,
+          tone: no3Val == null ? 'ink' : isBreach(no3Val, 0, 10) ? 'breach' : 'ok',
+          note: 'Ideal: 0 – 10',
+        }
+
   return {
     at: timestamp,
     flow: {
       value: formatNumber(flow),
       unit: 'm³/hr',
     },
-    params: PARAM_DEFS.map((def) => {
-      const keys = side === 'inlet' ? def.inletKeys : def.outletKeys
-      const value = pickNumber(merged, keys)
-      const tone: LiveParam['tone'] =
-        value == null ? 'ink' : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined) ? 'breach' : 'ok'
+    params: [
+      ...PARAM_DEFS.map((def) => {
+        const keys = side === 'inlet' ? def.inletKeys : def.outletKeys
+        const value = pickNumber(merged, keys)
+        const tone: LiveParam['tone'] =
+          value == null ? 'ink' : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined) ? 'breach' : 'ok'
 
-      return {
-        key: def.key,
-        label: def.label,
-        icon: def.icon,
-        value: value == null ? '—' : `${formatNumber(value)} ${def.unit}`,
-        tone,
-        note: 'note' in def ? def.note : undefined,
-      }
-    }),
+        return {
+          key: def.key,
+          label: def.label,
+          icon: def.icon,
+          value: value == null ? '—' : `${formatNumber(value)} ${def.unit}`,
+          tone,
+          note: 'note' in def ? def.note : undefined,
+        }
+      }),
+      nitrogenParam,
+    ],
   }
 }
 
@@ -216,18 +243,24 @@ function parseRawPayload(record: LiveReading | null | undefined): {
   }
   if (!parsed || typeof parsed !== 'object') return {}
 
-  const obj = parsed as LiveReading & { inlet?: LiveReading; outlet?: LiveReading; data?: LiveReading }
-  if (obj.inlet || obj.outlet) {
-    return { inlet: obj.inlet, outlet: obj.outlet, flat: obj }
+  const obj = parsed as LiveReading
+  const rawParams = (obj as Record<string, unknown>).PARAMETERS ?? (obj as Record<string, unknown>).parameters
+  if (rawParams && typeof rawParams === 'object') {
+    Object.assign(obj, rawParams)
   }
-  if (obj.data && typeof obj.data === 'object') {
-    const nested = obj.data as LiveReading & { inlet?: LiveReading; outlet?: LiveReading }
+
+  const typedObj = obj as LiveReading & { inlet?: LiveReading; outlet?: LiveReading; data?: LiveReading }
+  if (typedObj.inlet || typedObj.outlet) {
+    return { inlet: typedObj.inlet, outlet: typedObj.outlet, flat: typedObj }
+  }
+  if (typedObj.data && typeof typedObj.data === 'object') {
+    const nested = typedObj.data as LiveReading & { inlet?: LiveReading; outlet?: LiveReading }
     if (nested.inlet || nested.outlet) {
       return { inlet: nested.inlet, outlet: nested.outlet, flat: nested }
     }
     return { flat: nested }
   }
-  return { flat: obj }
+  return { flat: typedObj }
 }
 
 export function mapLivePayloadToRealtime(payload: unknown): LiveRealtimeData | null {

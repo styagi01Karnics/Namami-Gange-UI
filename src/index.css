@@ -92,6 +92,22 @@ input[type='password']::-ms-clear {
   display: none;
 }
 
+/* Smooth fade & scale animation for live CCTV stream URL transitions */
+@keyframes streamFadeIn {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.992);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-stream-fade {
+  animation: streamFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Hidden on screen — PrintDocument portals here and @media print shows it alone. */
 #print-root {
   display: none;

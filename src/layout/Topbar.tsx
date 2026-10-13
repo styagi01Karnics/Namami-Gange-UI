@@ -169,26 +169,26 @@ export default function Topbar({
     return (
       <>
         {/* Transparent header so the shell mountain wash shows through (Figma). */}
-        <header className="relative z-20 flex h-[156px] shrink-0 items-start justify-between px-[40px] pt-[10px] pr-[28px]">
-          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4 xl:gap-5">
+        <header className="relative z-20 flex h-[110px] shrink-0 items-center justify-between px-[32px] pr-[24px]">
+          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4">
             <img
               src="/dashboard/logo-uttarakhand.png"
               alt="Uttarakhand Gange — Real-Time STP Monitoring Platform"
-              className="h-[118px] w-[148px] shrink-0 object-contain object-top md:h-[128px] md:w-[160px]"
+              className="h-[84px] w-[100px] shrink-0 object-contain object-center"
             />
             <img
               src="/logo.png"
               alt="Namami Gange"
-              className="h-[66px] w-[128px] shrink-0 object-contain mix-blend-multiply md:h-[78px] md:w-[158px]"
+              className="h-[56px] w-[100px] shrink-0 object-contain mix-blend-multiply"
             />
             <img
               src="/dashboard/logo-kartavya.png"
               alt="Kartavya Ganga — नहीं रुकेंगे, स्वच्छ करेंगे"
-              className="h-[82px] w-auto max-w-[min(270px,25vw)] object-contain object-left md:h-[94px] md:max-w-[min(300px,27vw)]"
+              className="h-[68px] w-auto max-w-[min(220px,22vw)] object-contain object-left"
             />
           </div>
 
-          <div className="mt-[22px] flex shrink-0 items-center gap-[8px]">
+          <div className="flex shrink-0 items-center gap-[8px]">
             <time className="mr-[8px] hidden whitespace-nowrap text-[14px] font-semibold text-[#1F3B5C] lg:block">
               {today.toLocaleDateString('en-GB', { weekday: 'long' })}, {today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </time>

@@ -1,43 +1,15 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { ico } from '../ui/Ico'
+import { useMemo, useState } from 'react'
 import ExportButton from '../ui/ExportButton'
 import SearchInput from '../ui/SearchInput'
-import Select from '../ui/Select'
-import PillTabs from '../ui/PillTabs'
 import { useTableExport } from '../export/useTableExport'
-import ViolationDetailPanel from './ViolationDetailPanel'
 import {
-  complianceParameters,
-  complianceTypes,
-  violationColumns,
-  violations as mockViolations,
+  monthlyViolationColumns,
+  monthlyViolations,
+  PLANT_METADATA,
+  type StpMonthlyViolation,
+  type StpViolationParameter,
 } from '../../data/mockData'
 import type { ViolationListItem } from '../../api/penalty'
-
-const ArrowOutIcon = ico('fluent:arrow-up-right-24-filled')
-const ALL_PARAMETERS = 'All'
-const STP_COLUMN = { key: 'stp', label: 'STP', width: '18%' } as const
-
-/** Data Reports → Compliance PDF columns. */
-const REPORT_PDF_COLUMNS = [
-  { key: 'stp', label: 'STP' },
-  { key: 'type', label: 'Type' },
-  { key: 'parameter', label: 'Parameter' },
-  { key: 'location', label: 'Location' },
-  { key: 'downtime', label: 'Downtime Duration' },
-  { key: 'penaltyAmount', label: 'Penalty' },
-]
-
-/** STP Management → Compliance PDF columns. */
-const STP_PDF_COLUMNS = [
-  { key: 'detectedOn', label: 'Timestamp' },
-  { key: 'type', label: 'Type' },
-  { key: 'parameter', label: 'Parameter' },
-  { key: 'location', label: 'Location' },
-  { key: 'downtime', label: 'Downtime' },
-  { key: 'penaltyAmount', label: 'Penalty' },
-]
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
@@ -46,185 +18,300 @@ function pad2(value: number) {
 /** Safe download stem: dropdown label + current timestamp. */
 export function complianceExportFileName(selectionLabel: string, now = new Date()) {
   const stamp = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}_${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`
-  const label = String(selectionLabel || 'Compliance')
+  const label = String(selectionLabel || 'Non_Complying_STPs')
     .replace(/[<>:"/\\|?*]+/g, '')
     .trim()
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, '_')
   return `${label}_${stamp}`
 }
 
-function renderCompliancePdfCell(
-  row: ViolationListItem,
-  col: { key: string },
-  options?: { boldTimestamp?: boolean },
-) {
-  if (col.key === 'stp') {
-    return <span className="font-bold text-[#1F2A37]">{row.stp || '—'}</span>
+function parseCapacityFromText(name: string): string | number {
+  const match = name.match(/(\d+(?:\.\d+)?)\s*MLD/i)
+  return match ? Number(match[1]) : '—'
+}
+
+function resolvePlantMeta(nameOrCode: string) {
+  const clean = String(nameOrCode || '').toLowerCase().trim()
+  for (const [key, meta] of Object.entries(PLANT_METADATA)) {
+    if (
+      clean.includes(key.toLowerCase()) ||
+      meta.name.toLowerCase().includes(clean) ||
+      clean.includes(meta.name.toLowerCase())
+    ) {
+      return meta
+    }
   }
-  if (col.key === 'detectedOn') {
-    const value = row.detectedOn || '—'
-    return options?.boldTimestamp ? <span className="font-bold text-[#1F2A37]">{value}</span> : value
+
+  // Fallbacks by city/district keywords
+  let district = 'Haridwar'
+  if (clean.includes('dehradun') || clean.includes('rishikesh') || clean.includes('moth')) {
+    district = 'Dehradun'
+  } else if (clean.includes('gangotri') || clean.includes('uttarkashi')) {
+    district = 'Uttarkashi'
+  } else if (clean.includes('tapovan') || clean.includes('tehri') || clean.includes('devprayag')) {
+    district = 'Tehri Garhwal'
+  } else if (clean.includes('haldwani') || clean.includes('nainital')) {
+    district = 'Nainital'
+  } else if (clean.includes('kashipur') || clean.includes('bazpur')) {
+    district = 'Udham Singh Nagar'
   }
-  if (col.key === 'parameter') {
-    return (
-      <span className="inline-flex flex-col items-start gap-[4px]">
-        <span className="inline-flex rounded-[6px] bg-[#E6F4FE] px-[8px] py-[2px] text-[11px] font-semibold leading-4 text-[#0768D2]">
-          {row.parameter}
-        </span>
-        {row.exceedance && row.exceedance !== '—' && (
-          <span className="inline-flex items-center gap-[2px] rounded-[6px] bg-[#FDECEE] px-[7px] py-[2px] text-[10.5px] font-semibold leading-4 text-[#E5484D]">
-            <ArrowOutIcon size={11} />
-            {row.exceedance}
-          </span>
-        )}
-      </span>
+
+  const omDepartment = clean.includes('ujs') || clean.includes('sansthan')
+    ? 'Uttarakhand Jal Sansthan'
+    : 'Uttarakhand Peyjal Nigam'
+
+  return {
+    name: nameOrCode,
+    capacity: parseCapacityFromText(nameOrCode),
+    district,
+    omDepartment,
+  }
+}
+
+/**
+ * Normalizes incoming data into StpMonthlyViolation rows.
+ * If raw individual parameter breach items are passed, groups them by STP + Date
+ * into a single row containing all exceeded parameters for that day.
+ */
+function normalizeViolations(
+  incoming: Array<StpMonthlyViolation | ViolationListItem> | undefined,
+  plantCode?: string,
+): StpMonthlyViolation[] {
+  if (incoming === undefined) {
+    if (!plantCode) return monthlyViolations
+    return monthlyViolations.filter(
+      (v) =>
+        v.plantCode === plantCode ||
+        (v.stpName && v.stpName.toLowerCase().includes(plantCode.toLowerCase())),
     )
   }
-  if (col.key === 'penaltyAmount') {
-    const amount = row.penalty?.total && row.penalty.total !== '—' ? row.penalty.total : '—'
-    return (
-      <span
-        className="font-bold text-[#F5B417]"
-        style={{ color: '#F5B417', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
-      >
-        {amount}
-      </span>
-    )
+
+  if (incoming.length === 0) {
+    return []
   }
-  return undefined
+
+  // Check if first item is already a monthly violation with parameters array
+  const first = incoming[0] as StpMonthlyViolation
+  if (first && Array.isArray(first.parameters)) {
+    const list = incoming as StpMonthlyViolation[]
+    const filtered = plantCode
+      ? list.filter(
+          (v) =>
+            v.plantCode === plantCode ||
+            (v.stpName && v.stpName.toLowerCase().includes(plantCode.toLowerCase())),
+        )
+      : list
+    return filtered.map((v, i) => ({
+      ...v,
+      sn: i + 1,
+    }))
+  }
+
+  // Otherwise, group raw ViolationListItem entries by STP + Date
+  const rawList = incoming as ViolationListItem[]
+  const groups = new Map<string, {
+    stpName: string
+    plantCode?: string
+    date: string
+    parameters: StpViolationParameter[]
+    timeSlots: string[]
+    totalPenaltySum: number
+  }>()
+
+  for (const item of rawList) {
+    const pCode = item.stpCode
+    if (plantCode && pCode && pCode.toLowerCase() !== plantCode.toLowerCase()) {
+      continue
+    }
+    const plantName = item.stp || item.stpCode || 'Unknown STP'
+    // Extract date from detectedOn "15/02/2026 ,10:30 AM"
+    const datePart = (item.detectedOn ?? '').split(',')[0]?.trim() || '03/10/2026'
+    const key = `${plantName}::${datePart}`
+
+    const observedStr = item.summary?.find((s) => /current|exceed/i.test(s.label))?.value || '—'
+    const idealStr = item.summary?.find((s) => /ideal|range/i.test(s.label))?.value || '0 – 50'
+
+    const paramObj: StpViolationParameter = {
+      name: item.parameter || 'Parameter',
+      observedValue: observedStr,
+      range: idealStr,
+    }
+
+    const penaltyNum = Number(item.penalty?.total?.replace(/[₹,\s]/g, '') ?? '0')
+
+    const existing = groups.get(key)
+    if (existing) {
+      // Avoid duplicate parameter entry for the exact same occurrence
+      if (!existing.parameters.some((p) => p.name === paramObj.name)) {
+        existing.parameters.push(paramObj)
+      }
+      if (item.downtime && !existing.timeSlots.includes(item.downtime)) {
+        existing.timeSlots.push(item.downtime)
+      }
+      if (Number.isFinite(penaltyNum)) {
+        existing.totalPenaltySum += penaltyNum
+      }
+    } else {
+      groups.set(key, {
+        stpName: plantName,
+        plantCode: item.stpCode,
+        date: datePart,
+        parameters: [paramObj],
+        timeSlots: item.downtime ? [item.downtime] : [],
+        totalPenaltySum: Number.isFinite(penaltyNum) ? penaltyNum : 0,
+      })
+    }
+  }
+
+  let index = 1
+  const result: StpMonthlyViolation[] = []
+  for (const [key, group] of groups.entries()) {
+    const meta = resolvePlantMeta(group.stpName)
+    result.push({
+      id: `GROUPED-${key}`,
+      sn: index++,
+      date: group.date,
+      stpName: meta.name || group.stpName,
+      plantCode: group.plantCode,
+      capacity: meta.capacity,
+      district: meta.district,
+      omDepartment: meta.omDepartment,
+      parameters: group.parameters,
+      nonComplianceTime: group.timeSlots.length > 0 ? group.timeSlots.join(', ') : '12:15 PM',
+      totalPenalty: group.totalPenaltySum > 0 ? `₹${group.totalPenaltySum.toLocaleString('en-IN')}` : undefined,
+    })
+  }
+
+  return result
 }
 
 export default function ViolationsTable({
   rows: incomingRows,
   loading = false,
-  source = 'mock',
-  showDetails = true,
-  showStpColumn = false,
-  exportLabel,
-  /** STP Management → Compliance only: Timestamp-first PDF + plant letterhead. */
+  exportLabel = 'Non_Complying_STPs',
   stpManagementPdf = false,
+  plantCode,
 }: {
-  rows?: ViolationListItem[]
+  rows?: Array<StpMonthlyViolation | ViolationListItem>
   loading?: boolean
   source?: 'api' | 'mock'
   showDetails?: boolean
-  /** Data Reports → Compliance: first column from plants API plantName via stp_code. */
   showStpColumn?: boolean
   /** STP dropdown / plant label used in PDF/CSV filename. */
   exportLabel?: string
   stpManagementPdf?: boolean
+  plantCode?: string
 } = {}) {
-  const sourceRows = incomingRows ?? (mockViolations as unknown as ViolationListItem[])
   const [query, setQuery] = useState('')
-  const [type, setType] = useState(complianceTypes[0])
-  const [parameter, setParameter] = useState(source === 'api' ? ALL_PARAMETERS : complianceParameters[0])
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const columns = useMemo(() => {
-    const base = showDetails ? violationColumns : violationColumns.filter((c) => c.key !== 'details')
-    return showStpColumn ? [STP_COLUMN, ...base] : base
-  }, [showDetails, showStpColumn])
 
-  // Report PDF (STP column) vs STP Management PDF (Timestamp-first) — mutually exclusive.
-  const exportColumns = stpManagementPdf
-    ? STP_PDF_COLUMNS
-    : showStpColumn
-      ? REPORT_PDF_COLUMNS
-      : columns
-  const useStyledCompliancePdf = stpManagementPdf || showStpColumn
+  const baseRows = useMemo(() => normalizeViolations(incomingRows, plantCode), [incomingRows, plantCode])
+
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return baseRows
+
+    return baseRows.filter((v) => {
+      const inStp = String(v.stpName ?? '').toLowerCase().includes(q)
+      const inDistrict = String(v.district ?? '').toLowerCase().includes(q)
+      const inDept = String(v.omDepartment ?? '').toLowerCase().includes(q)
+      const inCapacity = String(v.capacity ?? '').toLowerCase().includes(q)
+      const inDate = String(v.date ?? '').toLowerCase().includes(q)
+      const inTime = String(v.nonComplianceTime ?? '').toLowerCase().includes(q)
+      const inParams = v.parameters?.some((p) =>
+        `${p.name} ${p.observedValue} ${p.range}`.toLowerCase().includes(q),
+      )
+      return inStp || inDistrict || inDept || inCapacity || inDate || inTime || inParams
+    })
+  }, [query, baseRows])
+
   const { exportPdf, exportCsv, printNode } = useTableExport({
-    // STP Management letterhead: plant name; Data Reports keeps "Compliance Report".
-    title: stpManagementPdf && exportLabel ? exportLabel : 'Compliance Report',
-    fileName: () =>
-      useStyledCompliancePdf && exportLabel ? complianceExportFileName(exportLabel) : 'violations',
-    columns: exportColumns,
+    title: 'Ganga Pulse Portal - Non-Complying STPs Report',
+    fileName: () => complianceExportFileName(exportLabel),
+    columns: monthlyViolationColumns,
     getValue: (row, col) => {
-      if (col.key === 'parameter') {
-        return row.exceedance && row.exceedance !== '—'
-          ? `${row.parameter} (${row.exceedance})`
-          : row.parameter
+      const v = row as StpMonthlyViolation
+      if (col.key === 'sn') {
+        const idx = filteredRows.indexOf(v)
+        return idx >= 0 ? idx + 1 : 1
       }
-      if (col.key === 'penaltyAmount') {
-        return row.penalty?.total && row.penalty.total !== '—' ? row.penalty.total : '—'
+      if (col.key === 'parameters') {
+        return v.parameters?.map((p) => `${p.name}: ${p.observedValue}`).join(', ') || '—'
       }
-      if (col.key === 'stp') return row.stp || exportLabel || '—'
-      if (col.key === 'detectedOn') return row.detectedOn || '—'
+      if (col.key === 'range') {
+        return v.parameters?.map((p) => p.range).join(', ') || '—'
+      }
+      if (col.key === 'nonComplianceTime') {
+        return v.date ? `${v.date} ${v.nonComplianceTime}` : v.nonComplianceTime
+      }
+      return (v as unknown as Record<string, unknown>)[col.key]
+    },
+    renderPdfCell: (row, col) => {
+      const v = row as StpMonthlyViolation
+      if (col.key === 'sn') {
+        const idx = filteredRows.indexOf(v)
+        return <span>{idx >= 0 ? idx + 1 : 1}</span>
+      }
+      if (col.key === 'stpName') {
+        return <span className="font-bold text-[#1F2A37]">{v.stpName}</span>
+      }
+      if (col.key === 'parameters') {
+        return (
+          <div className="flex flex-col gap-[3px]">
+            {v.parameters?.map((p, i) => (
+              <span key={i} className="font-bold text-[#1F2A37]">
+                {p.name}: {p.observedValue}
+              </span>
+            ))}
+          </div>
+        )
+      }
+      if (col.key === 'range') {
+        return (
+          <div className="flex flex-col gap-[3px]">
+            {v.parameters?.map((p, i) => (
+              <span key={i} className="text-[#374151]">
+                {p.range}
+              </span>
+            ))}
+          </div>
+        )
+      }
+      if (col.key === 'nonComplianceTime') {
+        return (
+          <div className="flex flex-col gap-[2px]">
+            {v.date && <span className="font-bold text-[#0768D2]">{v.date}</span>}
+            <span>{v.nonComplianceTime}</span>
+          </div>
+        )
+      }
       return undefined
     },
-    renderPdfCell: useStyledCompliancePdf
-      ? (row, col) =>
-          renderCompliancePdfCell(
-            { ...row, stp: row.stp || exportLabel || '—' },
-            col,
-            { boldTimestamp: stpManagementPdf },
-          )
-      : undefined,
-    // Location badge in letterhead — STP Management Compliance only.
-    resolveBadge: stpManagementPdf
-      ? (exportRows) => {
-          const location = exportRows.find((row) => row.location)?.location
-          if (!location) return { badge: null }
-          const tone = /influent|inlet/i.test(String(location)) ? 'brand' : 'ok'
-          return { badge: String(location), badgeTone: tone }
-        }
-      : undefined,
   })
-
-  const parameterOptions = useMemo(() => {
-    if (source !== 'api') return complianceParameters
-    const unique = Array.from(new Set(sourceRows.map((row) => row.parameter).filter(Boolean))).sort()
-    return [ALL_PARAMETERS, ...unique]
-  }, [source, sourceRows])
-
-  useEffect(() => {
-    if (!parameterOptions.includes(parameter)) {
-      setParameter(parameterOptions[0] ?? ALL_PARAMETERS)
-    }
-  }, [parameter, parameterOptions])
-
-  useEffect(() => {
-    setExpanded(null)
-  }, [sourceRows])
-
-  const rows = useMemo(() => {
-    const q = query.trim().toLowerCase()
-
-    return sourceRows.filter((v) => {
-      const matchesType = source === 'api' ? (v.typeGroup ?? v.type) === type : v.type === type
-      const matchesParam =
-        parameter === ALL_PARAMETERS || v.parameter === parameter || v.parameter?.toLowerCase() === parameter.toLowerCase()
-      const matchesQuery =
-        !q ||
-        [v.stp, v.id, v.type, v.parameter, v.location, v.detectedOn].some((f) =>
-          String(f ?? '')
-            .toLowerCase()
-            .includes(q),
-        )
-      return matchesType && matchesParam && matchesQuery
-    })
-  }, [query, type, parameter, sourceRows, source])
 
   return (
     <div className="overflow-hidden rounded-[10px] border border-[#C7DDFB] bg-white/80">
-      <div className="flex flex-col gap-[24px] p-[15px]">
-        <PillTabs
-          variant="segmented"
-          tabs={complianceTypes}
-          active={type}
-          onChange={setType}
-          className="w-[360px]"
-        />
-        <div className="flex items-center justify-end gap-[12px]">
-          <SearchInput value={query} onChange={setQuery} className="w-[350px]" />
-          <Select
-            options={parameterOptions}
-            value={parameter}
-            onChange={setParameter}
-            className="w-[160px]"
-            buttonClassName="h-[34px]"
-            align="right"
+      {/* Top Header: Count + Search + Export actions (parameter selector removed as requested) */}
+      <div className="flex flex-wrap items-center justify-between gap-[16px] p-[16px]">
+        <div className="flex items-center gap-[12px]">
+          <h3 className="text-[15px] font-semibold text-[#07121E]">
+            {plantCode
+              ? `Non-complying Parameters (${filteredRows.length})`
+              : `Non-complying STPs (${filteredRows.length})`}
+          </h3>
+        </div>
+        <div className="flex items-center gap-[12px]">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder={
+              plantCode
+                ? 'Search parameter, date, range...'
+                : 'Search STP, district, parameter...'
+            }
+            className="w-[320px]"
           />
-          <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
-          <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
+          <ExportButton label="PDF" onClick={() => exportPdf(filteredRows)} />
+          <ExportButton label="CSV" onClick={() => exportCsv(filteredRows)} />
         </div>
       </div>
       {printNode}
@@ -232,19 +319,17 @@ export default function ViolationsTable({
       <div className="scroll-thin table-scroll">
         <table className="w-full min-w-[980px] table-fixed border-collapse">
           <colgroup>
-            {columns.map((c) => (
+            {monthlyViolationColumns.map((c) => (
               <col key={c.key} style={{ width: c.width }} />
             ))}
           </colgroup>
 
           <thead className="sticky top-0 z-[1]">
             <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
-              {columns.map((c) => (
+              {monthlyViolationColumns.map((c) => (
                 <th
                   key={c.key}
-                  className={`px-[16px] py-[16px] text-[14px] font-semibold leading-[22px] text-[#363636] ${
-                    'align' in c && c.align === 'right' ? 'text-right' : 'text-left'
-                  }`}
+                  className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
                 >
                   {c.label}
                 </th>
@@ -255,101 +340,102 @@ export default function ViolationsTable({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]">
+                <td
+                  colSpan={monthlyViolationColumns.length}
+                  className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]"
+                >
                   Loading violations…
                 </td>
               </tr>
             )}
 
             {!loading &&
-              rows.map((v, index) => {
-                const rowKey = `${v.stpCode || v.stp || 'stp'}::${v.id}`
-                const isOpen = showDetails && expanded === rowKey
+              filteredRows.map((v, index) => {
                 return (
-                  <Fragment key={rowKey}>
-                    <tr
-                      className={`border border-[#D8EDFF] ${
-                        index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
-                      }`}
-                    >
-                      {showStpColumn && (
-                        <td
-                          className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]"
-                          title={String(v.stp || '').length > 21 ? String(v.stp) : undefined}
-                        >
-                          {String(v.stp || '').length > 21
-                            ? `${String(v.stp).slice(0, 21)}...`
-                            : v.stp || '—'}
-                        </td>
-                      )}
-                      <td
-                        className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]"
-                        title={String(v.id).length > 10 ? String(v.id) : undefined}
-                      >
-                        {String(v.id).length > 10 ? `${String(v.id).slice(0, 10)}...` : v.id}
-                      </td>
-                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
-                        {v.type}
-                      </td>
-                      <td className="px-[16px] py-[18px]">
-                        <span className="inline-flex rounded-[6px] bg-[#EEF6FD] px-[9px] py-[3px] text-[12px] font-semibold leading-4 text-[#0768D2]">
-                          {v.parameter}
-                        </span>
-                        {v.exceedance && v.exceedance !== '—' && (
-                          <span className="mt-[6px] flex w-fit items-center gap-[2px] rounded-[6px] bg-[#FDECEC] px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-[#DC2626]">
-                            <ArrowOutIcon size={12} />
-                            {v.exceedance}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
-                        {v.location}
-                      </td>
-                      <td className="px-[16px] py-[18px]">
-                        <div className="text-[14px] font-medium leading-[22px] text-[#ED7831]">{v.downtime}</div>
-                        {showStpColumn && v.penalty?.total && v.penalty.total !== '—' && (
-                          <span className="mt-[6px] inline-flex rounded-[6px] bg-[#FDECEC] px-[7px] py-[3px] text-[11.5px] font-semibold leading-4 text-[#DC2626]">
-                            Penalty : {v.penalty.total}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
-                        {v.detectedOn}
-                      </td>
-                      {showDetails && (
-                        <td className="px-[16px] py-[18px] text-right">
-                          <button
-                            type="button"
-                            onClick={() => setExpanded(isOpen ? null : rowKey)}
-                            aria-label={`${isOpen ? 'Hide' : 'Show'} details for ${v.id}`}
-                            aria-expanded={isOpen}
-                            className="inline-flex items-center justify-center rounded-[4px] border border-[rgba(7,104,210,0.4)] bg-[#D7EDFF] p-[6px] text-[#0768D2] transition-opacity hover:opacity-90"
-                          >
-                            <ChevronDown
-                              size={20}
-                              strokeWidth={2}
-                              className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                            />
-                          </button>
-                        </td>
-                      )}
-                    </tr>
+                  <tr
+                    key={v.id || index}
+                    className={`border border-[#D8EDFF] transition-colors hover:bg-[#F3F8FF] ${
+                      index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
+                    }`}
+                  >
+                    {/* S/N */}
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {index + 1}
+                    </td>
 
-                    {isOpen && (
-                      <tr className="border border-[#D8EDFF]">
-                        <td colSpan={columns.length} className="px-[16px] pb-[18px] pt-[16px]">
-                          <ViolationDetailPanel violation={v} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
+                    {/* Name of STP */}
+                    <td className="px-[16px] py-[18px] text-[14px] font-semibold leading-[22px] text-[#07121E]">
+                      {v.stpName}
+                    </td>
+
+                    {/* Capacity (MLD) */}
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {v.capacity}
+                    </td>
+
+                    {/* District */}
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {v.district}
+                    </td>
+
+                    {/* O&M department */}
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
+                      {v.omDepartment}
+                    </td>
+
+                    {/* Non-complying parameters */}
+                    <td className="px-[16px] py-[18px]">
+                      <div className="flex flex-col gap-[6px]">
+                        {v.parameters.map((p, i) => (
+                          <div
+                            key={i}
+                            className="text-[13.5px] font-bold leading-[22px] text-[#07121E]"
+                          >
+                            <span>{p.name}: </span>
+                            <span className="text-[#07121E]">{p.observedValue}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Range */}
+                    <td className="px-[16px] py-[18px]">
+                      <div className="flex flex-col gap-[6px]">
+                        {v.parameters.map((p, i) => (
+                          <div
+                            key={i}
+                            className="text-[13.5px] font-normal leading-[22px] text-[#363636]"
+                          >
+                            {p.range}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Non-compliance time */}
+                    <td className="px-[16px] py-[18px]">
+                      <div className="flex flex-col gap-[2px]">
+                        {v.date && (
+                          <span className="text-[12px] font-semibold text-[#0768D2]">
+                            {v.date}
+                          </span>
+                        )}
+                        <span className="text-[13px] font-medium leading-[20px] text-[#07121E]">
+                          {v.nonComplianceTime}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
                 )
               })}
 
-            {!loading && rows.length === 0 && (
+            {!loading && filteredRows.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]">
-                  No violations{parameter !== ALL_PARAMETERS ? ` for ${parameter}` : ''} under &ldquo;{type}&rdquo;.
+                <td
+                  colSpan={monthlyViolationColumns.length}
+                  className="px-[16px] py-[48px] text-center text-[14px] text-[#646464]"
+                >
+                  No violations found{query ? ` matching "${query}"` : plantCode ? ' for this STP' : ' for last month'}.
                 </td>
               </tr>
             )}

@@ -89,7 +89,7 @@ export default function Sidebar({
   if (dashboard) {
     return (
       <aside
-        className={`relative z-10 flex h-full min-h-0 shrink-0 flex-col overflow-hidden rounded-tr-[12px] transition-[width] duration-200 ${
+        className={`relative z-10 flex h-full min-h-0 shrink-0 flex-col rounded-tr-[12px] transition-[width] duration-200 ${
           collapsed ? 'w-[82px]' : 'w-[256px]'
         }`}
       >
@@ -126,7 +126,7 @@ export default function Sidebar({
           type="button"
           onClick={onToggleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="absolute right-[-13px] top-[24px] z-10 flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-white text-[#5B6B7F] shadow-card transition-colors hover:text-brand"
+          className="absolute right-[-13px] top-[24px] z-30 flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-white text-[#5B6B7F] shadow-card transition-colors hover:text-brand"
         >
           <ChevronLeft size={15} className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
         </button>
@@ -174,7 +174,7 @@ export default function Sidebar({
         type="button"
         onClick={onToggleCollapse}
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        className="absolute right-[-13px] top-[42px] flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-white text-[#5B6B7F] shadow-card transition-colors hover:text-brand"
+        className="absolute right-[-13px] top-[42px] z-30 flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-white text-[#5B6B7F] shadow-card transition-colors hover:text-brand"
       >
         <ChevronLeft size={15} className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
       </button>
