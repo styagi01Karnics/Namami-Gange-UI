@@ -49,6 +49,16 @@ export default function LiveCameraFeed({
               key={camera.id}
               feed={cameraToFeed(camera)}
               divider={i % 2 === 1}
+              recording={
+                canRecord
+                  ? {
+                    plantCode,
+                    stpId,
+                    channel: camera.channel,
+                    location: cameraLocationLabel(camera),
+                  }
+                  : undefined
+              }
             />
           ))}
         </div>

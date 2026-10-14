@@ -8,7 +8,7 @@ import type { CameraPlayer, RecordingTarget } from '../../api/cctv'
 const STATUS_DOT = { Live: 'bg-ok', Offline: 'bg-danger' }
 
 export const waterLabel = (location: string) =>
-  location === 'Influent' ? 'Sewer Water' : location === 'Effluent' ? 'Treated Water' : location
+  location === 'Influent' ? 'Sewage Water' : location === 'Effluent' ? 'Treated Water' : location
 
 export type LiveFeed = {
   key: string
@@ -174,9 +174,8 @@ export default function CameraFeedTile({
       </div>
 
       <dl
-        className={`mt-[14px] space-y-[8px] ${
-          divider ? 'border-l border-line pl-[16px]' : 'pr-[16px]'
-        }`}
+        className={`mt-[14px] space-y-[8px] ${divider ? 'border-l border-line pl-[16px]' : 'pr-[16px]'
+          }`}
       >
         {[['Location:', waterLabel(feed.location)]].map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-[10px]">
