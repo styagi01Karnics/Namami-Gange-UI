@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
-import ReportTable from '../../components/reports/ReportTable'
-import SoftStatCardsRow from '../../components/ui/SoftStatCard'
-import TabSectionHeader from '../../components/stp/TabSectionHeader'
-import DateRangeField from '../../components/ui/DateRangeField'
-import { StpLink } from '../../components/reports/cells'
-import { cctvReportColumns, cctvReportStats, cctvSites } from '../../data/mockData'
+import ReportDownloadScreen from '../../components/reports/ReportDownloadScreen'
+import { cctvReportColumns, cctvSites } from '../../data/mockData'
 import { emptyCameras, loadLiveCamerasByStp, type LiveSiteCamera } from '../../api/cctv'
 import { ALL_STP_FILTER_OPTION } from '../../api/plants'
 
@@ -51,9 +47,8 @@ function metricsFromCamera(camera: LiveSiteCamera) {
 }
 
 function CctvReportBody() {
-  const { stpId, stpOptions, range, setRange } = useReportFilters()
+  const { stpId, stpOptions } = useReportFilters()
   const [liveByStp, setLiveByStp] = useState<Record<string, LiveSiteCamera[]>>({})
-  const [loading, setLoading] = useState(true)
 
   const plantOptions = useMemo(
     () =>
@@ -66,12 +61,10 @@ function CctvReportBody() {
   useEffect(() => {
     if (plantOptions.length === 0) {
       setLiveByStp({})
-      setLoading(false)
       return undefined
     }
 
     let cancelled = false
-    setLoading(true)
 
     async function load() {
       const next = await loadLiveCamerasByStp(
@@ -80,7 +73,6 @@ function CctvReportBody() {
       )
       if (cancelled) return
       setLiveByStp(next)
-      setLoading(false)
     }
 
     load()
@@ -112,64 +104,31 @@ function CctvReportBody() {
     })
   }, [visiblePlants, liveByStp])
 
-  const stats = useMemo(() => {
-    const total = rows.length
-    const live = rows.filter((row) => row.status === 'Live').length
-    const nonActive = rows.filter((row) => row.status !== 'Live').length
-    const operationalPct = total === 0 ? 0 : Math.round((live / total) * 1000) / 10
-    const affectedStps = new Set(
-      rows.filter((row) => row.status !== 'Live').map((row) => row.stp),
-    ).size
-    const totalStps = visiblePlants.length
-    const affectedNote = `Affected STP: ${affectedStps} / ${totalStps || 0}`
-
-    return cctvReportStats.map((item) => {
-      if (item.key === 'total') {
-        return { ...item, value: String(total), note: affectedNote }
-      }
-      if (item.key === 'operational') {
-        return {
-          ...item,
-          value: `${live} / day`,
-          note: `${operationalPct}%`,
-        }
-      }
-      if (item.key === 'offline') {
-        return {
-          ...item,
-          value: String(nonActive),
-          note: affectedNote,
-        }
-      }
-      return item
-    })
-  }, [rows, visiblePlants.length])
-
-  const renderCell = (row: CctvReportRow, col: { key: string }) => {
-    if (col.key === 'stp') return <StpLink>{row.stp}</StpLink>
-    return row[col.key as keyof CctvReportRow]
-  }
-
   return (
-    <>
-      <TabSectionHeader
-        tab="CCTV"
-        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
-      />
-
-      <SoftStatCardsRow items={stats} columns={3} gap={16} tall />
-
-      <ReportTable
-        columns={cctvReportColumns}
-        rows={loading ? [] : rows}
-        searchKeys={['stp', 'cameraId']}
-        renderCell={renderCell}
-        minWidth={1100}
-        emptyMessage={loading ? 'Loading cameras…' : 'No cameras match your search.'}
-        exportTitle="CCTV Report"
-        exportFileName="cctv-report"
-      />
-    </>
+    <ReportDownloadScreen
+      moduleKey="cctv"
+      title="CCTV Operational Report"
+      description="Camera stream availability, operational status, downtime tracking, and maintenance records."
+      columns={cctvReportColumns}
+      rows={rows}
+      renderCell={(r, col) => {
+        if (col.key === 'status') {
+          const isLive = r.status === 'Live'
+          return (
+            <span
+              className={`inline-flex rounded-full px-[10px] py-[3px] text-[12px] font-bold ${
+                isLive ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FEE2E2] text-[#DC2626]'
+              }`}
+            >
+              {r.status}
+            </span>
+          )
+        }
+        return r[col.key]
+      }}
+      exportTitle="CCTV Monitoring Operational Report"
+      exportFileName="cctv-report"
+    />
   )
 }
 

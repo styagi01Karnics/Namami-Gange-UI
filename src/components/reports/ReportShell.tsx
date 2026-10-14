@@ -2,13 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useLocation, useNavigate } from 'react-router-dom'
 import Select from '../ui/Select'
 import SectionTabs from '../stp/SectionTabs'
+import DateRangeField from '../ui/DateRangeField'
 import { ExportMetaProvider } from '../export/exportMeta'
 import { REPORT_TABS } from '../../routes'
 import { defaultDateRange } from '../../data/mockData'
 import {
-  ALL_STP_FILTER_OPTION,
+  FALLBACK_PLANT_OPTIONS,
   fetchDashboardPlants,
-  toFilterPlantOptions,
+  toPlantOptions,
 } from '../../api/plants'
 
 const TAB_LABELS = REPORT_TABS.map((t) => t.label)
@@ -22,6 +23,7 @@ export type ReportStpOption = {
 
 type ReportFiltersContextValue = {
   stpId: string
+  setStpId: (value: string) => void
   plantCode?: string
   plantLabel?: string
   stpOptions: ReportStpOption[]
@@ -37,12 +39,19 @@ export function useReportFilters() {
   return ctx
 }
 
-/** Filter bar + tab strip + page body shared by all five Data Reports sub-pages. */
+const initialIndividualOptions: ReportStpOption[] = FALLBACK_PLANT_OPTIONS.map((plant) => ({
+  id: plant.plantCode,
+  label: plant.label,
+  plantCode: plant.plantCode,
+  stpId: plant.stpId,
+}))
+
+/** Filter bar + tab strip + page body shared by all Data Reports sub-pages. */
 export default function ReportShell({ children }: { children?: ReactNode }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const [stpOptions, setStpOptions] = useState<ReportStpOption[]>(() => toFilterPlantOptions([]))
-  const [stpId, setStpId] = useState<string>(ALL_STP_FILTER_OPTION.id)
+  const [stpOptions, setStpOptions] = useState<ReportStpOption[]>(() => initialIndividualOptions)
+  const [stpId, setStpId] = useState<string>(initialIndividualOptions[0]?.id ?? '68mldjag')
   const [range, setRange] = useState(defaultDateRange)
 
   useEffect(() => {
@@ -51,9 +60,15 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
     async function loadPlants() {
       const plants = await fetchDashboardPlants()
       if (cancelled) return
-      const next = toFilterPlantOptions(plants)
+      const plantList = plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
+      const next: ReportStpOption[] = plantList.map((p) => ({
+        id: p.plantCode,
+        label: p.label,
+        plantCode: p.plantCode,
+        stpId: p.stpId,
+      }))
       setStpOptions(next)
-      setStpId((current) => (next.some((option) => option.id === current) ? current : ALL_STP_FILTER_OPTION.id))
+      setStpId((current) => (next.some((option) => option.id === current) ? current : next[0]?.id ?? '68mldjag'))
     }
 
     loadPlants()
@@ -70,26 +85,26 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
   const filters = useMemo<ReportFiltersContextValue>(
     () => ({
       stpId,
-      plantCode: selected?.id === ALL_STP_FILTER_OPTION.id ? undefined : selected?.plantCode,
-      plantLabel: selected?.id === ALL_STP_FILTER_OPTION.id ? undefined : selected?.label,
+      setStpId,
+      plantCode: selected?.plantCode,
+      plantLabel: selected?.label,
       stpOptions,
       range,
       setRange,
     }),
-    [stpId, selected, stpOptions, range],
+    [stpId, setStpId, selected, stpOptions, range],
   )
 
   const active = REPORT_TABS.find((t) => t.path === pathname)?.label ?? TAB_LABELS[0]
-  const openTab = (label: string) => navigate(REPORT_TABS.find((t) => t.label === label)!.path)
+  const openTab = (label: string) => {
+    const target = REPORT_TABS.find((t) => t.label === label)
+    if (target) navigate(target.path)
+  }
 
   return (
     <ReportFiltersContext.Provider value={filters}>
       <ExportMetaProvider value={{ rangeLabel: range, badge: null, address: null }}>
         <div className="flex flex-col gap-[16px] pb-[22px]">
-          <div className="flex items-center justify-end gap-[16px]">
-            <Select options={stpOptions} value={stpId} onChange={setStpId} className="w-[33%]" align="right" />
-          </div>
-
           <SectionTabs tabs={TAB_LABELS} active={active} onChange={openTab} />
 
           {children}

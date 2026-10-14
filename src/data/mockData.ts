@@ -2818,6 +2818,30 @@ export const inventoryReportRows = [
   { id: 'i5', stp: '14 MLD STP, Sarai, Haridwar', category: 'Others', opening: 18, received: 140, consumed: 60, closing: 98, lowStock: 3, outOfStock: 1, updated: '15/06/2026 ,11:20 AM' },
 ]
 
+export const stpParameterReportColumns = [
+  { key: 'sn', label: 'S/N', width: '5%' },
+  { key: 'date', label: 'Date', width: '11%' },
+  { key: 'time', label: 'Time', width: '10%' },
+  { key: 'bod', label: 'BOD (mg/L)', width: '11%' },
+  { key: 'cod', label: 'COD (mg/L)', width: '11%' },
+  { key: 'tss', label: 'TSS (mg/L)', width: '11%' },
+  { key: 'ph', label: 'pH', width: '9%' },
+  { key: 'temp', label: 'Temp (°C)', width: '10%' },
+  { key: 'nh4n', label: 'NH₄-N (mg/L)', width: '10%' },
+  { key: 'status', label: 'Compliance Status', width: '12%' },
+]
+
+export const stpParameterReportRows = [
+  { id: 'pr1', date: '21/09/2026', time: '10:00 AM', bod: '18.4', cod: '84.2', tss: '24.1', ph: '7.45', temp: '26.2', nh4n: '4.8', status: 'Compliant' },
+  { id: 'pr2', date: '20/09/2026', time: '10:00 AM', bod: '19.2', cod: '88.0', tss: '25.6', ph: '7.38', temp: '25.8', nh4n: '5.2', status: 'Compliant' },
+  { id: 'pr3', date: '19/09/2026', time: '10:00 AM', bod: '34.5', cod: '142.1', tss: '31.2', ph: '8.12', temp: '27.1', nh4n: '8.9', status: 'Non-Complying' },
+  { id: 'pr4', date: '18/09/2026', time: '10:00 AM', bod: '17.8', cod: '79.5', tss: '22.0', ph: '7.52', temp: '26.0', nh4n: '4.1', status: 'Compliant' },
+  { id: 'pr5', date: '17/09/2026', time: '10:00 AM', bod: '18.1', cod: '82.3', tss: '23.4', ph: '7.40', temp: '25.5', nh4n: '4.5', status: 'Compliant' },
+  { id: 'pr6', date: '16/09/2026', time: '10:00 AM', bod: '16.9', cod: '76.8', tss: '21.5', ph: '7.30', temp: '26.4', nh4n: '3.9', status: 'Compliant' },
+  { id: 'pr7', date: '15/09/2026', time: '10:00 AM', bod: '22.4', cod: '96.5', tss: '27.8', ph: '7.65', temp: '26.8', nh4n: '6.1', status: 'Compliant' },
+  { id: 'pr8', date: '14/09/2026', time: '10:00 AM', bod: '18.0', cod: '80.1', tss: '23.0', ph: '7.42', temp: '25.9', nh4n: '4.3', status: 'Compliant' },
+]
+
 /* ==========================================================================
    9. REMOTE CALIBRATION
    ========================================================================== */

@@ -1,74 +1,54 @@
+import { useMemo } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
-import ReportTable from '../../components/reports/ReportTable'
-import SoftStatCardsRow from '../../components/ui/SoftStatCard'
-import StatusPill, { statusTone } from '../../components/ui/StatusPill'
-import TabSectionHeader from '../../components/stp/TabSectionHeader'
-import DateRangeField from '../../components/ui/DateRangeField'
-import { DownloadAction, StpLink } from '../../components/reports/cells'
-import { contractsReportColumns, contractsReportRows, contractsSummary } from '../../data/mockData'
+import ReportDownloadScreen from '../../components/reports/ReportDownloadScreen'
+import { contractsReportColumns, contractsReportRows } from '../../data/mockData'
 
 function ContractsReportBody() {
-  const { range, setRange } = useReportFilters()
+  const { plantLabel } = useReportFilters()
 
-  const renderCell = (row: any, col: any, { exportRow }: { exportRow?: () => void } = {}) => {
-    switch (col.key) {
-      case 'id':
-        return (
-          <button
-            type="button"
-            className="text-[14px] font-semibold leading-[22px] text-[#ED7831] hover:underline"
-          >
-            {row.id}
-          </button>
-        )
-      case 'stp':
-        return <StpLink>{row.stp}</StpLink>
-      case 'status':
-        return (
-          <StatusPill
-            tone={statusTone(row.status)}
-            className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
-          >
-            {row.status}
-          </StatusPill>
-        )
-      case 'duration':
-        return (
-          <span className="text-[14px] font-medium leading-[22px] text-[#07121E]">
-            {row.startDate} -<br />
-            {row.endDate}
-          </span>
-        )
-      case 'action':
-        return <DownloadAction label={`Download ${row.id}`} onClick={exportRow} />
-      default:
-        return row[col.key]
-    }
-  }
+  const rows = useMemo(() => {
+    if (!plantLabel) return contractsReportRows
+    const filtered = contractsReportRows.filter((r) =>
+      r.stp.toLowerCase().includes(plantLabel.toLowerCase()),
+    )
+    return filtered.length > 0 ? filtered : contractsReportRows
+  }, [plantLabel])
 
   return (
-    <>
-      <TabSectionHeader
-        tab="Contracts"
-        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
-      />
-
-      <SoftStatCardsRow items={contractsSummary} columns={4} gap={16} tall />
-
-      <ReportTable
-        columns={contractsReportColumns}
-        rows={contractsReportRows}
-        searchKeys={['id', 'name', 'vendor', 'stp', 'status']}
-        renderCell={renderCell}
-        minWidth={1080}
-        emptyMessage="No contracts match your search."
-        exportTitle="Contracts Report"
-        exportFileName="contracts-report"
-        exportValue={(row, col) =>
-          col.key === 'duration' ? `${row.startDate} - ${row.endDate}` : undefined
+    <ReportDownloadScreen
+      moduleKey="contracts"
+      title="STP Operation & Maintenance Contracts Report"
+      description="Agency agreements, vendor SLAs, O&M scope of work, duration timelines, and contract values."
+      columns={contractsReportColumns.filter((c) => c.key !== 'action')}
+      rows={rows}
+      renderCell={(r, col) => {
+        if (col.key === 'status') {
+          const isComplete = r.status === 'Completed'
+          return (
+            <span
+              className={`inline-flex rounded-full px-[10px] py-[3px] text-[12px] font-bold ${
+                isComplete ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FEF3C7] text-[#D97706]'
+              }`}
+            >
+              {r.status}
+            </span>
+          )
         }
-      />
-    </>
+        if (col.key === 'id') {
+          return <span className="font-semibold text-[#ED7831]">{r.id}</span>
+        }
+        if (col.key === 'duration') {
+          return (
+            <span>
+              {r.startDate} to {r.endDate}
+            </span>
+          )
+        }
+        return r[col.key]
+      }}
+      exportTitle="Contracts & SLAs Report"
+      exportFileName="contracts-report"
+    />
   )
 }
 

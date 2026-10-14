@@ -1,50 +1,41 @@
+import { useMemo } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
-import ReportTable from '../../components/reports/ReportTable'
-import SoftStatCardsRow from '../../components/ui/SoftStatCard'
-import TabSectionHeader from '../../components/stp/TabSectionHeader'
-import DateRangeField from '../../components/ui/DateRangeField'
-import { Sparkline, StpLink, Tone } from '../../components/reports/cells'
-import { manpowerReportColumns, manpowerReportRows, manpowerReportStats } from '../../data/mockData'
-
-const TONED = { present: 'green', absent: 'red', leave: 'amber' }
+import ReportDownloadScreen from '../../components/reports/ReportDownloadScreen'
+import { manpowerReportColumns, manpowerReportRows } from '../../data/mockData'
 
 function ManpowerReportBody() {
-  const { range, setRange } = useReportFilters()
+  const { plantLabel } = useReportFilters()
 
-  const renderCell = (row, col) => {
-    if (col.key === 'stp') return <StpLink>{row.stp}</StpLink>
-    if (TONED[col.key]) return <Tone tone={TONED[col.key]}>{row[col.key]}</Tone>
-    if (col.key === 'attendance') {
-      return (
-        <span className="flex items-center gap-[12px]">
-          <Sparkline points={row.spark} />
-          <span className="text-[14px] font-medium leading-[22px] text-[#07121E]">{row.attendance}</span>
-        </span>
-      )
-    }
-    return row[col.key]
-  }
+  const rows = useMemo(() => {
+    if (!plantLabel) return manpowerReportRows
+    const filtered = manpowerReportRows.filter((r) =>
+      r.stp.toLowerCase().includes(plantLabel.toLowerCase()),
+    )
+    return filtered.length > 0 ? filtered : manpowerReportRows
+  }, [plantLabel])
 
   return (
-    <>
-      <TabSectionHeader
-        tab="Manpower"
-        right={<DateRangeField value={range} onChange={setRange} className="w-[280px]" />}
-      />
-
-      <SoftStatCardsRow items={manpowerReportStats} columns={4} gap={16} tall />
-
-      <ReportTable
-        columns={manpowerReportColumns}
-        rows={manpowerReportRows}
-        searchKeys={['date', 'stp']}
-        renderCell={renderCell}
-        minWidth={1080}
-        emptyMessage="No manpower records match your search."
-        exportTitle="Manpower Report"
-        exportFileName="manpower-report"
-      />
-    </>
+    <ReportDownloadScreen
+      moduleKey="manpower"
+      title="Manpower Attendance Report"
+      description="Daily personnel deployment, attendance tracking, shift compliance, and staff shortage records."
+      columns={manpowerReportColumns}
+      rows={rows}
+      renderCell={(r, col) => {
+        if (col.key === 'present') {
+          return <span className="font-semibold text-[#16A34A]">{r.present}</span>
+        }
+        if (col.key === 'absent') {
+          return <span className="font-semibold text-[#DC2626]">{r.absent}</span>
+        }
+        if (col.key === 'shortage' && Number(r.shortage) > 0) {
+          return <span className="font-bold text-[#DC2626]">{r.shortage}</span>
+        }
+        return r[col.key]
+      }}
+      exportTitle="Manpower Attendance & Deployment Report"
+      exportFileName="manpower-report"
+    />
   )
 }
 

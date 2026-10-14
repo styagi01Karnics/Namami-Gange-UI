@@ -788,7 +788,13 @@ export default function CctvMonitoring() {
 
             {/* Right Column: Resized Slim STP Queue List */}
             {showQueue && (
-              <aside className="flex flex-col overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white shadow-xs">
+              <aside
+                className={`flex flex-col min-h-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white shadow-xs ${
+                  cameraLayout === 'stacked'
+                    ? 'max-h-[720px] lg:max-h-[calc(100vh-180px)]'
+                    : 'max-h-[490px] xl:max-h-[530px]'
+                }`}
+              >
                 {/* Queue Header */}
                 <div className="flex shrink-0 items-center justify-between border-b border-[#E9EFF6] bg-[#FAFDFE] px-3 py-2.5">
                   <div>
@@ -803,8 +809,8 @@ export default function CctvMonitoring() {
                   </span>
                 </div>
 
-                {/* Quick Filter Search inside Queue */}
-                <div className="border-b border-[#EDF2F7] px-2.5 py-1.5">
+                {/* Quick Filter Search inside Queue - Static header */}
+                <div className="shrink-0 border-b border-[#EDF2F7] bg-white px-2.5 py-1.5">
                   <div className="relative">
                     <Search
                       size={13}
@@ -820,8 +826,8 @@ export default function CctvMonitoring() {
                   </div>
                 </div>
 
-                {/* Scrollable list of STPs in Queue - Resized Slim Cards */}
-                <div className="scroll-thin flex-1 space-y-1.5 overflow-y-auto p-2 [scrollbar-gutter:stable]">
+                {/* Scrollable list of STPs in Queue with visible scrollbar */}
+                <div className="queue-scrollbar flex-1 min-h-0 space-y-1.5 overflow-y-auto overflow-x-hidden p-2 pr-1.5">
                   {filteredQueueSites.length > 0 ? (
                     filteredQueueSites.map((site) => {
                       const originalIndex = sites.findIndex((s) => s.id === site.id)
