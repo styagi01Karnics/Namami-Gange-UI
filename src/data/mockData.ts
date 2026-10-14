@@ -26,7 +26,15 @@ export const stateOptions = [
   'Uttarakhand',
 ]
 
-export const defaultDateRange = '1 Sep 2026 - 21 Sep 2026'
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const
+
+export function currentMonthDateRange(): string {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  return `${start.getDate()} ${MONTH_NAMES[start.getMonth()]} ${start.getFullYear()} - ${now.getDate()} ${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`
+}
+
+export const defaultDateRange = currentMonthDateRange()
 
 /** Options for the STP picker at the top of STP Management. */
 export const stpOptions = [
@@ -2661,7 +2669,7 @@ export const complianceReportRows = [
   { id: 'VL123456', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
   { id: 'VL1233520', stp: '26 MLD STP Lakkar Ghat', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
   { id: 'VL123458', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL123461', stp: '68 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'BOD', exceedance: '23.3%', location: 'Outlet', downtime: '3h 20min', penalty: '₹12,000', date: '22/02/2026', time: '02:05 PM', status: 'Pending' },
+  { id: 'VL123461', stp: '68 MLD STP, Jagjeetpur, Haridwar', type: 'Parameter Breach', parameter: 'BOD', exceedance: '23.3%', location: 'Outlet', downtime: '3h 20min', penalty: '₹12,000', date: '22/02/2026', time: '02:05 PM', status: 'Pending' },
   { id: 'VL123465', stp: '1.2 MLD Happy Valley, Dehradun', type: 'Equipment Failure', parameter: 'Flow', exceedance: '8.4%', location: 'Inlet', downtime: '0h 55min', penalty: '₹3,000', date: '26/02/2026', time: '09:40 AM', status: 'Recovered' },
   { id: 'VL123470', stp: '26 MLD STP Lakkar Ghat', type: 'Parameter Breach', parameter: 'TSS', exceedance: '15.2%', location: 'Effluent', downtime: '2h 05min', penalty: '₹6,500', date: '28/02/2026', time: '11:15 AM', status: 'Pending' },
 ]
@@ -2743,7 +2751,7 @@ export const manpowerReportColumns = [
 
 export const manpowerReportRows = [
   { id: 'r1', date: '19 May 2026', stp: '14 MLD STP, Sarai, Haridwar', required: 35, total: 33, shortage: 2, present: 30, absent: 3, leave: 3, attendance: '85.71%', spark: [28, 30, 29, 31, 30, 32, 30] },
-  { id: 'r2', date: '19 May 2026', stp: '68 MLD STP, Sarai, Haridwar', required: 28, total: 28, shortage: 2, present: 24, absent: 4, leave: 4, attendance: '85.71%', spark: [22, 24, 23, 25, 24, 26, 24] },
+  { id: 'r2', date: '19 May 2026', stp: '68 MLD STP, Jagjeetpur, Haridwar', required: 28, total: 28, shortage: 2, present: 24, absent: 4, leave: 4, attendance: '85.71%', spark: [22, 24, 23, 25, 24, 26, 24] },
   { id: 'r3', date: '19 May 2026', stp: '26 MLD STP Lakkar Ghat', required: 35, total: 33, shortage: 2, present: 30, absent: 3, leave: 3, attendance: '85.71%', spark: [29, 28, 30, 29, 31, 30, 30] },
   { id: 'r4', date: '19 May 2026', stp: '1.2 MLD Happy Valley, Dehradun', required: 12, total: 11, shortage: 1, present: 10, absent: 1, leave: 1, attendance: '90.90%', spark: [9, 10, 10, 9, 11, 10, 10] },
   { id: 'r5', date: '18 May 2026', stp: '14 MLD STP, Sarai, Haridwar', required: 35, total: 34, shortage: 1, present: 31, absent: 2, leave: 2, attendance: '88.57%', spark: [30, 31, 30, 32, 31, 31, 31] },
@@ -2793,7 +2801,7 @@ export const cctvReportRows = [
   { id: 'c2', stp: '14 MLD STP, Sarai, Haridwar', cameraId: 'CAM-02', availability: '98.6%', interruptions: 1, downtime: '21h 35m', timestamp: '15/06/2026 ,10:30 AM', storage: '64%' },
   { id: 'c3', stp: '26 MLD STP Lakkar Ghat', cameraId: 'CAM-01', availability: '95.2%', interruptions: 3, downtime: '0', timestamp: '-', storage: '98%' },
   { id: 'c4', stp: '26 MLD STP Lakkar Ghat', cameraId: 'CAM-02', availability: '100%', interruptions: 0, downtime: '46h 10m', timestamp: '15/02/2026 ,10:30 AM', storage: '82%' },
-  { id: 'c5', stp: '68 MLD STP, Sarai, Haridwar', cameraId: 'CAM-01', availability: '99.2%', interruptions: 2, downtime: '1 hr', timestamp: '15/02/2026 ,10:30 AM', storage: '60%' },
+  { id: 'c5', stp: '68 MLD STP, Jagjeetpur, Haridwar', cameraId: 'CAM-01', availability: '99.2%', interruptions: 2, downtime: '1 hr', timestamp: '15/02/2026 ,10:30 AM', storage: '60%' },
   { id: 'c6', stp: '1.2 MLD Happy Valley, Dehradun', cameraId: 'CAM-01', availability: '97.4%', interruptions: 4, downtime: '8h 05m', timestamp: '15/02/2026 ,10:30 AM', storage: '55%' },
 ]
 
@@ -2814,7 +2822,7 @@ export const inventoryReportColumns = [
 
 export const inventoryReportRows = [
   { id: 'i1', stp: '14 MLD STP, Sarai, Haridwar', category: 'Coagulant', opening: 48, received: 510, consumed: 120, closing: 438, lowStock: 4, outOfStock: 1, updated: '15/06/2026 ,10:30 AM' },
-  { id: 'i2', stp: '68 MLD STP, Sarai, Haridwar', category: 'Disinfectant', opening: 52, received: 480, consumed: 90, closing: 442, lowStock: 8, outOfStock: 3, updated: '15/06/2026 ,10:45 AM' },
+  { id: 'i2', stp: '68 MLD STP, Jagjeetpur, Haridwar', category: 'Disinfectant', opening: 52, received: 480, consumed: 90, closing: 442, lowStock: 8, outOfStock: 3, updated: '15/06/2026 ,10:45 AM' },
   { id: 'i3', stp: '26 MLD STP Lakkar Ghat', category: 'Polymers', opening: 45, received: 550, consumed: 100, closing: 495, lowStock: 2, outOfStock: 0, updated: '15/06/2026 ,10:45 AM' },
   { id: 'i4', stp: '1.2 MLD Happy Valley, Dehradun', category: 'pH Adjusters', opening: 30, received: 220, consumed: 75, closing: 175, lowStock: 5, outOfStock: 2, updated: '15/06/2026 ,11:05 AM' },
   { id: 'i5', stp: '14 MLD STP, Sarai, Haridwar', category: 'Others', opening: 18, received: 140, consumed: 60, closing: 98, lowStock: 3, outOfStock: 1, updated: '15/06/2026 ,11:20 AM' },
@@ -2833,16 +2841,34 @@ export const stpParameterReportColumns = [
   { key: 'status', label: 'Compliance Status', width: '12%' },
 ]
 
-export const stpParameterReportRows = [
-  { id: 'pr1', date: '21/09/2026', time: '10:00 AM', bod: '18.4', cod: '84.2', tss: '24.1', ph: '7.45', temp: '26.2', nh4n: '4.8', status: 'Compliant' },
-  { id: 'pr2', date: '20/09/2026', time: '10:00 AM', bod: '19.2', cod: '88.0', tss: '25.6', ph: '7.38', temp: '25.8', nh4n: '5.2', status: 'Compliant' },
-  { id: 'pr3', date: '19/09/2026', time: '10:00 AM', bod: '34.5', cod: '142.1', tss: '31.2', ph: '8.12', temp: '27.1', nh4n: '8.9', status: 'Non-Complying' },
-  { id: 'pr4', date: '18/09/2026', time: '10:00 AM', bod: '17.8', cod: '79.5', tss: '22.0', ph: '7.52', temp: '26.0', nh4n: '4.1', status: 'Compliant' },
-  { id: 'pr5', date: '17/09/2026', time: '10:00 AM', bod: '18.1', cod: '82.3', tss: '23.4', ph: '7.40', temp: '25.5', nh4n: '4.5', status: 'Compliant' },
-  { id: 'pr6', date: '16/09/2026', time: '10:00 AM', bod: '16.9', cod: '76.8', tss: '21.5', ph: '7.30', temp: '26.4', nh4n: '3.9', status: 'Compliant' },
-  { id: 'pr7', date: '15/09/2026', time: '10:00 AM', bod: '22.4', cod: '96.5', tss: '27.8', ph: '7.65', temp: '26.8', nh4n: '6.1', status: 'Compliant' },
-  { id: 'pr8', date: '14/09/2026', time: '10:00 AM', bod: '18.0', cod: '80.1', tss: '23.0', ph: '7.42', temp: '25.9', nh4n: '4.3', status: 'Compliant' },
-]
+export const buildParameterReportRows = () => {
+  const now = new Date()
+  const baseRows = [
+    { bod: '18.4', cod: '84.2', tss: '24.1', ph: '7.45', temp: '26.2', nh4n: '4.8', status: 'Compliant' },
+    { bod: '19.2', cod: '88.0', tss: '25.6', ph: '7.38', temp: '25.8', nh4n: '5.2', status: 'Compliant' },
+    { bod: '34.5', cod: '142.1', tss: '31.2', ph: '8.12', temp: '27.1', nh4n: '8.9', status: 'Non-Complying' },
+    { bod: '17.8', cod: '79.5', tss: '22.0', ph: '7.52', temp: '26.0', nh4n: '4.1', status: 'Compliant' },
+    { bod: '18.1', cod: '82.3', tss: '23.4', ph: '7.40', temp: '25.5', nh4n: '4.5', status: 'Compliant' },
+    { bod: '16.9', cod: '76.8', tss: '21.5', ph: '7.30', temp: '26.4', nh4n: '3.9', status: 'Compliant' },
+    { bod: '22.4', cod: '96.5', tss: '27.8', ph: '7.65', temp: '26.8', nh4n: '6.1', status: 'Compliant' },
+    { bod: '18.0', cod: '80.1', tss: '23.0', ph: '7.42', temp: '25.9', nh4n: '4.3', status: 'Compliant' },
+  ]
+  return baseRows.map((r, i) => {
+    const d = new Date(now)
+    d.setDate(now.getDate() - i)
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = d.getFullYear()
+    return {
+      id: `pr${i + 1}`,
+      date: `${day}/${month}/${year}`,
+      time: '10:00 AM',
+      ...r,
+    }
+  })
+}
+
+export const stpParameterReportRows = buildParameterReportRows()
 
 /* ==========================================================================
    9. REMOTE CALIBRATION

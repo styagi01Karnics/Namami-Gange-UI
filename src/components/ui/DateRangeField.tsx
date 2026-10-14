@@ -71,6 +71,12 @@ export function toPenaltyRangeFromLabel(value: string) {
   return toPenaltyApiDayRange(parsed.from, parsed.to)
 }
 
+export function currentMonthDateRange(): string {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  return formatRangeLabel(start, now)
+}
+
 export default function DateRangeField({ value, onChange, className = '', compact = false }: DateRangeFieldProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
@@ -78,11 +84,18 @@ export default function DateRangeField({ value, onChange, className = '', compac
   const [fromValue, setFromValue] = useState(() => (parsed ? toInputDate(parsed.from) : ''))
   const [toValue, setToValue] = useState(() => (parsed ? toInputDate(parsed.to) : ''))
 
+  const todayInputDate = toInputDate(new Date())
+
   useEffect(() => {
     if (!open) return
     const next = parseDateRangeLabel(value)
-    setFromValue(next ? toInputDate(next.from) : '')
-    setToValue(next ? toInputDate(next.to) : '')
+    if (next) {
+      const now = new Date()
+      const clampedFrom = next.from.getTime() > now.getTime() ? now : next.from
+      const clampedTo = next.to.getTime() > now.getTime() ? now : next.to
+      setFromValue(toInputDate(clampedFrom))
+      setToValue(toInputDate(clampedTo))
+    }
   }, [open, value])
 
   useEffect(() => {
@@ -103,13 +116,36 @@ export default function DateRangeField({ value, onChange, className = '', compac
     }
   }, [open])
 
+  const setPreset = (preset: 'currentMonth' | 'today' | 'last7' | 'last30') => {
+    const now = new Date()
+    let start: Date
+    if (preset === 'today') {
+      start = now
+    } else if (preset === 'currentMonth') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1)
+    } else if (preset === 'last7') {
+      start = new Date(now)
+      start.setDate(now.getDate() - 6)
+    } else {
+      start = new Date(now)
+      start.setDate(now.getDate() - 29)
+    }
+    setFromValue(toInputDate(start))
+    setToValue(todayInputDate)
+  }
+
   const applyRange = () => {
     const from = parseLooseDate(fromValue)
     const to = parseLooseDate(toValue)
     if (!from || !to) return
 
-    const start = from.getTime() <= to.getTime() ? from : to
-    const end = from.getTime() <= to.getTime() ? to : from
+    const now = new Date()
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+    const clampedFrom = from.getTime() > todayEnd.getTime() ? now : from
+    const clampedTo = to.getTime() > todayEnd.getTime() ? now : to
+
+    const start = clampedFrom.getTime() <= clampedTo.getTime() ? clampedFrom : clampedTo
+    const end = clampedFrom.getTime() <= clampedTo.getTime() ? clampedTo : clampedFrom
     onChange?.(formatRangeLabel(start, end))
     setOpen(false)
   }
@@ -140,25 +176,74 @@ export default function DateRangeField({ value, onChange, className = '', compac
       </div>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-[8px] w-[280px] rounded-[12px] border border-line bg-white p-[14px] shadow-pop">
-          <p className="text-[12px] font-semibold leading-4 text-ink-soft">Select date range</p>
+        <div className="absolute right-0 z-30 mt-[8px] w-[290px] rounded-[12px] border border-line bg-white p-[14px] shadow-pop">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] font-semibold leading-4 text-ink-soft">Select date range</p>
+            <span className="text-[11px] text-[#6B7280]">Up to today</span>
+          </div>
+
+          {/* Quick presets */}
+          <div className="mt-[10px] flex flex-wrap gap-[6px]">
+            <button
+              type="button"
+              onClick={() => setPreset('currentMonth')}
+              className="rounded-[6px] border border-[#BFDBFE] bg-[#EFF6FF] px-[8px] py-[3px] text-[11px] font-medium text-[#1D4ED8] hover:bg-[#DBEAFE] transition-colors"
+            >
+              Current Month
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreset('today')}
+              className="rounded-[6px] border border-[#E5E7EB] bg-[#F9FAFB] px-[8px] py-[3px] text-[11px] font-medium text-[#4B5563] hover:bg-[#F3F4F6] transition-colors"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreset('last7')}
+              className="rounded-[6px] border border-[#E5E7EB] bg-[#F9FAFB] px-[8px] py-[3px] text-[11px] font-medium text-[#4B5563] hover:bg-[#F3F4F6] transition-colors"
+            >
+              Last 7 Days
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreset('last30')}
+              className="rounded-[6px] border border-[#E5E7EB] bg-[#F9FAFB] px-[8px] py-[3px] text-[11px] font-medium text-[#4B5563] hover:bg-[#F3F4F6] transition-colors"
+            >
+              Last 30 Days
+            </button>
+          </div>
 
           <label className="mt-[12px] block">
             <span className="mb-[6px] block text-[12px] font-medium text-ink-soft">From</span>
             <input
               type="date"
+              max={todayInputDate}
               value={fromValue}
-              onChange={(e) => setFromValue(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value
+                if (next && next > todayInputDate) return
+                setFromValue(next)
+                if (toValue && next > toValue) {
+                  setToValue(next)
+                }
+              }}
               className="h-[36px] w-full rounded-[8px] border border-line bg-white px-[10px] text-[13px] text-ink outline-none focus:border-brand"
             />
           </label>
 
           <label className="mt-[10px] block">
-            <span className="mb-[6px] block text-[12px] font-medium text-ink-soft">To</span>
+            <span className="mb-[6px] block text-[12px] font-medium text-ink-soft">To (Max today)</span>
             <input
               type="date"
+              min={fromValue || undefined}
+              max={todayInputDate}
               value={toValue}
-              onChange={(e) => setToValue(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value
+                if (next && next > todayInputDate) return
+                setToValue(next)
+              }}
               className="h-[36px] w-full rounded-[8px] border border-line bg-white px-[10px] text-[13px] text-ink outline-none focus:border-brand"
             />
           </label>

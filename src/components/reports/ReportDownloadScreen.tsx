@@ -15,6 +15,13 @@ type ReportDownloadScreenProps = {
   getValue?: (row: any, col: any) => any
   exportTitle?: string
   exportFileName?: string
+  topContent?: React.ReactNode
+  categoryFilter?: {
+    label: string
+    value: string
+    options: { id: string; label: string }[]
+    onChange: (value: string) => void
+  }
 }
 
 export default function ReportDownloadScreen({
@@ -26,6 +33,8 @@ export default function ReportDownloadScreen({
   getValue,
   exportTitle,
   exportFileName,
+  topContent,
+  categoryFilter,
 }: ReportDownloadScreenProps) {
   const { stpId, setStpId, stpOptions, plantLabel, range, setRange } = useReportFilters()
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf')
@@ -107,6 +116,9 @@ export default function ReportDownloadScreen({
     <div className="flex flex-col gap-[20px]">
       {printNode}
 
+      {/* Top Content (e.g. Sub-tabs / KPI stat cards) */}
+      {topContent && <div>{topContent}</div>}
+
       {/* Main Download Card */}
       <div className="relative rounded-[16px] border border-[#D8EDFF] bg-white p-[24px] sm:p-[28px] shadow-sm">
         {/* Card Header */}
@@ -153,8 +165,8 @@ export default function ReportDownloadScreen({
           </div>
         )}
 
-        {/* Scope Dropdowns Row: Target STP, Date Range, Selected Format */}
-        <div className="my-[24px] grid grid-cols-1 md:grid-cols-3 gap-[16px]">
+        {/* Scope Dropdowns Row: Target STP, Category Filter (optional), Date Range, Selected Format */}
+        <div className={`my-[24px] grid gap-[16px] ${categoryFilter ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
           {/* Box 1: Target STP Dropdown */}
           <div className="flex flex-col justify-between rounded-[12px] border border-[#E5E7EB] bg-[#F9FAFB] p-[16px]">
             <span className="text-[11.5px] font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -169,6 +181,23 @@ export default function ReportDownloadScreen({
               />
             </div>
           </div>
+
+          {/* Optional Category Filter Dropdown (e.g. Chemical / Equipment) */}
+          {categoryFilter && (
+            <div className="flex flex-col justify-between rounded-[12px] border border-[#E5E7EB] bg-[#F9FAFB] p-[16px]">
+              <span className="text-[11.5px] font-semibold uppercase tracking-wider text-[#6B7280]">
+                {categoryFilter.label}
+              </span>
+              <div className="mt-[6px]">
+                <Select
+                  options={categoryFilter.options}
+                  value={categoryFilter.value}
+                  onChange={categoryFilter.onChange}
+                  className="w-full bg-white"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Box 2: Date Range Picker */}
           <div className="flex flex-col justify-between rounded-[12px] border border-[#E5E7EB] bg-[#F9FAFB] p-[16px]">
