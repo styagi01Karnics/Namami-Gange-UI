@@ -69,6 +69,57 @@ const STP_14MLD_CAMERAS: CctvCamera[] = [
   },
 ]
 
+const STP_33MLD_CAMERAS: CctvCamera[] = [
+  {
+    id: 'saliar-33-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP33MLD',
+  },
+  {
+    id: 'saliar-33-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP33MLD',
+  },
+]
+
+const STP_20MLD_UNIT1_CAMERAS: CctvCamera[] = [
+  {
+    id: 'mothorowala-20-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP20MLD1',
+  },
+  {
+    id: 'mothorowala-20-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP20MLD1',
+  },
+]
+
+const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = [
+  {
+    id: 'mothorowala-20-2-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP20MLD2',
+  },
+  {
+    id: 'mothorowala-20-2-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP20MLD2',
+  },
+]
+
 const DEFAULT_SITES: CctvSite[] = [{ id: 1, siteCode: 'PLANT001', name: '68 MLD STP, Jagjeetpur' }]
 
 const DEFAULT_CAMERAS: CctvCamera[] = [
@@ -102,12 +153,24 @@ export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCam
 }
 
 export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
-  if (stpId === 'sarai-14') {
+  if (stpId === 'sarai-14' || stpId === '14mldsarai') {
     return STP_14MLD_CAMERAS
   }
   // 18 MLD Jagjeetpur reuses the 68 MLD PLANT001 stream URLs.
   if (stpId === 'sarai-18' || stpId === '18mldjag') {
     return STP_68MLD_CAMERAS
+  }
+  if (stpId === 'jagjeetpur-68' || stpId === '68mldjag') {
+    return STP_68MLD_CAMERAS
+  }
+  if (stpId === 'saliar-33' || stpId === '33mldsali') {
+    return STP_33MLD_CAMERAS
+  }
+  if (stpId === 'mothorowala-20' || stpId === '20mldmothorowala') {
+    return STP_20MLD_UNIT1_CAMERAS
+  }
+  if (stpId === 'mothorowala-20-2' || stpId === '20mldmoth_2') {
+    return STP_20MLD_UNIT2_CAMERAS
   }
   return null
 }
@@ -123,12 +186,22 @@ export function isCameraRecording(camera: CctvCamera) {
   return String(camera.status ?? '').trim().toUpperCase() === 'LIVE'
 }
 
+async function parseJsonSafely<T = any>(response: Response): Promise<T | null> {
+  try {
+    const text = await response.text()
+    if (!text || !text.trim()) return null
+    return JSON.parse(text) as T
+  } catch {
+    return null
+  }
+}
+
 export async function fetchCctvSites() {
   try {
     const response = await fetch(`${CCTV_API}/sites`)
-    if (!response.ok) throw new Error('Failed to load sites')
+    if (!response.ok) return DEFAULT_SITES
 
-    const data = await response.json()
+    const data = await parseJsonSafely<CctvSite[]>(response)
     const sites = Array.isArray(data) ? data : []
     return sites.length > 0 ? (sites as CctvSite[]) : DEFAULT_SITES
   } catch {
@@ -139,9 +212,9 @@ export async function fetchCctvSites() {
 export async function fetchCctvCameras() {
   try {
     const response = await fetch(`${CCTV_API}/cameras`)
-    if (!response.ok) throw new Error('Failed to load cameras')
+    if (!response.ok) return DEFAULT_CAMERAS
 
-    const data = await response.json()
+    const data = await parseJsonSafely<CctvCamera[]>(response)
     const cameras = Array.isArray(data) ? data : []
     return cameras.length > 0 ? (cameras as CctvCamera[]) : DEFAULT_CAMERAS
   } catch {
@@ -150,20 +223,28 @@ export async function fetchCctvCameras() {
 }
 
 export async function startCameraStream(cameraId: number) {
-  const response = await fetch(`${CCTV_API}/stream/start/${cameraId}`, { method: 'POST' })
-  const data = await response.json()
+  try {
+    const response = await fetch(`${CCTV_API}/stream/start/${cameraId}`, { method: 'POST' })
+    const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
-  if (!response.ok || !data.success) {
-    throw new Error(data.message ?? 'Unable to start camera')
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message ?? 'Unable to start camera')
+    }
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Unable to start camera')
   }
 }
 
 export async function stopCameraStream(cameraId: number) {
-  const response = await fetch(`${CCTV_API}/stream/stop/${cameraId}`, { method: 'POST' })
-  const data = await response.json()
+  try {
+    const response = await fetch(`${CCTV_API}/stream/stop/${cameraId}`, { method: 'POST' })
+    const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
-  if (!response.ok || !data.success) {
-    throw new Error(data.message ?? 'Unable to stop camera')
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message ?? 'Unable to stop camera')
+    }
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Unable to stop camera')
   }
 }
 
@@ -373,6 +454,24 @@ export async function loadPeriodRecording(input: RecordingTarget) {
     }
   }
 
+  // Fallback to the best listed clip's direct stream URL if conversion / period playback didn't return ready
+  const sorted = sortClipsForPeriod(listed, period)
+  if (sorted.length > 0) {
+    const best = sorted[0]
+    return {
+      id: best.id,
+      channel: best.channel,
+      fileName: best.fileName,
+      startTime: best.startTime,
+      endTime: best.endTime,
+      sizeBytes: best.sizeBytes,
+      player: 'mp4' as CameraPlayer,
+      ready: true,
+      streamUrl: best.streamUrl,
+      period: clipPeriod(best),
+    } satisfies ReadyRecording
+  }
+
   return null
 }
 
@@ -438,10 +537,20 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
 const CPV_RECORDING_PLANTS = new Set([
   'jagjeetpur-68',
   '68mldjag',
+  '68mld',
   'sarai-14',
   '14mldsarai',
+  '14mld',
   'saliar-33',
   '33mldsali',
+  '33mld_sal',
+  '38mldsaliar',
+  'mothorowala-20',
+  '20mldmothorowala',
+  '20mld',
+  'mothorowala-20-2',
+  '20mldmoth_2',
+  '20mld2',
 ])
 
 export function hasCpvRecordings(stpId?: string, plantCode?: string) {

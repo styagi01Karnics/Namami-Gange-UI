@@ -39,7 +39,7 @@ export default function LiveCameraFeed({
   return (
     <section className="rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       {loading ? (
-        <p className="text-[13px] text-ink-soft">Loading cameras...</p>
+        <p className="text-[13px] text-ink-soft">Loading...</p>
       ) : cameras.length === 0 ? (
         <p className="text-[13px] text-ink-soft">No cameras registered yet.</p>
       ) : (
@@ -49,16 +49,6 @@ export default function LiveCameraFeed({
               key={camera.id}
               feed={cameraToFeed(camera)}
               divider={i % 2 === 1}
-              recording={
-                canRecord
-                  ? {
-                      plantCode,
-                      stpId,
-                      channel: camera.channel,
-                      location: cameraLocationLabel(camera),
-                    }
-                  : undefined
-              }
             />
           ))}
         </div>

@@ -2506,6 +2506,27 @@ const cctvSiteCameras = [
       { key: 'effluent', id: 'CAM-EF-05', location: 'Effluent', status: 'Live', lastActive: '15/04/2026 ,10:18 AM', timecode: '9:03:36:20', image: null },
     ],
   },
+  {
+    stpId: 'saliar-33',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-06', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-06', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'mothorowala-20',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-07', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-07', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'mothorowala-20-2',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-08', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-08', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
 ]
 
 export const cctvSites = cctvSiteCameras.map(({ stpId, cameras }) => ({
