@@ -85,19 +85,15 @@ export const dashboardKpis = [
     key: 'active',
     label: 'Active STPs',
     value: '12',
-    badge: '8% vs yesterday',
     tone: 'ok' as const,
     href: '/stp-management',
-    trend: 'up' as const,
   },
   {
     key: 'nonActive',
     label: 'Non Active STPs',
     value: '1',
-    badge: '5.9% vs yesterday',
     tone: 'danger' as const,
     openNonActive: true,
-    trend: 'up' as const,
   },
   {
     key: 'capacity',
@@ -1050,23 +1046,23 @@ const NON_PERFORMING_PLANTS = [
 ] as const
 
 const PARAM_SAMPLES = [
-  { param: { label: 'nh4n_outlet', delta: '5.1%' }, range: '0-10', time: '9.30am-2.00pm' },
-  { param: { label: 'bod_outlet', delta: '41.0%' }, range: '0-30', time: '8.00am-11.30am' },
-  { param: { label: 'cod_outlet', delta: '23.5%' }, range: '0-150', time: '10.00am-3.00pm' },
-  { param: { label: 'tss_outlet', delta: '36.8%' }, range: '0-50', time: '7.30am-12.00pm' },
-  { param: { label: 'ph_outlet', delta: '7.1%' }, range: '6.5-8.5', time: '9.00am-1.00pm' },
+  { param: { label: 'NH₄-N', value: '15.1', delta: '5.1%' }, range: '0-10', time: '9.30am-2.00pm' },
+  { param: { label: 'BOD', value: '42.3', delta: '41.0%' }, range: '0-30', time: '8.00am-11.30am' },
+  { param: { label: 'COD', value: '185.2', delta: '23.5%' }, range: '0-150', time: '10.00am-3.00pm' },
+  { param: { label: 'TSS', value: '68.4', delta: '36.8%' }, range: '0-50', time: '7.30am-12.00pm' },
+  { param: { label: 'pH', value: '9.14', delta: '7.1%' }, range: '6.5-8.5', time: '9.00am-1.00pm' },
 ] as const
 
 const EQUIPMENT_SAMPLES = [
-  { param: { label: 'blower', delta: '18.1%' }, range: '—', time: '10.30am-1.00pm' },
-  { param: { label: 'pump', delta: '11.2%' }, range: '—', time: '8.00am-12.00pm' },
-  { param: { label: 'aerator', delta: '12.6%' }, range: '—', time: '11.00am-2.30pm' },
-  { param: { label: 'flow_meter', delta: '8.7%' }, range: '—', time: '9.15am-1.45pm' },
+  { param: { label: 'blower', value: 'Offline', delta: '18.1%' }, range: '—', time: '10.30am-1.00pm' },
+  { param: { label: 'pump', value: 'Fault', delta: '11.2%' }, range: '—', time: '8.00am-12.00pm' },
+  { param: { label: 'aerator', value: 'Offline', delta: '12.6%' }, range: '—', time: '11.00am-2.30pm' },
+  { param: { label: 'flow_meter', value: 'Error', delta: '8.7%' }, range: '—', time: '9.15am-1.45pm' },
 ] as const
 
 function toCriticalRows(
-  samples: readonly { param: { label: string; delta: string }; range: string; time: string }[],
-  pinned?: Record<string, { param: { label: string; delta: string }; range: string; time: string }>,
+  samples: readonly { param: { label: string; value?: string; delta: string }; range: string; time: string }[],
+  pinned?: Record<string, { param: { label: string; value?: string; delta: string }; range: string; time: string }>,
 ) {
   return NON_PERFORMING_PLANTS.map((plant, index) => {
     const sample = pinned?.[plant.plantCode] ?? samples[index % samples.length]
@@ -1084,7 +1080,7 @@ export const criticalStps = {
   tabs: ['Parameter Breach', 'Equipment Failure'] as const,
   'Parameter Breach': toCriticalRows(PARAM_SAMPLES, {
     '14mldsarai': {
-      param: { label: 'nh4n_outlet', delta: '5.1%' },
+      param: { label: 'NH₄-N', value: '15.1', delta: '5.1%' },
       range: '0-10',
       time: '9.30am-2.00pm',
     },
@@ -1270,8 +1266,8 @@ export const stpStreams = [
   {
     key: 'influent',
     title: 'Influent',
-    subtitle: 'Sewer Water',
-    barTitle: 'Influent (Sewer Water)',
+    subtitle: 'Sewage Water',
+    barTitle: 'Influent (Sewage Water)',
     tone: 'brand',
     icon: 'in',
   },
@@ -1801,14 +1797,15 @@ export type StpMonthlyViolation = {
 }
 
 export const monthlyViolationColumns = [
-  { key: 'sn', label: 'S/N', width: '5%' },
-  { key: 'stpName', label: 'Name of STP', width: '22%' },
-  { key: 'capacity', label: 'Capacity (MLD)', width: '10%' },
-  { key: 'district', label: 'District', width: '12%' },
-  { key: 'omDepartment', label: 'O&M department', width: '17%' },
-  { key: 'parameters', label: 'Non-complying parameters', width: '15%' },
-  { key: 'range', label: 'Range', width: '9%' },
-  { key: 'nonComplianceTime', label: 'Non-compliance time', width: '10%' },
+  { key: 'sn', label: 'S/N', width: '4%' },
+  { key: 'stpName', label: 'Name of STP', width: '18%' },
+  { key: 'capacity', label: 'Capacity (MLD)', width: '8%' },
+  { key: 'district', label: 'District', width: '9%' },
+  { key: 'omDepartment', label: 'O&M department', width: '13%' },
+  { key: 'parameters', label: 'Non-complying parameters', width: '14%' },
+  { key: 'range', label: 'Range', width: '7%' },
+  { key: 'date', label: 'Date', width: '10%' },
+  { key: 'nonComplianceTime', label: 'Non-compliance time', width: '17%' },
 ]
 
 export const monthlyComplianceSummary = [

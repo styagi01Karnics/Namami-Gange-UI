@@ -52,11 +52,11 @@ export default function LiveCameraFeed({
               recording={
                 canRecord
                   ? {
-                      plantCode,
-                      stpId,
-                      channel: camera.channel,
-                      location: cameraLocationLabel(camera),
-                    }
+                    plantCode,
+                    stpId,
+                    channel: camera.channel,
+                    location: cameraLocationLabel(camera),
+                  }
                   : undefined
               }
             />

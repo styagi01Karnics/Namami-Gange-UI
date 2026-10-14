@@ -50,7 +50,7 @@ export default function DashboardKpiRow() {
           return (
             <div
               key={kpi.key}
-              className={`flex flex-col gap-[6px] rounded-[10px] border border-solid px-[14px] py-[10px] ${tone.border}`}
+              className={`flex flex-col justify-between gap-[6px] rounded-[10px] border border-solid px-[14px] py-[10px] ${tone.border}`}
               style={{ backgroundImage: tone.gradient }}
             >
               <div className="flex flex-col gap-[4px]">
@@ -67,12 +67,14 @@ export default function DashboardKpiRow() {
                   <p className={valueClass}>{kpi.value}</p>
                 )}
               </div>
-              <span
-                className={`inline-flex h-[20px] w-fit items-center gap-[2px] rounded-full px-[4px] text-[12px] font-semibold leading-[14px] opacity-80 ${tone.badge}`}
-              >
-                {'trend' in kpi && kpi.trend === 'up' && <TrendingUp size={12} strokeWidth={2.4} />}
-                {kpi.badge}
-              </span>
+              {'badge' in kpi && kpi.badge ? (
+                <span
+                  className={`inline-flex h-[20px] w-fit items-center gap-[2px] rounded-full px-[4px] text-[12px] font-semibold leading-[14px] opacity-80 ${tone.badge}`}
+                >
+                  {'trend' in kpi && kpi.trend === 'up' && <TrendingUp size={12} strokeWidth={2.4} />}
+                  {kpi.badge}
+                </span>
+              ) : null}
             </div>
           )
         })}

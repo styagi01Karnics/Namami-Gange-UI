@@ -27,7 +27,7 @@ const PERIOD_BY_LABEL = Object.fromEntries(
 ) as Record<string, RecordingPeriod>
 
 const LOCATIONS = [
-  { id: 'Influent', label: 'Sewer Water' },
+  { id: 'Influent', label: 'Sewage Water' },
   { id: 'Effluent', label: 'Treated Water' },
 ]
 const RETENTION_DAYS = 15

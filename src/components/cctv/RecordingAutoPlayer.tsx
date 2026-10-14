@@ -74,7 +74,7 @@ export default function RecordingAutoPlayer({
       preload="auto"
       className="pointer-events-none"
       onCanPlay={(event) => {
-        event.currentTarget.play().catch(() => {})
+        event.currentTarget.play().catch(() => { })
       }}
       onError={() => setLabel('Unable to play this recording')}
     />

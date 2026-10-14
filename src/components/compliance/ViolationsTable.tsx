@@ -10,6 +10,7 @@ import {
   type StpViolationParameter,
 } from '../../data/mockData'
 import type { ViolationListItem } from '../../api/penalty'
+import { formatParameterName } from '../../lib/parameters'
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
@@ -240,31 +241,6 @@ export default function ViolationsTable({
       if (col.key === 'range') {
         return v.parameters?.map((p) => p.range).join(', ') || '—'
       }
-      if (col.key === 'nonComplianceTime') {
-        return v.date ? `${v.date} ${v.nonComplianceTime}` : v.nonComplianceTime
-      }
-      return (v as unknown as Record<string, unknown>)[col.key]
-    },
-    renderPdfCell: (row, col) => {
-      const v = row as StpMonthlyViolation
-      if (col.key === 'sn') {
-        const idx = filteredRows.indexOf(v)
-        return <span>{idx >= 0 ? idx + 1 : 1}</span>
-      }
-      if (col.key === 'stpName') {
-        return <span className="font-bold text-[#1F2A37]">{v.stpName}</span>
-      }
-      if (col.key === 'parameters') {
-        return (
-          <div className="flex flex-col gap-[3px]">
-            {v.parameters?.map((p, i) => (
-              <span key={i} className="font-bold text-[#1F2A37]">
-                {p.name}: {p.observedValue}
-              </span>
-            ))}
-          </div>
-        )
-      }
       if (col.key === 'range') {
         return (
           <div className="flex flex-col gap-[3px]">
@@ -276,13 +252,11 @@ export default function ViolationsTable({
           </div>
         )
       }
+      if (col.key === 'date') {
+        return <span className="font-semibold text-[#0768D2]">{v.date || '—'}</span>
+      }
       if (col.key === 'nonComplianceTime') {
-        return (
-          <div className="flex flex-col gap-[2px]">
-            {v.date && <span className="font-bold text-[#0768D2]">{v.date}</span>}
-            <span>{v.nonComplianceTime}</span>
-          </div>
-        )
+        return <span>{v.nonComplianceTime || '—'}</span>
       }
       return undefined
     },
@@ -317,7 +291,7 @@ export default function ViolationsTable({
       {printNode}
 
       <div className="scroll-thin table-scroll">
-        <table className="w-full min-w-[980px] table-fixed border-collapse">
+        <table className="w-full min-w-[1060px] table-fixed border-collapse">
           <colgroup>
             {monthlyViolationColumns.map((c) => (
               <col key={c.key} style={{ width: c.width }} />
@@ -329,7 +303,9 @@ export default function ViolationsTable({
               {monthlyViolationColumns.map((c) => (
                 <th
                   key={c.key}
-                  className="px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]"
+                  className={`px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636] ${
+                    c.key === 'date' || c.key === 'nonComplianceTime' ? 'whitespace-nowrap' : ''
+                  }`}
                 >
                   {c.label}
                 </th>
@@ -391,8 +367,8 @@ export default function ViolationsTable({
                             key={i}
                             className="text-[13.5px] font-bold leading-[22px] text-[#07121E]"
                           >
-                            <span>{p.name}: </span>
-                            <span className="text-[#07121E]">{p.observedValue}</span>
+                            <span>{formatParameterName(p.name)}: </span>
+                            <span className="text-[#DC2626] font-bold">{p.observedValue}</span>
                           </div>
                         ))}
                       </div>
@@ -412,18 +388,14 @@ export default function ViolationsTable({
                       </div>
                     </td>
 
+                    {/* Date */}
+                    <td className="px-[16px] py-[18px] text-[13px] font-semibold leading-[20px] text-[#0768D2] whitespace-nowrap">
+                      {v.date || '—'}
+                    </td>
+
                     {/* Non-compliance time */}
-                    <td className="px-[16px] py-[18px]">
-                      <div className="flex flex-col gap-[2px]">
-                        {v.date && (
-                          <span className="text-[12px] font-semibold text-[#0768D2]">
-                            {v.date}
-                          </span>
-                        )}
-                        <span className="text-[13px] font-medium leading-[20px] text-[#07121E]">
-                          {v.nonComplianceTime}
-                        </span>
-                      </div>
+                    <td className="px-[16px] py-[18px] text-[13px] font-medium leading-[20px] text-[#07121E] whitespace-nowrap">
+                      {v.nonComplianceTime || '—'}
                     </td>
                   </tr>
                 )
