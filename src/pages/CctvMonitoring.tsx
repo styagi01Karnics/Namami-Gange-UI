@@ -57,16 +57,28 @@ function is33MldSaliar(item: { id?: string; plantCode?: string; stpId?: string }
   return plantKey(item).some((key) => key === '33mldsali' || key === 'saliar-33')
 }
 
+function is20MldMothorowala(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some((key) => key === '20mldmothorowala' || key === 'mothorowala-20')
+}
+
+function is20MldMothorowala2(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some((key) => key === '20mldmoth_2' || key === 'mothorowala-20-2')
+}
+
 function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string }>(items: T[]) {
   const first = items.find(is14MldSarai)
   const second = items.find(is68MldJagjeetpur)
   const third = items.find(is33MldSaliar)
-  const pinned = new Set([first, second, third].filter(Boolean))
+  const fourth = items.find(is20MldMothorowala)
+  const fifth = items.find(is20MldMothorowala2)
+  const pinned = new Set([first, second, third, fourth, fifth].filter(Boolean))
   const rest = items.filter((item) => !pinned.has(item))
   return [
     ...(first ? [first] : []),
     ...(second ? [second] : []),
     ...(third ? [third] : []),
+    ...(fourth ? [fourth] : []),
+    ...(fifth ? [fifth] : []),
     ...rest,
   ]
 }

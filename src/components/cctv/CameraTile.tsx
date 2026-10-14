@@ -90,7 +90,19 @@ export function CameraStill({
   )
 }
 
-export default function CameraTile({ camera, onExpand, onPlayRecording, recording, hideTags = false }) {
+export default function CameraTile({
+  camera,
+  onExpand,
+  onPlayRecording,
+  recording,
+  hideTags = false,
+}: {
+  camera: any
+  onExpand?: (camera: any) => void
+  onPlayRecording?: (camera: any) => void
+  recording?: RecordingTarget | null
+  hideTags?: boolean
+}) {
   return (
     <div className="min-w-0 rounded-[12px] bg-[#EAF2FC] p-[12px]">
       <div className="flex items-center justify-between gap-3">

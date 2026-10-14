@@ -11,12 +11,12 @@ export default function RecordingAutoPlayer({
   title: string
 }) {
   const [src, setSrc] = useState('')
-  const [label, setLabel] = useState('Loading recording…')
+  const [label, setLabel] = useState('Loading...')
 
   useEffect(() => {
     let cancelled = false
     setSrc('')
-    setLabel('Loading recording…')
+    setLabel('Loading...')
 
     loadPeriodRecording(recording)
       .then((clip) => {
