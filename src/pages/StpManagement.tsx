@@ -26,6 +26,7 @@ import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
 import {
   FALLBACK_PLANT_OPTIONS,
+  PLANT_CODE_TO_STP_ID,
   loadPlantPickerOptions,
   resolveStpDetail,
   type PlantOption,
@@ -144,7 +145,7 @@ export default function StpManagement() {
             id: plantParam,
             label: searchParams.get('name') ?? plantParam,
             plantCode: plantParam,
-            stpId: plantParam,
+            stpId: PLANT_CODE_TO_STP_ID[plantParam] ?? plantParam,
           }
         : plantOptions[0]),
     [plantOptions, plantCode, plantParam, searchParams],

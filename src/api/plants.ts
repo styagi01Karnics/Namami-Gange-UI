@@ -8,17 +8,14 @@ export type DashboardPlant = {
   tables?: Record<string, string>
 }
 
-/** Maps API plant codes to existing mock STP detail keys used by CCTV and headers. */
-const PLANT_CODE_TO_STP_ID: Record<string, string> = {
+export const PLANT_CODE_TO_STP_ID: Record<string, string> = {
   '68mldjag': 'jagjeetpur-68',
   '68mldkargi': 'kargi-68',
-  '18mldjag': 'sarai-18',
+  '18mldjag': 'jagjeetpur-18',
   '33mldsali': 'saliar-33',
   '14mldsarai': 'sarai-14',
   '20mldmothorowala': 'mothorowala-20',
   '20mldmoth_2': 'mothorowala-20-2',
-  '27mldknh4': 'kankhal-27',
-  '5mldbgp6': 'bhagwanpur-5',
   '26mldlkgt2': 'lakkar-ghat-26',
 }
 
@@ -33,13 +30,11 @@ export type PlantOption = {
 export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
   { id: '68mldjag', label: '68 MLD Jagjeetpur', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
   { id: '68mldkargi', label: '68 MLD Kargi', plantCode: '68mldkargi', stpId: 'kargi-68' },
-  { id: '18mldjag', label: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'sarai-18' },
+  { id: '18mldjag', label: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'jagjeetpur-18' },
   { id: '33mldsali', label: '33 MLD Saliar', plantCode: '33mldsali', stpId: 'saliar-33' },
   { id: '14mldsarai', label: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14' },
   { id: '20mldmothorowala', label: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
   { id: '20mldmoth_2', label: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
-  { id: '27mldknh4', label: '27 MLD Kankhal', plantCode: '27mldknh4', stpId: 'kankhal-27' },
-  { id: '5mldbgp6', label: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', stpId: 'bhagwanpur-5' },
   { id: '26mldlkgt2', label: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26' },
 ]
 
@@ -101,9 +96,11 @@ export function resolveStpDetail(option: PlantOption | undefined) {
 
   if (!option) return fallback
 
-  const base = stpDetails[option.stpId]
+  const stpKey = option.stpId || PLANT_CODE_TO_STP_ID[option.plantCode] || PLANT_CODE_TO_STP_ID[option.id] || option.id
+  const base = stpDetails[stpKey] || stpDetails[PLANT_CODE_TO_STP_ID[option.plantCode]] || stpDetails[PLANT_CODE_TO_STP_ID[option.id]]
   if (base) {
-    return { ...base, name: option.label }
+    const isRawCode = option.label === option.id || option.label === option.plantCode
+    return { ...base, name: isRawCode ? base.name : option.label }
   }
 
   return {
