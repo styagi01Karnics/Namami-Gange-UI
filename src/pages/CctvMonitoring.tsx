@@ -92,9 +92,14 @@ function pinFilterPlantOptions(
   return [...(allOption ? [allOption] : []), ...pinCctvSiteOrder(plants)]
 }
 
-function cameraChannel(camera: LiveSiteCamera) {
+function cameraChannel(camera: LiveSiteCamera, siteStpId?: string) {
   if (camera.channel) return camera.channel
-  return String(camera.location ?? '').toLowerCase().includes('effluent') ? 2 : 1
+  const is20Mld = /mothorowala-20|20mld/i.test(siteStpId ?? '')
+  const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
+  if (is20Mld) {
+    return isEffluent ? 1 : 2
+  }
+  return isEffluent ? 2 : 1
 }
 
 function recordingFor(
@@ -105,7 +110,7 @@ function recordingFor(
   return {
     plantCode: site.plantCode,
     stpId: site.stpId,
-    channel: cameraChannel(camera),
+    channel: cameraChannel(camera, site.stpId || site.plantCode),
     location: camera.location,
   }
 }
@@ -124,7 +129,9 @@ function getSiteStreams(site: StpSite) {
 
   let influent = cameras.find((c) => {
     const loc = String(c.location ?? c.id ?? '').toLowerCase()
-    return loc.includes('influent') || c.channel === 1 || loc.includes('cam-in')
+    if (loc.includes('influent') || loc.includes('cam-in')) return true
+    if (loc.includes('effluent') || loc.includes('cam-ef')) return false
+    return c.channel === 1
   })
   if (!influent && cameras.length > 0) {
     influent = cameras[0]
@@ -133,11 +140,17 @@ function getSiteStreams(site: StpSite) {
   let effluent = cameras.find((c) => {
     if (c === influent) return false
     const loc = String(c.location ?? c.id ?? '').toLowerCase()
-    return loc.includes('effluent') || c.channel === 2 || loc.includes('cam-ef')
+    if (loc.includes('effluent') || loc.includes('cam-ef')) return true
+    if (loc.includes('influent') || loc.includes('cam-in')) return false
+    return c.channel === 2
   })
   if (!effluent && cameras.length > 1) {
     effluent = cameras[1]
   }
+
+  const is20Mld = /mothorowala-20|20mld/i.test(site.stpId)
+  const defaultInfluentChannel = is20Mld ? 2 : 1
+  const defaultEffluentChannel = is20Mld ? 1 : 2
 
   const fallbackInfluent: LiveSiteCamera = influent ?? {
     key: `${site.stpId}-influent`,
@@ -145,7 +158,7 @@ function getSiteStreams(site: StpSite) {
     location: 'Influent',
     status: 'Offline',
     lastActive: 'Unavailable',
-    channel: 1,
+    channel: defaultInfluentChannel,
   }
 
   const fallbackEffluent: LiveSiteCamera = effluent ?? {
@@ -154,7 +167,7 @@ function getSiteStreams(site: StpSite) {
     location: 'Effluent',
     status: 'Offline',
     lastActive: 'Unavailable',
-    channel: 2,
+    channel: defaultEffluentChannel,
   }
 
   return { influent: fallbackInfluent, effluent: fallbackEffluent }
@@ -640,7 +653,7 @@ export default function CctvMonitoring() {
                         </p>
                       </div>
                       <span className="rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] text-white/80">
-                        Ch {cameraChannel(influent)}
+                        Ch {cameraChannel(influent, activeSite?.stpId)}
                       </span>
                     </div>
                   </div>
@@ -732,7 +745,7 @@ export default function CctvMonitoring() {
                         </p>
                       </div>
                       <span className="rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] text-white/80">
-                        Ch {cameraChannel(effluent)}
+                        Ch {cameraChannel(effluent, activeSite?.stpId)}
                       </span>
                     </div>
                   </div>

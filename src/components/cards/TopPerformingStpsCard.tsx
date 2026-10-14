@@ -61,9 +61,9 @@ export default function TopPerformingStpsCard() {
         <span className="text-right">Compliance</span>
       </div>
 
-      <ol className="mt-1 flex min-h-0 flex-1 flex-col divide-y divide-[#E8F0F8] overflow-hidden">
+      <ol className="mt-1 flex-1 divide-y divide-[#E8F0F8] overflow-y-auto scroll-thin max-h-[calc(7*42px)] pr-1">
         {rows.map((row) => (
-          <li key={`${row.rank}-${row.name}`} className="grid min-h-0 flex-1 grid-cols-[30px_minmax(0,1fr)_90px] items-center gap-x-2 px-2 py-1">
+          <li key={`${row.rank}-${row.name}`} className="grid h-[42px] shrink-0 grid-cols-[30px_minmax(0,1fr)_90px] items-center gap-x-2 px-2">
             <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-[#0768D2] text-[11px] font-bold text-white">
               {row.rank}
             </span>

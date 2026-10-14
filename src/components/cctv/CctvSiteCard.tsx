@@ -9,9 +9,14 @@ import {
 
 const PinIcon = ico('fluent:location-24-filled')
 
-function channelOf(camera: LiveSiteCamera) {
+function channelOf(camera: LiveSiteCamera, siteStpId?: string) {
   if (camera.channel) return camera.channel
-  return String(camera.location ?? '').toLowerCase().includes('effluent') ? 2 : 1
+  const is20Mld = /mothorowala-20|20mld/i.test(siteStpId ?? '')
+  const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
+  if (is20Mld) {
+    return isEffluent ? 1 : 2
+  }
+  return isEffluent ? 2 : 1
 }
 
 /** One STP with its cameras, collapsible like the panels on the STP page. */
@@ -45,7 +50,7 @@ export default function CctvSiteCard({ site, open, onToggle, onExpand }) {
                     ? {
                         plantCode: site.plantCode,
                         stpId: site.stpId,
-                        channel: channelOf(camera),
+                        channel: channelOf(camera, site.stpId || site.plantCode),
                         location: camera.location,
                       }
                     : undefined

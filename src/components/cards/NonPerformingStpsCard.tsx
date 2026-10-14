@@ -45,10 +45,10 @@ export default function NonPerformingStpsCard() {
         </div>
       </div>
 
-      <div className="mt-[10px] min-h-0 flex-1 overflow-auto scroll-thin px-[8px]">
+      <div className="mt-[10px] min-h-0 flex-1 overflow-auto scroll-thin px-[8px] max-h-[calc(4*42px+34px)]">
         <table className="w-full min-w-[720px] table-fixed border-collapse">
           <thead className="sticky top-0 z-[1]">
-            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
+            <tr className="h-[34px] border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}

@@ -90,14 +90,14 @@ const STP_20MLD_UNIT1_CAMERAS: CctvCamera[] = [
   {
     id: 'mothorowala-20-cam-1',
     name: 'Influent',
-    channel: 1,
+    channel: 2,
     status: 'LIVE',
     siteCode: 'STP20MLD1',
   },
   {
     id: 'mothorowala-20-cam-2',
     name: 'Effluent',
-    channel: 2,
+    channel: 1,
     status: 'LIVE',
     siteCode: 'STP20MLD1',
   },
@@ -107,14 +107,14 @@ const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = [
   {
     id: 'mothorowala-20-2-cam-1',
     name: 'Influent',
-    channel: 1,
+    channel: 2,
     status: 'LIVE',
     siteCode: 'STP20MLD2',
   },
   {
     id: 'mothorowala-20-2-cam-2',
     name: 'Effluent',
-    channel: 2,
+    channel: 1,
     status: 'LIVE',
     siteCode: 'STP20MLD2',
   },
@@ -494,8 +494,10 @@ export async function probeLiveStream(url?: string | null) {
 /** Display labels used by Live Camera Feed tiles. */
 export function cameraLocationLabel(camera: CctvCamera) {
   const name = String(camera.name ?? '').toLowerCase().replace(/\s+/g, '')
-  if (camera.channel === 1 || /camera1|cam-?1\b/.test(name) || name.includes('influent')) return 'Influent'
-  if (camera.channel === 2 || /camera2|cam-?2\b/.test(name) || name.includes('effluent')) return 'Effluent'
+  if (name.includes('influent')) return 'Influent'
+  if (name.includes('effluent')) return 'Effluent'
+  if (camera.channel === 1 || /camera1|cam-?1\b/.test(name)) return 'Influent'
+  if (camera.channel === 2 || /camera2|cam-?2\b/.test(name)) return 'Effluent'
   return camera.name
 }
 
