@@ -25,7 +25,9 @@ import { CameraStill } from '../components/cctv/CameraTile'
 import { cctvSites } from '../data/mockData'
 import {
   emptyCameras,
+  getCamerasForStp,
   hasCpvRecordings,
+  isCameraOnline,
   loadLiveCamerasByStp,
   type LiveSiteCamera,
   type RecordingTarget,
@@ -102,11 +104,44 @@ function officialOrderIndex(item: { id?: string; plantCode?: string; stpId?: str
   return 999
 }
 
-function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string }>(items: T[]) {
-  return [...items].sort((a, b) => officialOrderIndex(a) - officialOrderIndex(b))
+function itemHasLiveStream(item: { id?: string; plantCode?: string; stpId?: string; cameras?: LiveSiteCamera[] }) {
+  if (item.cameras && item.cameras.length > 0) {
+    return item.cameras.some(
+      (c) => (c.status === 'Live' || String(c.status).toUpperCase() === 'LIVE') && Boolean(c.streamUrl),
+    )
+  }
+  const siteStpId = item.stpId || item.id
+  const configured = getCamerasForStp(siteStpId) ?? getCamerasForStp(item.plantCode)
+  return Boolean(configured?.some((c) => isCameraOnline(c) && Boolean(c.streamUrl || c.siteCode)))
 }
 
-/** Keep dropdown options on the same MLD sequence. */
+function itemHasRecording(item: { id?: string; plantCode?: string; stpId?: string }) {
+  const siteStpId = item.stpId || item.id
+  return hasCpvRecordings(siteStpId, item.plantCode)
+}
+
+function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: string; cameras?: LiveSiteCamera[] }) {
+  const live = itemHasLiveStream(item)
+  const recording = itemHasRecording(item)
+
+  // STPs with live streaming or recording are prioritized on top
+  if (live && recording) return 0
+  if (live) return 1
+  if (recording) return 2
+  return 3
+}
+
+function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string; cameras?: LiveSiteCamera[] }>(
+  items: T[],
+) {
+  return [...items].sort((a, b) => {
+    const priorityDiff = cctvPriorityScore(a) - cctvPriorityScore(b)
+    if (priorityDiff !== 0) return priorityDiff
+    return officialOrderIndex(a) - officialOrderIndex(b)
+  })
+}
+
+/** Keep dropdown options with live streaming/recording plants on top. */
 function pinFilterPlantOptions(
   options: Array<{ id: string; label: string; plantCode?: string; stpId?: string }>,
 ) {
@@ -272,7 +307,7 @@ export default function CctvMonitoring() {
   }, [plantOptions])
 
   const allSites: StpSite[] = useMemo(() => {
-    return pinCctvSiteOrder(plantOptions).map((option) => {
+    const rawSites: StpSite[] = plantOptions.map((option) => {
       const siteStpId = option.stpId || option.id
       const detail = resolveStpDetail({
         id: option.plantCode || option.id,
@@ -293,6 +328,8 @@ export default function CctvMonitoring() {
         cameras: liveByStp[siteStpId] ?? mockSite?.cameras ?? emptyCameras(siteStpId),
       }
     })
+
+    return pinCctvSiteOrder(rawSites)
   }, [plantOptions, liveByStp])
 
   const sites = useMemo(() => {
@@ -957,8 +994,8 @@ export default function CctvMonitoring() {
           <div className="flex max-h-[min(72vh,760px)] min-h-0 flex-col gap-[12px] overflow-hidden p-3 sm:p-4">
             <div className="flex shrink-0 items-center justify-between gap-3">
               <p className="text-[12px] text-[#7085A2]">
-                Browse every STP and camera. Auto view follows this same MLD order (live stream, or recording when live
-                is down).
+                Browse every STP and camera. STPs with active live streaming or recording are shown on top, followed by
+                offline plants.
               </p>
               {expandAllButton}
             </div>

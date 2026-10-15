@@ -126,14 +126,14 @@ function defaultPlantCameras(siteCode: string): CctvCamera[] {
       id: `${siteCode}-cam-1`,
       name: 'Influent',
       channel: 1,
-      status: 'LIVE',
+      status: 'OFFLINE',
       siteCode,
     },
     {
       id: `${siteCode}-cam-2`,
       name: 'Effluent',
       channel: 2,
-      status: 'LIVE',
+      status: 'OFFLINE',
       siteCode,
     },
   ]
