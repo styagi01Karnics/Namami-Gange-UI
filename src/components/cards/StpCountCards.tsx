@@ -13,7 +13,7 @@ type CountItem = {
 }
 
 const VALUE = {
-  brand: 'text-[#0375BC]',
+  brand: 'text-[#0375BC] decoration-[#0375BC]',
   ok: 'text-[#168E3F] decoration-[#168E3F]',
   danger: 'text-[#DC2626] decoration-[#DC2626]',
 }
@@ -55,7 +55,12 @@ export default function StpCountCards({
   const [nonActiveOpen, setNonActiveOpen] = useState(false)
 
   const items: CountItem[] = [
-    { key: 'total', label: "Total STP's", value: total, tone: 'brand' },
+    {
+      key: 'total',
+      label: "Total STP's",
+      value: total,
+      tone: 'brand',
+    },
     { key: 'active', label: "Active STP's", value: active, tone: 'ok', href: '/stp-management' },
     {
       key: 'nonActive',

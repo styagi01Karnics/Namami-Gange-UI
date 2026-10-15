@@ -6,42 +6,65 @@ import SearchInput from '../ui/SearchInput'
 import Select from '../ui/Select'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { useTableExport } from '../export/useTableExport'
-import { chemicalInventory, chemicalStatusFilterMap } from '../../data/mockData'
+import { chemicalInventory, chemicalStatusFilterMap, stpDetails } from '../../data/mockData'
+import { getChemicalInventoryForPlant } from '../../data/bazpurChemicalData'
 
 const STATUS_OPTIONS = chemicalInventory.filters.map((f) => ({
   id: f,
   label: f === 'All' ? 'All Status' : f,
 }))
 
-export default function ChemicalInventoryCard({ open = true, onToggle }) {
+export default function ChemicalInventoryCard({
+  open = true,
+  onToggle,
+  stpId,
+  plantCode,
+}: {
+  open?: boolean
+  onToggle?: () => void
+  stpId?: string
+  plantCode?: string
+}) {
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState({ key: null, dir: 'asc' })
+  const [sort, setSort] = useState<{ key: string | null; dir: 'asc' | 'desc' }>({ key: null, dir: 'asc' })
+
+  const plantName = useMemo(() => {
+    const key = stpId ?? plantCode
+    if (key && stpDetails[key]?.name) return stpDetails[key].name
+    return plantCode ?? stpId ?? ''
+  }, [stpId, plantCode])
+
+  const sourceRows = useMemo(() => {
+    return getChemicalInventoryForPlant(plantName || stpId || plantCode)
+  }, [plantName, stpId, plantCode])
+
   const { exportPdf, exportCsv, printNode } = useTableExport({
-    title: 'Chemical Inventory Status',
-    fileName: 'chemical-inventory',
+    title: `Chemical Inventory Status${plantName ? ` — ${plantName}` : ''}`,
+    fileName: `chemical-inventory-${(plantCode ?? stpId ?? 'all').toLowerCase()}`,
     columns: chemicalInventory.columns,
   })
 
-  const toggleSort = (key) =>
+  const toggleSort = (key: string) =>
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }))
 
   const rows = useMemo(() => {
     const wanted = chemicalStatusFilterMap[filter]
     const q = query.trim().toLowerCase()
 
-    const list = chemicalInventory.rows.filter((r) => {
+    const list = sourceRows.filter((r) => {
       const matchesStatus = !wanted || r.status === wanted
       const matchesQuery = !q || [r.name, r.category, r.status].some((f) => f.toLowerCase().includes(q))
       return matchesStatus && matchesQuery
     })
 
     if (!sort.key) return list
+    const sortKey = sort.key as keyof typeof sourceRows[number]
     return [...list].sort((a, b) => {
-      const cmp = String(a[sort.key]).localeCompare(String(b[sort.key]), undefined, { numeric: true })
+      const cmp = String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? ''), undefined, { numeric: true })
       return sort.dir === 'asc' ? cmp : -cmp
     })
-  }, [filter, query, sort])
+  }, [filter, query, sort, sourceRows])
 
   return (
     <section
@@ -117,8 +140,7 @@ export default function ChemicalInventoryCard({ open = true, onToggle }) {
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.name}</td>
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.category}</td>
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.currentQty}</td>
-                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.requiredQty}</td>
-                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.daysLeft}</td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">{r.consumption ?? r.requiredQty}</td>
                     <td className="px-[16px] py-[18px]">
                       <StatusPill
                         tone={statusTone(r.status)}

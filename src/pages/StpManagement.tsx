@@ -47,10 +47,18 @@ const TAB_BODY = {
 
 function resolvePlantId(options: PlantOption[], plantParam: string | null) {
   if (!plantParam) return null
-  const byCode = options.find((option) => option.id === plantParam || option.plantCode === plantParam)
-  if (byCode) return byCode.id
-  const byStp = options.find((option) => option.stpId === plantParam)
-  return byStp?.id ?? plantParam
+  const clean = plantParam.trim().toLowerCase()
+  const match = options.find(
+    (option) =>
+      option.id.toLowerCase() === clean ||
+      option.plantCode.toLowerCase() === clean ||
+      option.stpId?.toLowerCase() === clean ||
+      option.label.toLowerCase() === clean ||
+      clean.includes(option.id.toLowerCase()) ||
+      clean.includes(option.stpId?.toLowerCase() ?? ''),
+  )
+  if (match) return match.id
+  return plantParam
 }
 
 function currentInventoryMonth() {
@@ -68,7 +76,7 @@ export default function StpManagement() {
   const { tab: slug } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const plantParam = searchParams.get('plant')
+  const plantParam = searchParams.get('plant') || searchParams.get('stp')
   const focusParam = searchParams.get('focus')
   const [plantOptions, setPlantOptions] = useState(FALLBACK_PLANT_OPTIONS)
   const [plantCode, setPlantCode] = useState(

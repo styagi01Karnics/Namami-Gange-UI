@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { TrendingUp } from 'lucide-react'
-import { dashboardKpis } from '../../data/mockData'
+import { ChevronDown, TrendingUp } from 'lucide-react'
+import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
 import NonActiveStpModal from './NonActiveStpModal'
 
 const TONE = {
@@ -37,26 +37,115 @@ const TONE = {
 
 export default function DashboardKpiRow() {
   const [nonActiveOpen, setNonActiveOpen] = useState(false)
+  const [totalDropdownOpen, setTotalDropdownOpen] = useState(false)
+  const [activeDropdownOpen, setActiveDropdownOpen] = useState(false)
+
+  const totalDropdownRef = useRef<HTMLDivElement>(null)
+  const totalTriggerRef = useRef<HTMLButtonElement>(null)
+  const activeDropdownRef = useRef<HTMLDivElement>(null)
+  const activeTriggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!totalDropdownOpen && !activeDropdownOpen) return undefined
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node
+      if (
+        totalDropdownRef.current &&
+        !totalDropdownRef.current.contains(target) &&
+        totalTriggerRef.current &&
+        !totalTriggerRef.current.contains(target)
+      ) {
+        setTotalDropdownOpen(false)
+      }
+      if (
+        activeDropdownRef.current &&
+        !activeDropdownRef.current.contains(target) &&
+        activeTriggerRef.current &&
+        !activeTriggerRef.current.contains(target)
+      ) {
+        setActiveDropdownOpen(false)
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setTotalDropdownOpen(false)
+        setActiveDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [totalDropdownOpen, activeDropdownOpen])
 
   return (
     <>
       <div className="grid grid-cols-4 gap-[10px]">
         {dashboardKpis.map((kpi) => {
           const tone = TONE[kpi.tone]
+          const isClickable =
+            'href' in kpi || 'openNonActive' in kpi || 'openTotalStp' in kpi || 'openActiveStp' in kpi
           const valueClass = `text-[20px] font-bold leading-[26px] ${tone.value} ${
-            'href' in kpi || 'openNonActive' in kpi ? 'underline underline-offset-[3px]' : ''
+            isClickable ? 'underline underline-offset-[3px] cursor-pointer' : ''
           }`
 
           return (
             <div
               key={kpi.key}
-              className={`flex flex-col justify-between gap-[6px] rounded-[10px] border border-solid px-[14px] py-[10px] ${tone.border}`}
+              className={`relative flex flex-col justify-between gap-[6px] rounded-[10px] border border-solid px-[14px] py-[10px] ${tone.border}`}
               style={{ backgroundImage: tone.gradient }}
             >
               <div className="flex flex-col gap-[4px]">
                 <p className="text-[13px] font-semibold leading-normal text-[#07121E]">{kpi.label}</p>
-                {'openNonActive' in kpi && kpi.openNonActive ? (
-                  <button type="button" onClick={() => setNonActiveOpen(true)} className={`w-fit ${valueClass}`}>
+                {'openTotalStp' in kpi && kpi.openTotalStp ? (
+                  <button
+                    ref={totalTriggerRef}
+                    type="button"
+                    onClick={() => {
+                      setTotalDropdownOpen((prev) => !prev)
+                      setActiveDropdownOpen(false)
+                    }}
+                    className="inline-flex items-center gap-1.5 w-fit text-left text-[20px] font-bold leading-[26px] text-[#0768D2] underline underline-offset-[3px] cursor-pointer"
+                    title="Click to view all 13 STPs"
+                    aria-expanded={totalDropdownOpen}
+                  >
+                    <span>{kpi.value}</span>
+                    <ChevronDown
+                      size={15}
+                      className={`text-[#0768D2] transition-transform duration-200 ${
+                        totalDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                ) : 'openActiveStp' in kpi && kpi.openActiveStp ? (
+                  <button
+                    ref={activeTriggerRef}
+                    type="button"
+                    onClick={() => {
+                      setActiveDropdownOpen((prev) => !prev)
+                      setTotalDropdownOpen(false)
+                    }}
+                    className="inline-flex items-center gap-1.5 w-fit text-left text-[20px] font-bold leading-[26px] text-[#168E3F] underline underline-offset-[3px] cursor-pointer"
+                    title="Click to view 12 Active STPs"
+                    aria-expanded={activeDropdownOpen}
+                  >
+                    <span>{kpi.value}</span>
+                    <ChevronDown
+                      size={15}
+                      className={`text-[#168E3F] transition-transform duration-200 ${
+                        activeDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                ) : 'openNonActive' in kpi && kpi.openNonActive ? (
+                  <button
+                    type="button"
+                    onClick={() => setNonActiveOpen(true)}
+                    className={`w-fit text-left ${valueClass}`}
+                    title="View Non-Active STPs"
+                  >
                     {kpi.value}
                   </button>
                 ) : 'href' in kpi && kpi.href ? (
@@ -75,6 +164,50 @@ export default function DashboardKpiRow() {
                   {kpi.badge}
                 </span>
               ) : null}
+
+              {/* 13 STPs Dropdown (showing only STP names) */}
+              {'openTotalStp' in kpi && kpi.openTotalStp && totalDropdownOpen && (
+                <div
+                  ref={totalDropdownRef}
+                  className="absolute left-0 top-[calc(100%+6px)] z-50 w-[320px] max-w-[90vw] overflow-hidden rounded-[10px] border border-[#CDE0F5] bg-white shadow-[0_12px_28px_rgba(7,104,210,0.18)]"
+                >
+                  <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
+                    {official13StpDetails.map((stp) => (
+                      <Link
+                        key={stp.stpId}
+                        to={`/stp-management?plant=${encodeURIComponent(stp.plantCode || stp.stpId)}&name=${encodeURIComponent(stp.name)}`}
+                        onClick={() => setTotalDropdownOpen(false)}
+                        className="block truncate px-3.5 py-2.5 text-[12.5px] font-medium text-[#1E293B] transition-colors hover:bg-[#F0F7FF] hover:text-[#0768D2]"
+                        title={stp.name}
+                      >
+                        {stp.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 12 Active STPs Dropdown (showing only STP names) */}
+              {'openActiveStp' in kpi && kpi.openActiveStp && activeDropdownOpen && (
+                <div
+                  ref={activeDropdownRef}
+                  className="absolute left-0 top-[calc(100%+6px)] z-50 w-[320px] max-w-[90vw] overflow-hidden rounded-[10px] border border-[#CDE0F5] bg-white shadow-[0_12px_28px_rgba(22,142,63,0.18)]"
+                >
+                  <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
+                    {active12StpDetails.map((stp) => (
+                      <Link
+                        key={stp.stpId}
+                        to={`/stp-management?plant=${encodeURIComponent(stp.plantCode || stp.stpId)}&name=${encodeURIComponent(stp.name)}`}
+                        onClick={() => setActiveDropdownOpen(false)}
+                        className="block truncate px-3.5 py-2.5 text-[12.5px] font-medium text-[#1E293B] transition-colors hover:bg-[#F0FDF4] hover:text-[#168E3F]"
+                        title={stp.name}
+                      >
+                        {stp.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}

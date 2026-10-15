@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Beaker, Droplet, FlaskConical, X } from 'lucide-react'
-import { chemicalInventory } from '../../data/mockData'
+import { useEffect, useMemo, useState } from 'react'
+import { Beaker, Droplet, FlaskConical, Search, X } from 'lucide-react'
+import { stpDetails } from '../../data/mockData'
+import { getChemicalInventoryForPlant, type ChemicalInventoryItem } from '../../data/bazpurChemicalData'
 
 const STOCK = {
   total: 10000,
@@ -21,7 +22,16 @@ const CATEGORY_TOTAL = STOCK.categories.reduce((sum, item) => sum + item.amount,
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 66
 const formatLitres = (value: number) => `${value.toLocaleString('en-IN')} L`
 
-function ChemicalListModal({ onClose }: { onClose: () => void }) {
+interface ChemicalListModalProps {
+  onClose: () => void
+  stpName?: string
+  chemicals: ChemicalInventoryItem[]
+}
+
+function ChemicalListModal({ onClose, stpName, chemicals }: ChemicalListModalProps) {
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('All')
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -29,6 +39,30 @@ function ChemicalListModal({ onClose }: { onClose: () => void }) {
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
+
+  const rawList = chemicals
+
+  const categories = useMemo(() => {
+    const set = new Set<string>()
+    rawList.forEach((item) => {
+      if (item.category) set.add(item.category)
+    })
+    return ['All', ...Array.from(set)]
+  }, [rawList])
+
+  const filteredList = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return rawList.filter((item) => {
+      const matchesSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        String(item.currentQty).toLowerCase().includes(q) ||
+        String(item.consumption ?? '').toLowerCase().includes(q)
+      const matchesCat = categoryFilter === 'All' || item.category === categoryFilter
+      return matchesSearch && matchesCat
+    })
+  }, [rawList, search, categoryFilter])
 
   return (
     <div
@@ -41,49 +75,101 @@ function ChemicalListModal({ onClose }: { onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="chemical-list-title"
         onClick={(event) => event.stopPropagation()}
-        className="flex max-h-[min(80vh,680px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(9,35,71,0.3)]"
+        className="flex max-h-[min(82vh,720px)] w-full max-w-[820px] flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(9,35,71,0.3)]"
       >
-        <header className="flex items-center justify-between gap-4 border-b border-[#E5EEF8] px-5 py-4">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5EEF8] px-5 py-4">
           <div>
-            <h2 id="chemical-list-title" className="text-[17px] font-bold text-[#16345B]">Chemical Inventory List</h2>
-            <p className="mt-1 text-[12px] text-[#71829A]">{chemicalInventory.rows.length} chemical records available</p>
+            <h2 id="chemical-list-title" className="text-[17px] font-bold text-[#16345B]">
+              Chemical Inventory List {stpName ? `— ${stpName}` : ''}
+            </h2>
+            <p className="mt-1 text-[12px] text-[#71829A]">
+              {rawList.length} chemical records available
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close chemical inventory list"
-            className="grid size-9 shrink-0 place-items-center rounded-[8px] text-[#526783] hover:bg-[#F2F7FC]"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8292A6]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search chemicals..."
+                className="h-8 w-44 rounded-md border border-[#D5E2F1] bg-[#F8FAFD] pl-8 pr-2.5 text-[12px] text-[#1E3A5F] placeholder-[#8EA0B6] transition-colors focus:border-[#1677F2] focus:bg-white focus:outline-none"
+              />
+            </div>
+            {categories.length > 2 && (
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-8 rounded-md border border-[#D5E2F1] bg-[#F8FAFD] px-2 text-[12px] text-[#1E3A5F] focus:border-[#1677F2] focus:outline-none"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat === 'All' ? 'All Categories' : cat}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close chemical inventory list"
+              className="grid size-8 shrink-0 place-items-center rounded-[8px] text-[#526783] hover:bg-[#F2F7FC]"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </header>
         <div className="min-h-0 overflow-auto p-4">
-          <table className="w-full min-w-[620px] border-collapse text-left text-[12px]">
+          <table className="w-full min-w-[560px] border-collapse text-left text-[12px]">
             <thead className="sticky top-0 bg-[#F2F7FC] text-[#536987]">
               <tr>
                 <th className="px-3 py-3 font-semibold">Chemical Name</th>
                 <th className="px-3 py-3 font-semibold">Category</th>
-                <th className="px-3 py-3 font-semibold">Current Qty</th>
-                <th className="px-3 py-3 font-semibold">Required Qty</th>
-                <th className="px-3 py-3 font-semibold">Days Left</th>
+                <th className="px-3 py-3 font-semibold">Quantity</th>
+                <th className="px-3 py-3 font-semibold">Consumption</th>
                 <th className="px-3 py-3 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
-              {chemicalInventory.rows.map((chemical) => (
-                <tr key={chemical.name} className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]">
-                  <td className="px-3 py-3 font-semibold text-[#254064]">{chemical.name}</td>
-                  <td className="px-3 py-3 text-[#526783]">{chemical.category}</td>
-                  <td className="px-3 py-3 text-[#254064]">{chemical.currentQty}</td>
-                  <td className="px-3 py-3 text-[#254064]">{chemical.requiredQty}</td>
-                  <td className="px-3 py-3 text-[#254064]">{chemical.daysLeft} days</td>
-                  <td className="px-3 py-3">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${chemical.status === 'Adequate' ? 'bg-[#E8F8EF] text-[#168849]' : chemical.status === 'Low Stock' ? 'bg-[#FFF5E5] text-[#B66A00]' : 'bg-[#FFF0F0] text-[#D6333F]'}`}>
-                      {chemical.status}
-                    </span>
+              {filteredList.map((chemical, idx) => {
+                const consumptionVal =
+                  'consumption' in chemical && chemical.consumption
+                    ? chemical.consumption
+                    : chemical.requiredQty
+
+                return (
+                  <tr
+                    key={`${chemical.name}-${idx}`}
+                    className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]"
+                  >
+                    <td className="px-3 py-3 font-semibold text-[#254064]">{chemical.name}</td>
+                    <td className="px-3 py-3 text-[#526783]">{chemical.category}</td>
+                    <td className="px-3 py-3 font-medium text-[#1677F2]">{chemical.currentQty}</td>
+                    <td className="px-3 py-3 text-[#254064]">{consumptionVal}</td>
+                    <td className="px-3 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                          chemical.status === 'Adequate'
+                            ? 'bg-[#E8F8EF] text-[#168849]'
+                            : chemical.status === 'Low Stock'
+                            ? 'bg-[#FFF5E5] text-[#B66A00]'
+                            : 'bg-[#FFF0F0] text-[#D6333F]'
+                        }`}
+                      >
+                        {chemical.status}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+              {filteredList.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-8 text-center text-[13px] text-[#71829A]">
+                    No chemicals match your search.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -261,8 +347,26 @@ function ChemicalUsageDetails() {
   )
 }
 
-export default function ChemicalOverviewCard() {
+export default function ChemicalOverviewCard({
+  stpId,
+  plantCode,
+}: {
+  stpId?: string
+  plantCode?: string
+} = {}) {
   const [chemicalListOpen, setChemicalListOpen] = useState(false)
+
+  const plantName = useMemo(() => {
+    const key = stpId ?? plantCode
+    if (key && stpDetails[key]?.name) return stpDetails[key].name
+    return plantCode ?? stpId ?? ''
+  }, [stpId, plantCode])
+
+  const chemicals = useMemo(() => {
+    return getChemicalInventoryForPlant(plantName || stpId || plantCode)
+  }, [plantName, stpId, plantCode])
+
+  const stpDisplayName = plantName || 'STP Inventory'
 
   return (
     <div className="grid grid-cols-1 items-stretch gap-[14px] lg:grid-cols-[minmax(300px,0.95fr)_minmax(0,1.45fr)]">
@@ -278,7 +382,7 @@ export default function ChemicalOverviewCard() {
                 aria-label="View chemical inventory list"
                 className="text-[24px] font-bold leading-7 text-[#1677F2] underline decoration-2 underline-offset-2 hover:text-[#0055B8] focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1677F2]"
               >
-                98
+                {chemicals.length}
               </button>
               <span className="text-[11px] text-[#71829A]">Types of chemicals in inventory</span>
             </div>
@@ -287,7 +391,13 @@ export default function ChemicalOverviewCard() {
         <ChemicalStockOverview />
       </div>
       <ChemicalUsageDetails />
-      {chemicalListOpen && <ChemicalListModal onClose={() => setChemicalListOpen(false)} />}
+      {chemicalListOpen && (
+        <ChemicalListModal
+          onClose={() => setChemicalListOpen(false)}
+          stpName={stpDisplayName}
+          chemicals={chemicals}
+        />
+      )}
     </div>
   )
 }

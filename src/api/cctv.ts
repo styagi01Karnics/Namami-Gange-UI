@@ -120,7 +120,40 @@ const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = [
   },
 ]
 
-const DEFAULT_SITES: CctvSite[] = [{ id: 1, siteCode: 'PLANT001', name: '68 MLD STP, Jagjeetpur' }]
+function defaultPlantCameras(siteCode: string): CctvCamera[] {
+  return [
+    {
+      id: `${siteCode}-cam-1`,
+      name: 'Influent',
+      channel: 1,
+      status: 'LIVE',
+      siteCode,
+    },
+    {
+      id: `${siteCode}-cam-2`,
+      name: 'Effluent',
+      channel: 2,
+      status: 'LIVE',
+      siteCode,
+    },
+  ]
+}
+
+const DEFAULT_SITES: CctvSite[] = [
+  { id: 1, siteCode: '14mldsarai', name: '14 MLD STP, Sarai, Haridwar' },
+  { id: 2, siteCode: 'PLANT001', name: '68 MLD STP, Jagjeetpur, Haridwar' },
+  { id: 3, siteCode: '27mldjag_upg', name: '27 MLD STP, Jagjeetpur' },
+  { id: 4, siteCode: '18mldsarai_upg', name: '18 MLD STP, Sarai' },
+  { id: 5, siteCode: '18mldjag', name: '18 MLD STP, Jagjeetpur, Haridwar' },
+  { id: 6, siteCode: '26mldlkgt2', name: '26 MLD STP, Lakkarghat, Rishikesh' },
+  { id: 7, siteCode: '28mldindira', name: '28 MLD STP, Indira Nagar, Haldwani' },
+  { id: 8, siteCode: 'STP20MLD1', name: '20 MLD STP, Mothorowala-1, Dehradun' },
+  { id: 9, siteCode: '68mldkargi', name: '68 MLD STP, Kargi Chowk, Dehradun' },
+  { id: 10, siteCode: 'STP20MLD2', name: '20 MLD STP, Mothorowala-2, Dehradun' },
+  { id: 11, siteCode: 'STP33MLD', name: '33 MLD STP, Saliyar, Roorkee' },
+  { id: 12, siteCode: '10mldbazpur', name: '10 MLD STP, Bazpur' },
+  { id: 13, siteCode: '10mldkashipur', name: '10 MLD STP, Kashipur' },
+]
 
 const DEFAULT_CAMERAS: CctvCamera[] = [
   {
@@ -153,24 +186,47 @@ export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCam
 }
 
 export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
-  if (stpId === 'sarai-14' || stpId === '14mldsarai') {
+  const key = String(stpId ?? '').toLowerCase().trim()
+  if (!key) return null
+
+  if (key === 'sarai-14' || key === '14mldsarai') {
     return STP_14MLD_CAMERAS
   }
-  // 18 MLD Jagjeetpur reuses the 68 MLD PLANT001 stream URLs.
-  if (stpId === 'sarai-18' || stpId === '18mldjag') {
+  if (key === 'jagjeetpur-68' || key === '68mldjag') {
     return STP_68MLD_CAMERAS
   }
-  if (stpId === 'jagjeetpur-68' || stpId === '68mldjag') {
+  if (key === 'jagjeetpur-27-upg' || key === '27mldjag_upg' || key === 'jagjeetpur-27') {
+    return defaultPlantCameras('27mldjag_upg')
+  }
+  if (key === 'sarai-18-upg' || key === '18mldsarai_upg' || key === 'sarai-18') {
+    return defaultPlantCameras('18mldsarai_upg')
+  }
+  if (key === 'jagjeetpur-18' || key === '18mldjag') {
     return STP_68MLD_CAMERAS
   }
-  if (stpId === 'saliar-33' || stpId === '33mldsali') {
-    return STP_33MLD_CAMERAS
+  if (key === 'lakkar-ghat-26' || key === '26mldlkgt2' || key === '26mldlakkar') {
+    return defaultPlantCameras('26mldlkgt2')
   }
-  if (stpId === 'mothorowala-20' || stpId === '20mldmothorowala') {
+  if (key === 'indira-nagar-28' || key === '28mldindira') {
+    return defaultPlantCameras('28mldindira')
+  }
+  if (key === 'mothorowala-20' || key === '20mldmothorowala') {
     return STP_20MLD_UNIT1_CAMERAS
   }
-  if (stpId === 'mothorowala-20-2' || stpId === '20mldmoth_2') {
+  if (key === 'kargi-68' || key === '68mldkargi') {
+    return defaultPlantCameras('68mldkargi')
+  }
+  if (key === 'mothorowala-20-2' || key === '20mldmoth_2') {
     return STP_20MLD_UNIT2_CAMERAS
+  }
+  if (key === 'saliar-33' || key === '33mldsali') {
+    return STP_33MLD_CAMERAS
+  }
+  if (key === 'bazpur-10' || key === '10mldbazpur') {
+    return defaultPlantCameras('10mldbazpur')
+  }
+  if (key === 'kashipur-10' || key === '10mldkashipur') {
+    return defaultPlantCameras('10mldkashipur')
   }
   return null
 }

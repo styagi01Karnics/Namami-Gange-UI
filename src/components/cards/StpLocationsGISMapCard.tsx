@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Layers3,
   Maximize2,
@@ -47,19 +47,19 @@ type MappedPlant = StpMapPoint & {
 // newer additions without surveyed GPS in the current dataset, the map uses
 // approximate town coordinates until verified plant coordinates are provided.
 const PLANT_POINTS: MappedPlant[] = [
-  { id: 'map-sarai-14', label: '14 MLD STP, Sarai', lat: 29.8952, lng: 78.0893, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '14mldsarai', detailKey: 'sarai-14' },
-  { id: 'map-jagjeetpur-68', label: '68 MLD STP, Haridwar', lat: 29.8987, lng: 78.139, risk: 'critical', riskPercent: 93, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '68mldjag', detailKey: 'jagjeetpur-68' },
-  { id: 'map-jagjeetpur-upgrade-27', label: '27 MLD STP, Jagjeetpur', lat: 29.8998, lng: 78.1377, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS' },
-  { id: 'map-sarai-upgrade-18', label: '18 MLD STP, Sarai', lat: 29.8933, lng: 78.0893, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS' },
-  { id: 'map-jagjeetpur-18', label: '18 MLD STP, Haridwar', lat: 29.9008, lng: 78.1384, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS' },
-  { id: 'map-lakkarghat-26', label: '26 MLD STP, Rishikesh', lat: 30.0577, lng: 78.2623, risk: 'watch', riskPercent: 69, minZoom: 0, city: 'Rishikesh', district: 'Dehradun', operator: 'UKPJN', detailCode: '26mldlkgt2', detailKey: 'lakkar-ghat-26' },
-  { id: 'map-haldwani-28', label: '28 MLD STP, Haldwani', lat: 29.2183, lng: 79.513, risk: 'warning', riskPercent: 68, minZoom: 0, city: 'Haldwani', district: 'Nainital', operator: 'UKPJN' },
-  { id: 'map-mothorowala-1-20', label: '20 MLD STP, Mothorowala-1', lat: 30.261902, lng: 78.042315, risk: 'watch', riskPercent: 65, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '20mldmothorowala', detailKey: 'mothorowala-20' },
-  { id: 'map-kargi-68', label: '68 MLD STP, Kargi Chowk', lat: 30.286472, lng: 78.016181, risk: 'normal', riskPercent: 31, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '68mldkargi', detailKey: 'kargi-68' },
-  { id: 'map-mothorowala-2-20', label: '20 MLD STP, Mothorowala-2', lat: 30.261347, lng: 78.041421, risk: 'watch', riskPercent: 70, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '20mldmoth_2', detailKey: 'mothorowala-20-2' },
+  { id: 'map-sarai-14', label: '14 MLD STP, Sarai, Haridwar', lat: 29.8952, lng: 78.0893, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '14mldsarai', detailKey: 'sarai-14' },
+  { id: 'map-jagjeetpur-68', label: '68 MLD STP, Jagjeetpur, Haridwar', lat: 29.8987, lng: 78.139, risk: 'critical', riskPercent: 93, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '68mldjag', detailKey: 'jagjeetpur-68' },
+  { id: 'map-jagjeetpur-upgrade-27', label: '27 MLD STP, Jagjeetpur', lat: 29.8998, lng: 78.1377, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS', detailCode: '27mldjag_upg', detailKey: 'jagjeetpur-27-upg' },
+  { id: 'map-sarai-upgrade-18', label: '18 MLD STP, Sarai', lat: 29.8933, lng: 78.0893, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS', detailCode: '18mldsarai_upg', detailKey: 'sarai-18-upg' },
+  { id: 'map-jagjeetpur-18', label: '18 MLD STP, Jagjeetpur, Haridwar', lat: 29.9008, lng: 78.1384, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS', detailCode: '18mldjag', detailKey: 'jagjeetpur-18' },
+  { id: 'map-lakkarghat-26', label: '26 MLD STP, Lakkarghat, Rishikesh', lat: 30.0577, lng: 78.2623, risk: 'watch', riskPercent: 69, minZoom: 0, city: 'Rishikesh', district: 'Dehradun', operator: 'UKPJN', detailCode: '26mldlkgt2', detailKey: 'lakkar-ghat-26' },
+  { id: 'map-haldwani-28', label: '28 MLD STP, Indira Nagar, Haldwani', lat: 29.2183, lng: 79.513, risk: 'warning', riskPercent: 68, minZoom: 0, city: 'Haldwani', district: 'Nainital', operator: 'UKPJN', detailCode: '28mldindira', detailKey: 'indira-nagar-28' },
+  { id: 'map-mothorowala-1-20', label: '20 MLD STP, Mothorowala-1, Dehradun', lat: 30.261902, lng: 78.042315, risk: 'watch', riskPercent: 65, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '20mldmothorowala', detailKey: 'mothorowala-20' },
+  { id: 'map-kargi-68', label: '68 MLD STP, Kargi Chowk, Dehradun', lat: 30.286472, lng: 78.016181, risk: 'normal', riskPercent: 31, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '68mldkargi', detailKey: 'kargi-68' },
+  { id: 'map-mothorowala-2-20', label: '20 MLD STP, Mothorowala-2, Dehradun', lat: 30.261347, lng: 78.041421, risk: 'watch', riskPercent: 70, minZoom: 0, city: 'Dehradun', district: 'Dehradun', operator: 'UJS', detailCode: '20mldmoth_2', detailKey: 'mothorowala-20-2' },
   { id: 'map-saliyar-33', label: '33 MLD STP, Saliyar, Roorkee', lat: 29.901612, lng: 77.864822, risk: 'normal', riskPercent: 20, minZoom: 0, city: 'Roorkee', district: 'Haridwar', operator: 'UJS', detailCode: '33mldsali', detailKey: 'saliar-33' },
-  { id: 'map-bazpur-10', label: '10 MLD STP, Bazpur', lat: 29.152, lng: 79.11, risk: 'normal', riskPercent: 24, minZoom: 0, city: 'Bazpur', district: 'Udham Singh Nagar', operator: 'UKPJN' },
-  { id: 'map-kashipur-10', label: '10 MLD STP, Kashipur', lat: 29.2104, lng: 78.9619, risk: 'watch', riskPercent: 42, minZoom: 0, city: 'Kashipur', district: 'Udham Singh Nagar', operator: 'UKPJN' },
+  { id: 'map-bazpur-10', label: '10 MLD STP, Bazpur', lat: 29.152, lng: 79.11, risk: 'normal', riskPercent: 24, minZoom: 0, city: 'Bazpur', district: 'Udham Singh Nagar', operator: 'UKPJN', detailCode: '10mldbazpur', detailKey: 'bazpur-10' },
+  { id: 'map-kashipur-10', label: '10 MLD STP, Kashipur', lat: 29.2104, lng: 78.9619, risk: 'watch', riskPercent: 42, minZoom: 0, city: 'Kashipur', district: 'Udham Singh Nagar', operator: 'UKPJN', detailCode: '10mldkashipur', detailKey: 'kashipur-10' },
 ]
 
 const LABEL_LAYOUT: Record<string, { x: number; y: number }> = {
@@ -82,23 +82,23 @@ const LABEL_LAYOUT: Record<string, { x: number; y: number }> = {
 }
 
 const MAP_LABELS: Record<string, string> = {
-  'map-sarai-14': '14 MLD Sarai, Haridwar',
-  'map-jagjeetpur-68': '68 MLD Jagjeetpur, Haridwar',
-  'map-jagjeetpur-upgrade-27': '27 MLD Jagjeetpur, Haridwar',
-  'map-sarai-upgrade-18': '18 MLD Sarai, Haridwar',
-  'map-jagjeetpur-18': '18 MLD Jagjeetpur, Haridwar',
-  'map-lakkarghat-26': '26 MLD Lakkarghat, Rishikesh',
-  'map-haldwani-28': '28 MLD Indira Nagar, Haldwani',
-  'map-mothorowala-1-20': '20 MLD Mothorowala-1, Dehradun',
-  'map-kargi-68': '68 MLD Kargi Chowk, Dehradun',
-  'map-mothorowala-2-20': '20 MLD Mothorowala-2, Dehradun',
-  'map-saliyar-33': '33 MLD Saliyar, Roorkee',
-  'map-bazpur-10': '10 MLD Bazpur',
-  'map-kashipur-10': '10 MLD Kashipur',
+  'map-sarai-14': '14 MLD STP, Sarai, Haridwar',
+  'map-jagjeetpur-68': '68 MLD STP, Jagjeetpur, Haridwar',
+  'map-jagjeetpur-upgrade-27': '27 MLD STP, Jagjeetpur',
+  'map-sarai-upgrade-18': '18 MLD STP, Sarai',
+  'map-jagjeetpur-18': '18 MLD STP, Jagjeetpur, Haridwar',
+  'map-lakkarghat-26': '26 MLD STP, Lakkarghat, Rishikesh',
+  'map-haldwani-28': '28 MLD STP, Indira Nagar, Haldwani',
+  'map-mothorowala-1-20': '20 MLD STP, Mothorowala-1, Dehradun',
+  'map-kargi-68': '68 MLD STP, Kargi Chowk, Dehradun',
+  'map-mothorowala-2-20': '20 MLD STP, Mothorowala-2, Dehradun',
+  'map-saliyar-33': '33 MLD STP, Saliyar, Roorkee',
+  'map-bazpur-10': '10 MLD STP, Bazpur',
+  'map-kashipur-10': '10 MLD STP, Kashipur',
 }
 
 function displayName(point: StpMapPoint) {
-  return point.label.replace(/\s+STP(?:-\d+)?[,]?\s*/i, ' ').trim()
+  return point.label
 }
 
 function labelWidthFor(point: StpMapPoint) {
@@ -243,25 +243,26 @@ function MapInvalidateSize() {
   return null
 }
 
-function MapInitialBounds() {
+function MapInitialBounds({ enabled = true }: { enabled?: boolean }) {
   const map = useMap()
   useEffect(() => {
+    if (!enabled) return
     const bounds = L.latLngBounds(PLANT_POINTS.map((point) => [point.lat, point.lng])).pad(0.08)
     const frame = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-      map.invalidateSize()
-      map.fitBounds(bounds, { padding: [24, 24], maxZoom: 7, animate: false })
+        map.invalidateSize()
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 7, animate: false })
       })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [map])
+  }, [map, enabled])
   return null
 }
 
 function MapFocus({ point }: { point: StpMapPoint | null }) {
   const map = useMap()
   useEffect(() => {
-    if (point) map.flyTo([point.lat, point.lng], Math.min(Math.max(map.getZoom(), 10), 13), { duration: 0.7 })
+    if (point) map.flyTo([point.lat, point.lng], Math.min(Math.max(map.getZoom(), 11), 13), { duration: 0.7 })
   }, [map, point])
   return null
 }
@@ -275,7 +276,18 @@ function MapPopupController({
 }) {
   const map = useMap()
   useEffect(() => {
-    markers.get(selectedId)?.openPopup()
+    if (!selectedId || selectedId === ALL) return
+    let timer: number
+    const tryOpen = (attempts = 0) => {
+      const marker = markers.get(selectedId)
+      if (marker) {
+        marker.openPopup()
+      } else if (attempts < 15) {
+        timer = window.setTimeout(() => tryOpen(attempts + 1), 100)
+      }
+    }
+    tryOpen()
+    return () => window.clearTimeout(timer)
   }, [map, markers, selectedId])
   return null
 }
@@ -347,16 +359,54 @@ function StpPopup({ point, onViewDetails }: { point: MappedPlant; onViewDetails:
 
 export default function StpLocationsGISMapCard() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const targetParam = searchParams.get('stp') || searchParams.get('plant') || searchParams.get('mapStp')
+
+  const initialTargetPoint = useMemo(() => {
+    if (!targetParam) return null
+    const clean = targetParam.trim().toLowerCase()
+    return (
+      PLANT_POINTS.find(
+        (p) =>
+          p.id.toLowerCase() === clean ||
+          p.detailKey?.toLowerCase() === clean ||
+          p.detailCode?.toLowerCase() === clean ||
+          p.label.toLowerCase() === clean ||
+          clean.includes(p.detailCode?.toLowerCase() ?? '') ||
+          clean.includes(p.detailKey?.toLowerCase() ?? '') ||
+          p.label.toLowerCase().includes(clean) ||
+          clean.includes(p.label.toLowerCase()),
+      ) ?? null
+    )
+  }, [targetParam])
+
   const containerRef = useRef<HTMLDivElement>(null)
   const markerRefs = useRef(new Map<string, L.Marker>())
-  const [stateId, setStateId] = useState(ALL)
-  const [districtId, setDistrictId] = useState(ALL)
-  const [cityId, setCityId] = useState(ALL)
-  const [stpId, setStpId] = useState(ALL)
+  const [stateId, setStateId] = useState(initialTargetPoint ? 'uttarakhand' : ALL)
+  const [districtId, setDistrictId] = useState(initialTargetPoint?.district ?? ALL)
+  const [cityId, setCityId] = useState(initialTargetPoint?.city ?? ALL)
+  const [stpId, setStpId] = useState(initialTargetPoint?.id ?? ALL)
   const [search, setSearch] = useState('')
-  const [focusPoint, setFocusPoint] = useState<StpMapPoint | null>(null)
+  const [focusPoint, setFocusPoint] = useState<StpMapPoint | null>(initialTargetPoint)
   const [satellite, setSatellite] = useState(true)
   const [fullscreen, setFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (initialTargetPoint) {
+      if (initialTargetPoint.city && initialTargetPoint.district) {
+        setStateId('uttarakhand')
+        setDistrictId(initialTargetPoint.district)
+        setCityId(initialTargetPoint.city)
+      }
+      setStpId(initialTargetPoint.id)
+      setFocusPoint(initialTargetPoint)
+
+      const timer = window.setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 180)
+      return () => window.clearTimeout(timer)
+    }
+  }, [initialTargetPoint])
 
   useEffect(() => {
     const onFullscreenChange = () => setFullscreen(document.fullscreenElement === containerRef.current)
@@ -515,7 +565,7 @@ export default function StpLocationsGISMapCard() {
             />
           )}
           <MapInvalidateSize />
-          <MapInitialBounds />
+          <MapInitialBounds enabled={!initialTargetPoint} />
           <MapFocus point={focusPoint} />
           <MapCalloutLayout points={visiblePoints} markers={markerRefs.current} />
           <MapPopupController selectedId={stpId} markers={markerRefs.current} />

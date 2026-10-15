@@ -16,6 +16,8 @@
    1. SHARED
    ========================================================================== */
 
+import { BAZPUR_CHEMICAL_INVENTORY } from './bazpurChemicalData'
+
 export const currentUser = {
   name: 'Rajesh Nair',
   role: 'Super Admin',
@@ -38,13 +40,19 @@ export const defaultDateRange = currentMonthDateRange()
 
 /** Options for the STP picker at the top of STP Management. */
 export const stpOptions = [
-  { id: 'sarai-14', label: '14 MLD STP, Sarai' },
-  { id: 'lakkar-ghat-26', label: '26 MLD STP, Lakkar Ghat' },
-  { id: 'jagjeetpur-68', label: '68 MLD STP, Jagjeetpur' },
-  { id: 'kargi-68', label: '68 MLD STP, Kargi' },
-  { id: 'sarai-18', label: '18 MLD STP, Sarai' },
-  { id: 'mothorowala-20', label: '20 MLD STP, Mothorowala' },
-  { id: 'mothorowala-20-2', label: '20 MLD STP, Mothorowala 2' },
+  { id: 'sarai-14', label: '14 MLD STP, Sarai, Haridwar' },
+  { id: 'jagjeetpur-68', label: '68 MLD STP, Jagjeetpur, Haridwar' },
+  { id: 'jagjeetpur-27-upg', label: '27 MLD STP, Jagjeetpur' },
+  { id: 'sarai-18-upg', label: '18 MLD STP, Sarai' },
+  { id: 'jagjeetpur-18', label: '18 MLD STP, Jagjeetpur, Haridwar' },
+  { id: 'lakkar-ghat-26', label: '26 MLD STP, Lakkarghat, Rishikesh' },
+  { id: 'indira-nagar-28', label: '28 MLD STP, Indira Nagar, Haldwani' },
+  { id: 'mothorowala-20', label: '20 MLD STP, Mothorowala-1, Dehradun' },
+  { id: 'kargi-68', label: '68 MLD STP, Kargi Chowk, Dehradun' },
+  { id: 'mothorowala-20-2', label: '20 MLD STP, Mothorowala-2, Dehradun' },
+  { id: 'saliar-33', label: '33 MLD STP, Saliyar, Roorkee' },
+  { id: 'bazpur-10', label: '10 MLD STP, Bazpur' },
+  { id: 'kashipur-10', label: '10 MLD STP, Kashipur' },
 ]
 
 /* ==========================================================================
@@ -78,6 +86,140 @@ export const stpCapacity = {
   notUsed: 109,
 }
 
+export type OfficialStpDetail = {
+  sNo: number
+  name: string
+  agency: 'UKPJN' | 'UJS' | string
+  concernPerson: string
+  contactNo: string
+  stpId: string
+  plantCode: string
+}
+
+export const official13StpDetails: OfficialStpDetail[] = [
+  {
+    sNo: 1,
+    name: '14 MLD STP, Sarai, Haridwar',
+    agency: 'UKPJN',
+    concernPerson: 'Charu Aggarwal',
+    contactNo: '7830600074',
+    stpId: 'sarai-14',
+    plantCode: '14mldsarai',
+  },
+  {
+    sNo: 2,
+    name: '68 MLD STP, Jagjeetpur, Haridwar',
+    agency: 'UKPJN',
+    concernPerson: 'Charu Aggarwal',
+    contactNo: '7830600074',
+    stpId: 'jagjeetpur-68',
+    plantCode: '68mldjag',
+  },
+  {
+    sNo: 3,
+    name: '27 MLD STP, Jagjeetpur',
+    agency: 'UJS',
+    concernPerson: 'Ajay Kumar',
+    contactNo: '7500831727',
+    stpId: 'jagjeetpur-27-upg',
+    plantCode: '27mldjag_upg',
+  },
+  {
+    sNo: 4,
+    name: '18 MLD STP, Sarai',
+    agency: 'UJS',
+    concernPerson: 'Ajay Kumar',
+    contactNo: '7500831727',
+    stpId: 'sarai-18-upg',
+    plantCode: '18mldsarai_upg',
+  },
+  {
+    sNo: 5,
+    name: '18 MLD STP, Jagjeetpur, Haridwar',
+    agency: 'UJS',
+    concernPerson: 'Ajay Kumar',
+    contactNo: '7500831727',
+    stpId: 'jagjeetpur-18',
+    plantCode: '18mldjag',
+  },
+  {
+    sNo: 6,
+    name: '26 MLD STP, Lakkarghat, Rishikesh',
+    agency: 'UKPJN',
+    concernPerson: 'S.K. Verma',
+    contactNo: '9412929493',
+    stpId: 'lakkar-ghat-26',
+    plantCode: '26mldlkgt2',
+  },
+  {
+    sNo: 7,
+    name: '28 MLD STP, Indira Nagar, Haldwani',
+    agency: 'UKPJN',
+    concernPerson: 'EE, Mechanical Division Haldwani',
+    contactNo: '7830500458',
+    stpId: 'indira-nagar-28',
+    plantCode: '28mldindira',
+  },
+  {
+    sNo: 8,
+    name: '20 MLD STP, Mothorowala-1, Dehradun',
+    agency: 'UJS',
+    concernPerson: 'Baldev Singh Dogra',
+    contactNo: '9411113824',
+    stpId: 'mothorowala-20',
+    plantCode: '20mldmothorowala',
+  },
+  {
+    sNo: 9,
+    name: '68 MLD STP, Kargi Chowk, Dehradun',
+    agency: 'UJS',
+    concernPerson: 'Ashish Bhatt',
+    contactNo: '9012382583',
+    stpId: 'kargi-68',
+    plantCode: '68mldkargi',
+  },
+  {
+    sNo: 10,
+    name: '20 MLD STP, Mothorowala-2, Dehradun',
+    agency: 'UJS',
+    concernPerson: 'Baldev Singh Dogra',
+    contactNo: '9411113824',
+    stpId: 'mothorowala-20-2',
+    plantCode: '20mldmoth_2',
+  },
+  {
+    sNo: 11,
+    name: '33 MLD STP, Saliyar, Roorkee',
+    agency: 'UJS',
+    concernPerson: 'Ajay Kumar',
+    contactNo: '7500831727',
+    stpId: 'saliar-33',
+    plantCode: '33mldsali',
+  },
+  {
+    sNo: 12,
+    name: '10 MLD STP, Bazpur',
+    agency: 'UKPJN',
+    concernPerson: 'EE, Mechanical Division Haldwani',
+    contactNo: '7830500458',
+    stpId: 'bazpur-10',
+    plantCode: '10mldbazpur',
+  },
+  {
+    sNo: 13,
+    name: '10 MLD STP, Kashipur',
+    agency: 'UKPJN',
+    concernPerson: 'EE, Mechanical Division Haldwani',
+    contactNo: '7830500458',
+    stpId: 'kashipur-10',
+    plantCode: '10mldkashipur',
+  },
+]
+
+export const active12StpDetails: OfficialStpDetail[] = official13StpDetails.filter(
+  (stp) => stp.stpId !== 'kashipur-10',
+)
+
 /** Figma dashboard KPI strip (node 2155:5699). */
 export const dashboardKpis = [
   {
@@ -86,13 +228,14 @@ export const dashboardKpis = [
     value: '13',
     badge: 'Across all States',
     tone: 'brand' as const,
+    openTotalStp: true,
   },
   {
     key: 'active',
     label: 'Active STPs',
     value: '12',
     tone: 'ok' as const,
-    href: '/stp-management',
+    openActiveStp: true,
   },
   {
     key: 'nonActive',
@@ -169,7 +312,7 @@ export const liveStpData = [
   },
   {
     id: 'map-lakkarghat-26',
-    name: '26 MLD STP, Rishikesh',
+    name: '26 MLD STP, Lakkarghat, Rishikesh',
     plantCode: '26mldlkgt2',
     operator: 'UKPJN',
     image: '/dashboard/stp-sarai.png',
@@ -179,7 +322,7 @@ export const liveStpData = [
   },
   {
     id: 'map-haldwani-28',
-    name: '28 MLD STP, Haldwani',
+    name: '28 MLD STP, Indira Nagar, Haldwani',
     plantCode: 'map-haldwani-28',
     operator: 'UKPJN',
     image: '/dashboard/stp-saliyar.png',
@@ -189,7 +332,7 @@ export const liveStpData = [
   },
   {
     id: 'map-mothorowala-1-20',
-    name: '20 MLD STP, Mothorowala-1',
+    name: '20 MLD STP, Mothorowala-1, Dehradun',
     plantCode: '20mldmothorowala',
     operator: 'UJS',
     image: '/dashboard/stp-sarai.png',
@@ -199,7 +342,7 @@ export const liveStpData = [
   },
   {
     id: 'map-kargi-68',
-    name: '68 MLD STP, Kargi Chowk',
+    name: '68 MLD STP, Kargi Chowk, Dehradun',
     plantCode: '68mldkargi',
     operator: 'UJS',
     image: '/dashboard/stp-jagjeetpur.png',
@@ -209,7 +352,7 @@ export const liveStpData = [
   },
   {
     id: 'map-mothorowala-2-20',
-    name: '20 MLD STP, Mothorowala-2',
+    name: '20 MLD STP, Mothorowala-2, Dehradun',
     plantCode: '20mldmoth_2',
     operator: 'UJS',
     image: '/dashboard/stp-sarai.png',
@@ -251,16 +394,16 @@ export const liveStpData = [
 
 /** Weekly compliance ranking (dashboard Top 10 card). */
 export const topPerformingStps = [
-  { rank: 1, name: '18 MLD Jagjeetpur', plantCode: '18mldjag', score: 99 },
-  { rank: 2, name: '68 MLD Jagjeetpur', plantCode: '68mldjag', score: 98 },
-  { rank: 3, name: '14 MLD Sarai', plantCode: '14mldsarai', score: 96 },
-  { rank: 4, name: '33 MLD Salyar', plantCode: '33mldsali', score: 94 },
-  { rank: 5, name: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', score: 92 },
-  { rank: 6, name: '68 MLD Kargi', plantCode: '68mldkargi', score: 90 },
-  { rank: 7, name: '20 MLD Mothorowala', plantCode: '20mldmothorowala', score: 88 },
-  { rank: 8, name: '27 MLD Jagjeetpur', plantCode: 'map-jagjeetpur-upgrade-27', score: 86 },
-  { rank: 9, name: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', score: 84 },
-  { rank: 10, name: '28 MLD Haldwani', plantCode: 'map-haldwani-28', score: 82 },
+  { rank: 1, name: '18 MLD STP, Jagjeetpur, Haridwar', plantCode: '18mldjag', score: 99 },
+  { rank: 2, name: '68 MLD STP, Jagjeetpur, Haridwar', plantCode: '68mldjag', score: 98 },
+  { rank: 3, name: '14 MLD STP, Sarai, Haridwar', plantCode: '14mldsarai', score: 96 },
+  { rank: 4, name: '33 MLD STP, Saliyar, Roorkee', plantCode: '33mldsali', score: 94 },
+  { rank: 5, name: '26 MLD STP, Lakkarghat, Rishikesh', plantCode: '26mldlkgt2', score: 92 },
+  { rank: 6, name: '68 MLD STP, Kargi Chowk, Dehradun', plantCode: '68mldkargi', score: 90 },
+  { rank: 7, name: '20 MLD STP, Mothorowala-1, Dehradun', plantCode: '20mldmothorowala', score: 88 },
+  { rank: 8, name: '27 MLD STP, Jagjeetpur', plantCode: 'map-jagjeetpur-upgrade-27', score: 86 },
+  { rank: 9, name: '20 MLD STP, Mothorowala-2, Dehradun', plantCode: '20mldmoth_2', score: 84 },
+  { rank: 10, name: '28 MLD STP, Indira Nagar, Haldwani', plantCode: 'map-haldwani-28', score: 82 },
 ]
 
 /** Risk palette used by the STP Locations Leaflet map. */
@@ -333,7 +476,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
             children: [
               {
                 id: 'mothorowala-20-2',
-                label: '20 MLD STP, Motharawala-II',
+                label: '20 MLD STP, Mothorowala-2, Dehradun',
                 lat: 30.261347,
                 lng: 78.041421,
                 risk: 'watch',
@@ -343,7 +486,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
               },
               {
                 id: 'mothorowala-20',
-                label: '20 MLD STP, Mothrowala-I',
+                label: '20 MLD STP, Mothorowala-1, Dehradun',
                 lat: 30.261902,
                 lng: 78.042315,
                 risk: 'watch',
@@ -353,7 +496,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
               },
               {
                 id: 'kargi-68',
-                label: '68 MLD STP, Kargi',
+                label: '68 MLD STP, Kargi Chowk, Dehradun',
                 lat: 30.286472,
                 lng: 78.016181,
                 risk: 'normal',
@@ -425,7 +568,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
             children: [
               {
                 id: 'lakkarghat-26',
-                label: '26 MLD STP, Lakkarghat',
+                label: '26 MLD STP, Lakkarghat, Rishikesh',
                 lat: 30.0577,
                 lng: 78.2623,
                 risk: 'watch',
@@ -531,7 +674,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
               },
               {
                 id: 'jagjeetpur-18',
-                label: '18 MLD STP, Jagjeetpur',
+                label: '18 MLD STP, Jagjeetpur, Haridwar',
                 lat: 29.9008,
                 lng: 78.1384,
                 risk: 'critical',
@@ -551,7 +694,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
               },
               {
                 id: 'jagjeetpur-68',
-                label: '68 MLD STP, Jagjeetpur',
+                label: '68 MLD STP, Jagjeetpur, Haridwar',
                 lat: 29.8987,
                 lng: 78.139,
                 risk: 'critical',
@@ -561,7 +704,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
               },
               {
                 id: 'sarai-14',
-                label: '14 MLD STP, Sarai',
+                label: '14 MLD STP, Sarai, Haridwar',
                 lat: 29.8952,
                 lng: 78.0893,
                 risk: 'critical',
@@ -583,7 +726,7 @@ export const stpMapHierarchy: StpMapPoint[] = [
             children: [
               {
                 id: 'saliyar-33',
-                label: '33 MLD STP, Saliyar',
+                label: '33 MLD STP, Saliyar, Roorkee',
                 lat: 29.901612,
                 lng: 77.864822,
                 risk: 'normal',
@@ -925,31 +1068,13 @@ export const stpMapMarkers = [
 /** Rows shown in the Non-Active STP's modal (opened from the dashboard count). */
 export const nonActiveStpRows = [
   {
-    id: 'sarai-14',
-    name: '14 MLD STP, Sarai',
-    href: '/stp-management',
+    id: 'kashipur-10',
+    name: '10 MLD STP, Kashipur',
+    href: '/stp-management?plant=10mldkashipur&name=10%20MLD%20STP%20Kashipur',
     lastActiveDate: '15/02/2026',
     lastActiveTime: '10:45 AM',
     reason: 'Power Supply Interrupted or Communication Lost',
-    vendor: 'ABC Infra Pvt. Ltd',
-  },
-  {
-    id: 'jagjeetpur-68',
-    name: '68 MLD STP, Sarai, Haridwar',
-    href: '/stp-management',
-    lastActiveDate: '15/02/2026',
-    lastActiveTime: '10:45 AM',
-    reason: 'Network Disconnected',
-    vendor: 'ABC Infra Pvt. Ltd',
-  },
-  {
-    id: 'lakkar-ghat-26',
-    name: '26 MLD STP Lakkar Ghat',
-    href: '/stp-management',
-    lastActiveDate: '15/02/2026',
-    lastActiveTime: '10:45 AM',
-    reason: 'Network Disconnected',
-    vendor: 'ABC Infra Pvt. Ltd',
+    vendor: 'UKPJN',
   },
 ]
 
@@ -1037,18 +1162,21 @@ function omDeptFor(seed: string) {
   return OM_DEPTS[hash % OM_DEPTS.length]
 }
 
-/** Non-performing rows aligned to STP Management dropdown plants; 18 MLD first. */
+/** Non-performing rows aligned to the official 13 STPs. */
 const NON_PERFORMING_PLANTS = [
-  { id: 'jagjeetpur-18', name: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'sarai-18', capacityMld: 18, district: 'Haridwar' },
-  { id: 'jagjeetpur-68', name: '68 MLD Jagjeetpur', plantCode: '68mldjag', stpId: 'jagjeetpur-68', capacityMld: 68, district: 'Haridwar' },
-  { id: 'kargi-68', name: '68 MLD Kargi', plantCode: '68mldkargi', stpId: 'kargi-68', capacityMld: 68, district: 'Dehradun' },
-  { id: 'saliar-33', name: '33 MLD Saliar', plantCode: '33mldsali', stpId: 'saliar-33', capacityMld: 33, district: 'Haridwar' },
-  { id: 'sarai-14', name: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14', capacityMld: 14, district: 'Haridwar' },
-  { id: 'mothorowala-20', name: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20', capacityMld: 20, district: 'Dehradun' },
-  { id: 'mothorowala-20-2', name: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2', capacityMld: 20, district: 'Dehradun' },
-  { id: 'haldwani-28', name: '28 MLD Haldwani', plantCode: 'map-haldwani-28', stpId: 'haldwani-28', capacityMld: 28, district: 'Nainital' },
-  { id: 'bazpur-10', name: '10 MLD Bazpur', plantCode: 'map-bazpur-10', stpId: 'bazpur-10', capacityMld: 10, district: 'Udham Singh Nagar' },
-  { id: 'lakkar-ghat-26', name: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26', capacityMld: 26, district: 'Rishikesh' },
+  { id: 'sarai-14', name: '14 MLD STP, Sarai, Haridwar', plantCode: '14mldsarai', stpId: 'sarai-14', capacityMld: 14, district: 'Haridwar', omDept: 'UKPJN' },
+  { id: 'jagjeetpur-68', name: '68 MLD STP, Jagjeetpur, Haridwar', plantCode: '68mldjag', stpId: 'jagjeetpur-68', capacityMld: 68, district: 'Haridwar', omDept: 'UKPJN' },
+  { id: 'jagjeetpur-27-upg', name: '27 MLD STP, Jagjeetpur', plantCode: '27mldjag_upg', stpId: 'jagjeetpur-27-upg', capacityMld: 27, district: 'Haridwar', omDept: 'UJS' },
+  { id: 'sarai-18-upg', name: '18 MLD STP, Sarai', plantCode: '18mldsarai_upg', stpId: 'sarai-18-upg', capacityMld: 18, district: 'Haridwar', omDept: 'UJS' },
+  { id: 'jagjeetpur-18', name: '18 MLD STP, Jagjeetpur, Haridwar', plantCode: '18mldjag', stpId: 'jagjeetpur-18', capacityMld: 18, district: 'Haridwar', omDept: 'UJS' },
+  { id: 'lakkar-ghat-26', name: '26 MLD STP, Lakkarghat, Rishikesh', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26', capacityMld: 26, district: 'Rishikesh', omDept: 'UKPJN' },
+  { id: 'indira-nagar-28', name: '28 MLD STP, Indira Nagar, Haldwani', plantCode: '28mldindira', stpId: 'indira-nagar-28', capacityMld: 28, district: 'Nainital', omDept: 'UKPJN' },
+  { id: 'mothorowala-20', name: '20 MLD STP, Mothorowala-1, Dehradun', plantCode: '20mldmothorowala', stpId: 'mothorowala-20', capacityMld: 20, district: 'Dehradun', omDept: 'UJS' },
+  { id: 'kargi-68', name: '68 MLD STP, Kargi Chowk, Dehradun', plantCode: '68mldkargi', stpId: 'kargi-68', capacityMld: 68, district: 'Dehradun', omDept: 'UJS' },
+  { id: 'mothorowala-20-2', name: '20 MLD STP, Mothorowala-2, Dehradun', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2', capacityMld: 20, district: 'Dehradun', omDept: 'UJS' },
+  { id: 'saliar-33', name: '33 MLD STP, Saliyar, Roorkee', plantCode: '33mldsali', stpId: 'saliar-33', capacityMld: 33, district: 'Roorkee', omDept: 'UJS' },
+  { id: 'bazpur-10', name: '10 MLD STP, Bazpur', plantCode: '10mldbazpur', stpId: 'bazpur-10', capacityMld: 10, district: 'Udham Singh Nagar', omDept: 'UKPJN' },
+  { id: 'kashipur-10', name: '10 MLD STP, Kashipur', plantCode: '10mldkashipur', stpId: 'kashipur-10', capacityMld: 10, district: 'Udham Singh Nagar', omDept: 'UKPJN' },
 ] as const
 
 const PARAM_SAMPLES = [
@@ -1074,7 +1202,7 @@ function toCriticalRows(
     const sample = pinned?.[plant.plantCode] ?? samples[index % samples.length]
     return {
       ...plant,
-      omDept: omDeptFor(plant.plantCode),
+      omDept: plant.omDept ?? omDeptFor(plant.plantCode),
       param: sample.param,
       range: sample.range,
       time: sample.time,
@@ -1113,142 +1241,203 @@ export const stpDetails: Record<string, {
   images?: string[]
 }> = {
   'sarai-14': {
-    name: '14 MLD STP, Sarai',
+    name: '14 MLD STP, Sarai, Haridwar',
     status: 'Online',
     address: 'Sarai, Haridwar, Uttarakhand, 249404, India',
     createdOn: '15/02/2026 ,10:30 AM',
     lastSeen: '15/04/2026 ,10:30 AM',
     penalty: { amount: '₹7,000', reason: 'Parameter Breach' },
     inCharge: {
-      name: 'Sanjay kumar',
-      phone: '+91 8006358423',
-      email: 'sanjaykumar.tungalsingh@wabag.in',
+      name: 'Charu Aggarwal',
+      phone: '+91 7830600074',
+      email: 'charu.aggarwal@ukpjn.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'AAXIS NANO TECHNOLOGIES PVT  LTD', prefixId: '14mldsarai' },
+    vendor: { name: 'UKPJN', prefixId: '14mldsarai' },
     site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249404', lat: '29.94569', lng: '78.16425' },
     images: ['/stp-images/sarai-14.jpg', '/stp-images/sarai-14-2.jpg'],
   },
 
-  'lakkar-ghat-26': {
-    name: '26 MLD STP, Lakkar Ghat',
-    status: 'Online',
-    address: 'Lakkar Ghat, Rishikesh, Uttarakhand, 249201, India',
-    createdOn: '08/01/2026 ,08:45 AM',
-    lastSeen: '15/04/2026 ,10:29 AM',
-    penalty: { amount: '₹4,500', reason: 'Parameter Breach' },
-    inCharge: {
-      name: 'K. Semwal',
-      phone: '+91 98110 33418',
-      email: 'k.semwal@uttarakhandpeyjal.in',
-      role: 'Plant In charge',
-    },
-    vendor: { name: 'Ganga Enviro Systems Pvt. Ltd.', prefixId: '26mldlkgt2' },
-    site: { state: 'Uttarakhand', city: 'Rishikesh', zip: '249201', lat: '30.08690', lng: '78.26760' },
-    images: ['/stp-images/lakkar-ghat-26.jpg', '/stp-images/lakkar-ghat-26-2.jpg'],
-  },
   'jagjeetpur-68': {
-    name: '68 MLD STP, Jagjeetpur',
+    name: '68 MLD STP, Jagjeetpur, Haridwar',
     status: 'Online',
     address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹12,500', reason: 'Equipment Failure' },
     inCharge: {
-      name: 'M. Iyer',
-      phone: '+91 98110 55310',
-      email: 'm.iyer@upjalnigam.in',
+      name: 'Charu Aggarwal',
+      phone: '+91 7830600074',
+      email: 'charu.aggarwal@ukpjn.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '68mldjag' },
+    vendor: { name: 'UKPJN', prefixId: '68mldjag' },
     site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94520', lng: '78.16480' },
     images: ['/stp-images/jagjeetpur-68.jpg', '/stp-images/jagjeetpur-68-2.jpg'],
   },
-  'kargi-68': {
-    name: '68 MLD STP, Kargi',
+
+  'jagjeetpur-27-upg': {
+    name: '27 MLD STP, Jagjeetpur',
     status: 'Online',
-    address: 'Kargi, Dehradun, Uttarakhand, 248001, India',
+    address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'M. Iyer',
-      phone: '+91 98110 55310',
-      email: 'm.iyer@upjalnigam.in',
+      name: 'Ajay Kumar',
+      phone: '+91 7500831727',
+      email: 'ajay.kumar@ujs.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '68mldkargi' },
-    site: { state: 'Uttarakhand', city: 'Dehradun', zip: '248001', lat: '30.28840', lng: '78.00120' },
-    images: ['/stp-images/kargi-68.jpg', '/stp-images/kargi-68-2.jpg'],
+    vendor: { name: 'UJS', prefixId: '27mldjag_upg' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94490', lng: '78.16520' },
+    images: ['/stp-images/jagjeetpur-68.jpg'],
   },
+
+  'sarai-18-upg': {
+    name: '18 MLD STP, Sarai',
+    status: 'Online',
+    address: 'Sarai, Haridwar, Uttarakhand, 249404, India',
+    createdOn: '11/03/2026 ,11:40 AM',
+    lastSeen: '14/04/2026 ,06:05 PM',
+    penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
+    inCharge: {
+      name: 'Ajay Kumar',
+      phone: '+91 7500831727',
+      email: 'ajay.kumar@ujs.gov.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'UJS', prefixId: '18mldsarai_upg' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249404', lat: '29.94610', lng: '78.16390' },
+    images: ['/stp-images/sarai-18.jpg'],
+  },
+
+  'jagjeetpur-18': {
+    name: '18 MLD STP, Jagjeetpur, Haridwar',
+    status: 'Online',
+    address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
+    createdOn: '02/01/2026 ,09:15 AM',
+    lastSeen: '15/04/2026 ,10:28 AM',
+    penalty: { amount: '₹0', reason: 'No active penalty' },
+    inCharge: {
+      name: 'Ajay Kumar',
+      phone: '+91 7500831727',
+      email: 'ajay.kumar@ujs.gov.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'UJS', prefixId: '18mldjag' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94520', lng: '78.16480' },
+    images: ['/stp-images/jagjeetpur-18.jpg'],
+  },
+
+  'lakkar-ghat-26': {
+    name: '26 MLD STP, Lakkarghat, Rishikesh',
+    status: 'Online',
+    address: 'Lakkar Ghat, Rishikesh, Uttarakhand, 249201, India',
+    createdOn: '08/01/2026 ,08:45 AM',
+    lastSeen: '15/04/2026 ,10:29 AM',
+    penalty: { amount: '₹4,500', reason: 'Parameter Breach' },
+    inCharge: {
+      name: 'S.K. Verma',
+      phone: '+91 9412929493',
+      email: 'sk.verma@ukpjn.gov.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'UKPJN', prefixId: '26mldlkgt2' },
+    site: { state: 'Uttarakhand', city: 'Rishikesh', zip: '249201', lat: '30.08690', lng: '78.26760' },
+    images: ['/stp-images/lakkar-ghat-26.jpg', '/stp-images/lakkar-ghat-26-2.jpg'],
+  },
+
+  'indira-nagar-28': {
+    name: '28 MLD STP, Indira Nagar, Haldwani',
+    status: 'Online',
+    address: 'Indira Nagar, Haldwani, Nainital, Uttarakhand, 263139, India',
+    createdOn: '08/01/2026 ,08:45 AM',
+    lastSeen: '15/04/2026 ,10:29 AM',
+    penalty: { amount: '₹0', reason: 'No active penalty' },
+    inCharge: {
+      name: 'EE, Mechanical Division Haldwani',
+      phone: '+91 7830500458',
+      email: 'ee.mech.haldwani@ukpjn.gov.in',
+      role: 'Executive Engineer',
+    },
+    vendor: { name: 'UKPJN', prefixId: '28mldindira' },
+    site: { state: 'Uttarakhand', city: 'Haldwani', zip: '263139', lat: '29.21830', lng: '79.51260' },
+    images: ['/stp-images/haldwani-28.jpg'],
+  },
+
   'mothorowala-20': {
-    name: '20 MLD STP, Mothorowala',
+    name: '20 MLD STP, Mothorowala-1, Dehradun',
     status: 'Online',
     address: 'Mothorowala, Dehradun, Uttarakhand, 248001, India',
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'S. Rawat',
-      phone: '+91 98110 77841',
-      email: 's.rawat@uttarakhandpeyjal.in',
+      name: 'Baldev Singh Dogra',
+      phone: '+91 9411113824',
+      email: 'baldev.dogra@ujs.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Aqua Controls India Pvt. Ltd.', prefixId: '20mldmothorowala' },
+    vendor: { name: 'UJS', prefixId: '20mldmothorowala' },
     site: { state: 'Uttarakhand', city: 'Dehradun', zip: '248001', lat: '30.26720', lng: '78.00890' },
     images: ['/stp-images/mothorowala-20.jpg'],
   },
+
+  'kargi-68': {
+    name: '68 MLD STP, Kargi Chowk, Dehradun',
+    status: 'Online',
+    address: 'Kargi Chowk, Dehradun, Uttarakhand, 248001, India',
+    createdOn: '02/01/2026 ,09:15 AM',
+    lastSeen: '15/04/2026 ,10:28 AM',
+    penalty: { amount: '₹0', reason: 'No active penalty' },
+    inCharge: {
+      name: 'Ashish Bhatt',
+      phone: '+91 9012382583',
+      email: 'ashish.bhatt@ujs.gov.in',
+      role: 'Plant In charge',
+    },
+    vendor: { name: 'UJS', prefixId: '68mldkargi' },
+    site: { state: 'Uttarakhand', city: 'Dehradun', zip: '248001', lat: '30.28840', lng: '78.00120' },
+    images: ['/stp-images/kargi-68.jpg', '/stp-images/kargi-68-2.jpg'],
+  },
+
   'mothorowala-20-2': {
-    name: '20 MLD STP, Mothorowala 2',
+    name: '20 MLD STP, Mothorowala-2, Dehradun',
     status: 'Online',
     address: 'Mothorowala, Dehradun, Uttarakhand, 248001, India',
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'S. Rawat',
-      phone: '+91 98110 77841',
-      email: 's.rawat@uttarakhandpeyjal.in',
+      name: 'Baldev Singh Dogra',
+      phone: '+91 9411113824',
+      email: 'baldev.dogra@ujs.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Aqua Controls India Pvt. Ltd.', prefixId: '20mldmoth_2' },
+    vendor: { name: 'UJS', prefixId: '20mldmoth_2' },
     site: { state: 'Uttarakhand', city: 'Dehradun', zip: '248001', lat: '30.26910', lng: '78.01140' },
     images: ['/stp-images/mothorowala-20-2.jpg'],
   },
+
   'saliar-33': {
-    name: '33 MLD STP, Saliar, Roorkee',
+    name: '33 MLD STP, Saliyar, Roorkee',
     status: 'Online',
     address: 'Saliyar, Roorkee, Uttarakhand, 247667, India',
     createdOn: '02/01/2026 ,09:15 AM',
     lastSeen: '15/04/2026 ,10:28 AM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'M. Iyer',
-      phone: '+91 98110 55310',
-      email: 'm.iyer@upjalnigam.in',
+      name: 'Ajay Kumar',
+      phone: '+91 7500831727',
+      email: 'ajay.kumar@ujs.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'M/s R.K. Engineers, Sales Ltd. (Lead Partner)', prefixId: '33mldsali' },
+    vendor: { name: 'UJS', prefixId: '33mldsali' },
     site: { state: 'Uttarakhand', city: 'Roorkee', zip: '247667', lat: '29.85430', lng: '77.88800' },
     images: ['/stp-images/saliar-33.jpg'],
   },
-  'sarai-18': {
-    name: '18 MLD STP, Sarai',
-    status: 'Online',
-    address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
-    createdOn: '11/03/2026 ,11:40 AM',
-    lastSeen: '14/04/2026 ,06:05 PM',
-    penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
-    inCharge: {
-      name: 'S. Rawat',
-      phone: '+91 98110 77841',
-      email: 's.rawat@uttarakhandpeyjal.in',
-      role: 'Plant In charge',
-    },
-    vendor: { name: 'Aqua Controls India Pvt. Ltd.', prefixId: '18mldsar3' },
-    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94610', lng: '78.16390' },
-    images: ['/stp-images/sarai-18.jpg'],
-  },
+
   'bazpur-10': {
     name: '10 MLD STP, Bazpur',
     status: 'Online',
@@ -1257,31 +1446,68 @@ export const stpDetails: Record<string, {
     lastSeen: '14/04/2026 ,06:05 PM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'M. Iyer',
-      phone: '+91 98110 55310',
-      email: 'm.iyer@upjalnigam.in',
-      role: 'Plant In charge',
+      name: 'EE, Mechanical Division Haldwani',
+      phone: '+91 7830500458',
+      email: 'ee.mech.haldwani@ukpjn.gov.in',
+      role: 'Executive Engineer',
     },
-    vendor: { name: 'Eco Smart Solutions Pvt. Ltd.', prefixId: '10mldbazpur' },
+    vendor: { name: 'UKPJN', prefixId: '10mldbazpur' },
     site: { state: 'Uttarakhand', city: 'Bazpur', zip: '262401', lat: '29.15200', lng: '79.11000' },
     images: ['/stp-images/bazpur-10.jpg'],
   },
-  'jagjeetpur-18': {
-    name: '18 MLD STP, Jagjeetpur',
+
+  'kashipur-10': {
+    name: '10 MLD STP, Kashipur',
     status: 'Online',
-    address: 'Jagjeetpur, Haridwar, Uttarakhand, 249408, India',
-    createdOn: '02/01/2026 ,09:15 AM',
-    lastSeen: '15/04/2026 ,10:28 AM',
+    address: 'Kashipur, Udham Singh Nagar, Uttarakhand, 244713, India',
+    createdOn: '11/03/2026 ,11:40 AM',
+    lastSeen: '14/04/2026 ,06:05 PM',
     penalty: { amount: '₹0', reason: 'No active penalty' },
     inCharge: {
-      name: 'M. Iyer',
-      phone: '+91 98110 55310',
-      email: 'm.iyer@upjalnigam.in',
+      name: 'EE, Mechanical Division Haldwani',
+      phone: '+91 7830500458',
+      email: 'ee.mech.haldwani@ukpjn.gov.in',
+      role: 'Executive Engineer',
+    },
+    vendor: { name: 'UKPJN', prefixId: '10mldkashipur' },
+    site: { state: 'Uttarakhand', city: 'Kashipur', zip: '244713', lat: '29.21050', lng: '78.96190' },
+    images: ['/stp-images/kashipur-10.jpg'],
+  },
+
+  // Aliases for backwards compatibility with any query params
+  'sarai-18': {
+    name: '18 MLD STP, Sarai',
+    status: 'Online',
+    address: 'Sarai, Haridwar, Uttarakhand, 249404, India',
+    createdOn: '11/03/2026 ,11:40 AM',
+    lastSeen: '14/04/2026 ,06:05 PM',
+    penalty: { amount: '₹3,200', reason: 'Parameter Breach' },
+    inCharge: {
+      name: 'Ajay Kumar',
+      phone: '+91 7500831727',
+      email: 'ajay.kumar@ujs.gov.in',
       role: 'Plant In charge',
     },
-    vendor: { name: 'Nirmal Infratech Pvt. Ltd.', prefixId: '18mldjag' },
-    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249408', lat: '29.94520', lng: '78.16480' },
-    images: ['/stp-images/jagjeetpur-18.jpg'],
+    vendor: { name: 'UJS', prefixId: '18mldsarai_upg' },
+    site: { state: 'Uttarakhand', city: 'Haridwar', zip: '249404', lat: '29.94610', lng: '78.16390' },
+    images: ['/stp-images/sarai-18.jpg'],
+  },
+  'haldwani-28': {
+    name: '28 MLD STP, Indira Nagar, Haldwani',
+    status: 'Online',
+    address: 'Indira Nagar, Haldwani, Nainital, Uttarakhand, 263139, India',
+    createdOn: '08/01/2026 ,08:45 AM',
+    lastSeen: '15/04/2026 ,10:29 AM',
+    penalty: { amount: '₹0', reason: 'No active penalty' },
+    inCharge: {
+      name: 'EE, Mechanical Division Haldwani',
+      phone: '+91 7830500458',
+      email: 'ee.mech.haldwani@ukpjn.gov.in',
+      role: 'Executive Engineer',
+    },
+    vendor: { name: 'UKPJN', prefixId: '28mldindira' },
+    site: { state: 'Uttarakhand', city: 'Haldwani', zip: '263139', lat: '29.21830', lng: '79.51260' },
+    images: ['/stp-images/haldwani-28.jpg'],
   },
 }
 
@@ -2472,6 +2698,13 @@ export const cctvLogs = {
 
 const cctvSiteCameras = [
   {
+    stpId: 'sarai-14',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-01', location: 'Influent', status: 'Live', lastActive: '15/02/2026 ,10:30 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-01', location: 'Effluent', status: 'Offline', lastActive: '15/02/2026 ,10:30 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
     stpId: 'jagjeetpur-68',
     cameras: [
       { key: 'influent', id: 'CAM-IN-03', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,09:52 AM', timecode: '9:03:36:20', image: null },
@@ -2479,10 +2712,24 @@ const cctvSiteCameras = [
     ],
   },
   {
-    stpId: 'sarai-14',
+    stpId: 'jagjeetpur-27-upg',
     cameras: [
-      { key: 'influent', id: 'CAM-IN-01', location: 'Influent', status: 'Live', lastActive: '15/02/2026 ,10:30 AM', timecode: '9:03:36:20', image: null },
-      { key: 'effluent', id: 'CAM-EF-01', location: 'Effluent', status: 'Offline', lastActive: '15/02/2026 ,10:30 AM', timecode: '9:03:36:20', image: null },
+      { key: 'influent', id: 'CAM-IN-27', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-27', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'sarai-18-upg',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-18S', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-18S', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'jagjeetpur-18',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-18J', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-18J', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
     ],
   },
   {
@@ -2493,10 +2740,10 @@ const cctvSiteCameras = [
     ],
   },
   {
-    stpId: 'saliar-33',
+    stpId: 'indira-nagar-28',
     cameras: [
-      { key: 'influent', id: 'CAM-IN-06', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
-      { key: 'effluent', id: 'CAM-EF-06', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'influent', id: 'CAM-IN-28', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-28', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
     ],
   },
   {
@@ -2507,10 +2754,38 @@ const cctvSiteCameras = [
     ],
   },
   {
+    stpId: 'kargi-68',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-68K', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-68K', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
     stpId: 'mothorowala-20-2',
     cameras: [
       { key: 'influent', id: 'CAM-IN-08', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
       { key: 'effluent', id: 'CAM-EF-08', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'saliar-33',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-06', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-06', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'bazpur-10',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-10B', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-10B', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+    ],
+  },
+  {
+    stpId: 'kashipur-10',
+    cameras: [
+      { key: 'influent', id: 'CAM-IN-10K', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-10K', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
     ],
   },
 ]
@@ -2583,22 +2858,13 @@ export const equipmentInventory = {
 export const chemicalInventory = {
   filters: ['All', 'Adequate', 'Low Stock', 'Out of Stock'],
   columns: [
-    { key: 'name', label: 'Chemical Name', width: '26%' },
-    { key: 'category', label: 'Category', width: '18%', sortable: true },
-    { key: 'currentQty', label: 'Current Qty', width: '14%' },
-    { key: 'requiredQty', label: 'Required Qty', width: '15%' },
-    { key: 'daysLeft', label: 'Days Left', width: '12%' },
-    { key: 'status', label: 'Status', width: '15%', sortable: true },
+    { key: 'name', label: 'Chemical Name', width: '28%' },
+    { key: 'category', label: 'Category', width: '22%', sortable: true },
+    { key: 'currentQty', label: 'Quantity', width: '18%' },
+    { key: 'consumption', label: 'Consumption', width: '20%' },
+    { key: 'status', label: 'Status', width: '12%', sortable: true },
   ],
-  rows: [
-    { name: 'Alum (Liquid)', category: 'Coagulant', currentQty: '12.5', requiredQty: '-', daysLeft: '21', status: 'Adequate' },
-    { name: 'PAC', category: 'Disinfectant', currentQty: '12.5', requiredQty: '10.5', daysLeft: '8', status: 'Low Stock' },
-    { name: 'Sodium Hypochlorite', category: 'Disinfectant', currentQty: '-', requiredQty: '12.5', daysLeft: '0', status: 'Out of Stock' },
-    { name: 'Polyelectrolyte', category: 'Polymers', currentQty: '48.0', requiredQty: '-', daysLeft: '34', status: 'Adequate' },
-    { name: 'Caustic Soda', category: 'pH Adjusters', currentQty: '9.2', requiredQty: '15.0', daysLeft: '6', status: 'Low Stock' },
-    { name: 'Ferric Chloride', category: 'Coagulant', currentQty: '31.4', requiredQty: '-', daysLeft: '27', status: 'Adequate' },
-    { name: 'Antifoam Agent', category: 'Others', currentQty: '-', requiredQty: '5.0', daysLeft: '0', status: 'Out of Stock' },
-  ],
+  rows: BAZPUR_CHEMICAL_INVENTORY,
 }
 
 /** "All" maps to no filter; the rest match the row `status` values. */
@@ -2624,9 +2890,18 @@ export const inventoryByCategory = [
 export const reportStpOptions = [
   "All STP's",
   '14 MLD STP, Sarai, Haridwar',
-  '68 MLD STP, Sarai, Haridwar',
-  '26 MLD STP Lakkar Ghat',
-  '1.2 MLD Happy Valley, Dehradun',
+  '68 MLD STP, Jagjeetpur, Haridwar',
+  '27 MLD STP, Jagjeetpur',
+  '18 MLD STP, Sarai',
+  '18 MLD STP, Jagjeetpur, Haridwar',
+  '26 MLD STP, Lakkarghat, Rishikesh',
+  '28 MLD STP, Indira Nagar, Haldwani',
+  '20 MLD STP, Mothorowala-1, Dehradun',
+  '68 MLD STP, Kargi Chowk, Dehradun',
+  '20 MLD STP, Mothorowala-2, Dehradun',
+  '33 MLD STP, Saliyar, Roorkee',
+  '10 MLD STP, Bazpur',
+  '10 MLD STP, Kashipur',
 ]
 
 /* ---- Contracts report --------------------------------------------------- */
@@ -2643,11 +2918,11 @@ export const contractsReportColumns = [
 ]
 
 export const contractsReportRows = [
-  { id: 'CN-001', sno: 1, name: 'Haridwar STP Project', vendor: 'Eco Smart Solutions Pvt .Ltd.', stp: '14 MLD STP, Sarai, Haridwar', status: 'Active', startDate: '19 May 2026', endDate: '19 May 2026' },
-  { id: 'CN-002', sno: 2, name: 'Dehradun STP Project', vendor: 'ABC', stp: '1.2 MLD Happy Valley, Dehradun', status: 'Inactive', startDate: '19 May 2026', endDate: '19 May 2026' },
-  { id: 'CN-003', sno: 3, name: 'Lakkar Ghat O&M', vendor: 'Ganga Enviro Systems Pvt. Ltd.', stp: '26 MLD STP Lakkar Ghat', status: 'Active', startDate: '01 Apr 2026', endDate: '31 Mar 2029' },
-  { id: 'CN-004', sno: 4, name: 'Sludge Handling Upgrade', vendor: 'Nirmal Infratech Pvt. Ltd.', stp: '68 MLD STP, Sarai, Haridwar', status: 'Inactive', startDate: '12 Jan 2025', endDate: '11 Jan 2026' },
-  { id: 'CN-005', sno: 5, name: 'SCADA & Instrumentation AMC', vendor: 'Aqua Controls India Pvt. Ltd.', stp: '14 MLD STP, Sarai, Haridwar', status: 'Active', startDate: '05 Jun 2026', endDate: '04 Jun 2028' },
+  { id: 'CN-001', sno: 1, name: 'Haridwar STP Project', vendor: 'UKPJN', stp: '14 MLD STP, Sarai, Haridwar', status: 'Active', startDate: '19 May 2026', endDate: '19 May 2026' },
+  { id: 'CN-002', sno: 2, name: 'Dehradun STP Project', vendor: 'UJS', stp: '68 MLD STP, Kargi Chowk, Dehradun', status: 'Inactive', startDate: '19 May 2026', endDate: '19 May 2026' },
+  { id: 'CN-003', sno: 3, name: 'Lakkarghat O&M', vendor: 'UKPJN', stp: '26 MLD STP, Lakkarghat, Rishikesh', status: 'Active', startDate: '01 Apr 2026', endDate: '31 Mar 2029' },
+  { id: 'CN-004', sno: 4, name: 'Jagjeetpur 68 MLD Upgrade', vendor: 'UKPJN', stp: '68 MLD STP, Jagjeetpur, Haridwar', status: 'Inactive', startDate: '12 Jan 2025', endDate: '11 Jan 2026' },
+  { id: 'CN-005', sno: 5, name: 'SCADA & Instrumentation AMC', vendor: 'UJS', stp: '33 MLD STP, Saliyar, Roorkee', status: 'Active', startDate: '05 Jun 2026', endDate: '04 Jun 2028' },
 ]
 
 /* ---- Compliance report -------------------------------------------------- */
@@ -2667,11 +2942,11 @@ export const complianceReportColumns = [
 
 export const complianceReportRows = [
   { id: 'VL123456', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL1233520', stp: '26 MLD STP Lakkar Ghat', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
+  { id: 'VL1233520', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
   { id: 'VL123458', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
   { id: 'VL123461', stp: '68 MLD STP, Jagjeetpur, Haridwar', type: 'Parameter Breach', parameter: 'BOD', exceedance: '23.3%', location: 'Outlet', downtime: '3h 20min', penalty: '₹12,000', date: '22/02/2026', time: '02:05 PM', status: 'Pending' },
-  { id: 'VL123465', stp: '1.2 MLD Happy Valley, Dehradun', type: 'Equipment Failure', parameter: 'Flow', exceedance: '8.4%', location: 'Inlet', downtime: '0h 55min', penalty: '₹3,000', date: '26/02/2026', time: '09:40 AM', status: 'Recovered' },
-  { id: 'VL123470', stp: '26 MLD STP Lakkar Ghat', type: 'Parameter Breach', parameter: 'TSS', exceedance: '15.2%', location: 'Effluent', downtime: '2h 05min', penalty: '₹6,500', date: '28/02/2026', time: '11:15 AM', status: 'Pending' },
+  { id: 'VL123465', stp: '68 MLD STP, Kargi Chowk, Dehradun', type: 'Equipment Failure', parameter: 'Flow', exceedance: '8.4%', location: 'Inlet', downtime: '0h 55min', penalty: '₹3,000', date: '26/02/2026', time: '09:40 AM', status: 'Recovered' },
+  { id: 'VL123470', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'TSS', exceedance: '15.2%', location: 'Effluent', downtime: '2h 05min', penalty: '₹6,500', date: '28/02/2026', time: '11:15 AM', status: 'Pending' },
 ]
 
 /* ---- Manpower report ---------------------------------------------------- */
@@ -2752,8 +3027,8 @@ export const manpowerReportColumns = [
 export const manpowerReportRows = [
   { id: 'r1', date: '19 May 2026', stp: '14 MLD STP, Sarai, Haridwar', required: 35, total: 33, shortage: 2, present: 30, absent: 3, leave: 3, attendance: '85.71%', spark: [28, 30, 29, 31, 30, 32, 30] },
   { id: 'r2', date: '19 May 2026', stp: '68 MLD STP, Jagjeetpur, Haridwar', required: 28, total: 28, shortage: 2, present: 24, absent: 4, leave: 4, attendance: '85.71%', spark: [22, 24, 23, 25, 24, 26, 24] },
-  { id: 'r3', date: '19 May 2026', stp: '26 MLD STP Lakkar Ghat', required: 35, total: 33, shortage: 2, present: 30, absent: 3, leave: 3, attendance: '85.71%', spark: [29, 28, 30, 29, 31, 30, 30] },
-  { id: 'r4', date: '19 May 2026', stp: '1.2 MLD Happy Valley, Dehradun', required: 12, total: 11, shortage: 1, present: 10, absent: 1, leave: 1, attendance: '90.90%', spark: [9, 10, 10, 9, 11, 10, 10] },
+  { id: 'r3', date: '19 May 2026', stp: '26 MLD STP, Lakkarghat, Rishikesh', required: 35, total: 33, shortage: 2, present: 30, absent: 3, leave: 3, attendance: '85.71%', spark: [29, 28, 30, 29, 31, 30, 30] },
+  { id: 'r4', date: '19 May 2026', stp: '68 MLD STP, Kargi Chowk, Dehradun', required: 12, total: 11, shortage: 1, present: 10, absent: 1, leave: 1, attendance: '90.90%', spark: [9, 10, 10, 9, 11, 10, 10] },
   { id: 'r5', date: '18 May 2026', stp: '14 MLD STP, Sarai, Haridwar', required: 35, total: 34, shortage: 1, present: 31, absent: 2, leave: 2, attendance: '88.57%', spark: [30, 31, 30, 32, 31, 31, 31] },
 ]
 
@@ -2799,10 +3074,10 @@ export const cctvReportColumns = [
 export const cctvReportRows = [
   { id: 'c1', stp: '14 MLD STP, Sarai, Haridwar', cameraId: 'CAM-01', availability: '99.8%', interruptions: 1, downtime: '3h 12m', timestamp: '15/06/2026 ,10:30 AM', storage: '72%' },
   { id: 'c2', stp: '14 MLD STP, Sarai, Haridwar', cameraId: 'CAM-02', availability: '98.6%', interruptions: 1, downtime: '21h 35m', timestamp: '15/06/2026 ,10:30 AM', storage: '64%' },
-  { id: 'c3', stp: '26 MLD STP Lakkar Ghat', cameraId: 'CAM-01', availability: '95.2%', interruptions: 3, downtime: '0', timestamp: '-', storage: '98%' },
-  { id: 'c4', stp: '26 MLD STP Lakkar Ghat', cameraId: 'CAM-02', availability: '100%', interruptions: 0, downtime: '46h 10m', timestamp: '15/02/2026 ,10:30 AM', storage: '82%' },
+  { id: 'c3', stp: '26 MLD STP, Lakkarghat, Rishikesh', cameraId: 'CAM-01', availability: '95.2%', interruptions: 3, downtime: '0', timestamp: '-', storage: '98%' },
+  { id: 'c4', stp: '26 MLD STP, Lakkarghat, Rishikesh', cameraId: 'CAM-02', availability: '100%', interruptions: 0, downtime: '46h 10m', timestamp: '15/02/2026 ,10:30 AM', storage: '82%' },
   { id: 'c5', stp: '68 MLD STP, Jagjeetpur, Haridwar', cameraId: 'CAM-01', availability: '99.2%', interruptions: 2, downtime: '1 hr', timestamp: '15/02/2026 ,10:30 AM', storage: '60%' },
-  { id: 'c6', stp: '1.2 MLD Happy Valley, Dehradun', cameraId: 'CAM-01', availability: '97.4%', interruptions: 4, downtime: '8h 05m', timestamp: '15/02/2026 ,10:30 AM', storage: '55%' },
+  { id: 'c6', stp: '68 MLD STP, Kargi Chowk, Dehradun', cameraId: 'CAM-01', availability: '97.4%', interruptions: 4, downtime: '8h 05m', timestamp: '15/02/2026 ,10:30 AM', storage: '55%' },
 ]
 
 /* ---- Inventory report --------------------------------------------------- */
@@ -2823,8 +3098,8 @@ export const inventoryReportColumns = [
 export const inventoryReportRows = [
   { id: 'i1', stp: '14 MLD STP, Sarai, Haridwar', category: 'Coagulant', opening: 48, received: 510, consumed: 120, closing: 438, lowStock: 4, outOfStock: 1, updated: '15/06/2026 ,10:30 AM' },
   { id: 'i2', stp: '68 MLD STP, Jagjeetpur, Haridwar', category: 'Disinfectant', opening: 52, received: 480, consumed: 90, closing: 442, lowStock: 8, outOfStock: 3, updated: '15/06/2026 ,10:45 AM' },
-  { id: 'i3', stp: '26 MLD STP Lakkar Ghat', category: 'Polymers', opening: 45, received: 550, consumed: 100, closing: 495, lowStock: 2, outOfStock: 0, updated: '15/06/2026 ,10:45 AM' },
-  { id: 'i4', stp: '1.2 MLD Happy Valley, Dehradun', category: 'pH Adjusters', opening: 30, received: 220, consumed: 75, closing: 175, lowStock: 5, outOfStock: 2, updated: '15/06/2026 ,11:05 AM' },
+  { id: 'i3', stp: '26 MLD STP, Lakkarghat, Rishikesh', category: 'Polymers', opening: 45, received: 550, consumed: 100, closing: 495, lowStock: 2, outOfStock: 0, updated: '15/06/2026 ,10:45 AM' },
+  { id: 'i4', stp: '68 MLD STP, Kargi Chowk, Dehradun', category: 'pH Adjusters', opening: 30, received: 220, consumed: 75, closing: 175, lowStock: 5, outOfStock: 2, updated: '15/06/2026 ,11:05 AM' },
   { id: 'i5', stp: '14 MLD STP, Sarai, Haridwar', category: 'Others', opening: 18, received: 140, consumed: 60, closing: 98, lowStock: 3, outOfStock: 1, updated: '15/06/2026 ,11:20 AM' },
 ]
 
@@ -3147,7 +3422,7 @@ export const preferenceOptions = {
   dateFormat: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
   timeFormat: ['12-hour (10:30 AM)', '24-hour (10:30)'],
   landingPage: ['Dashboard', 'STP Management', 'Compliance', 'Data Reports'],
-  defaultStp: ['All STP’s', '14 MLD STP, Sarai', '68 MLD STP, Jagjeetpur', '26 MLD STP Lakkar Ghat'],
+  defaultStp: ['All STP’s', '14 MLD STP, Sarai', '68 MLD STP, Jagjeetpur', '26 MLD STP, Lakkarghat, Rishikesh'],
   rowsPerPage: ['10 rows', '25 rows', '50 rows', '100 rows'],
 }
 

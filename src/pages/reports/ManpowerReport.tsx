@@ -17,9 +17,7 @@ function hashString(str: string): number {
 
 function resolveFullStpName(plantLabel?: string, stpId?: string): string {
   if (stpId && stpDetails[stpId]?.name) {
-    const d = stpDetails[stpId]
-    const city = d.site?.city ? `, ${d.site.city}` : ''
-    return `${d.name}${city}`
+    return stpDetails[stpId].name
   }
   if (!plantLabel) return '68 MLD STP, Jagjeetpur, Haridwar'
 
@@ -27,14 +25,14 @@ function resolveFullStpName(plantLabel?: string, stpId?: string): string {
     const detailLower = detail.name.toLowerCase()
     const labelLower = plantLabel.toLowerCase()
     if (
+      detailLower === labelLower ||
       detailLower.includes(labelLower) ||
-      labelLower.includes(detailLower.replace(/\s*stp,?\s*/i, ' ').trim())
+      labelLower.includes(detailLower)
     ) {
-      const city = detail.site?.city ? `, ${detail.site.city}` : ''
-      return `${detail.name}${city}`
+      return detail.name
     }
   }
-  return plantLabel.includes('STP') ? plantLabel : `${plantLabel.replace(/(\d+\s*MLD)/i, '$1 STP,')}, Haridwar`
+  return plantLabel
 }
 
 function getDatesInRange(rangeStr?: string): Date[] {

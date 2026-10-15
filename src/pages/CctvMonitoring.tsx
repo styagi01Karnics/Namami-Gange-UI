@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Activity,
   ChevronLeft,
   ChevronRight,
   ChevronsDownUp,
@@ -65,22 +64,46 @@ function is20MldMothorowala2(item: { id?: string; plantCode?: string; stpId?: st
   return plantKey(item).some((key) => key === '20mldmoth_2' || key === 'mothorowala-20-2')
 }
 
+const OFFICIAL_CCTV_ORDER = [
+  '14mldsarai',
+  'sarai-14',
+  '68mldjag',
+  'jagjeetpur-68',
+  '27mldjag_upg',
+  'jagjeetpur-27-upg',
+  '18mldsarai_upg',
+  'sarai-18-upg',
+  '18mldjag',
+  'jagjeetpur-18',
+  '26mldlkgt2',
+  'lakkar-ghat-26',
+  '28mldindira',
+  'indira-nagar-28',
+  '20mldmothorowala',
+  'mothorowala-20',
+  '68mldkargi',
+  'kargi-68',
+  '20mldmoth_2',
+  'mothorowala-20-2',
+  '33mldsali',
+  'saliar-33',
+  '10mldbazpur',
+  'bazpur-10',
+  '10mldkashipur',
+  'kashipur-10',
+]
+
+function officialOrderIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
+  const keys = plantKey(item)
+  for (const k of keys) {
+    const idx = OFFICIAL_CCTV_ORDER.indexOf(k)
+    if (idx !== -1) return Math.floor(idx / 2)
+  }
+  return 999
+}
+
 function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string }>(items: T[]) {
-  const first = items.find(is14MldSarai)
-  const second = items.find(is68MldJagjeetpur)
-  const third = items.find(is33MldSaliar)
-  const fourth = items.find(is20MldMothorowala)
-  const fifth = items.find(is20MldMothorowala2)
-  const pinned = new Set([first, second, third, fourth, fifth].filter(Boolean))
-  const rest = items.filter((item) => !pinned.has(item))
-  return [
-    ...(first ? [first] : []),
-    ...(second ? [second] : []),
-    ...(third ? [third] : []),
-    ...(fourth ? [fourth] : []),
-    ...(fifth ? [fifth] : []),
-    ...rest,
-  ]
+  return [...items].sort((a, b) => officialOrderIndex(a) - officialOrderIndex(b))
 }
 
 /** Keep dropdown options on the same MLD sequence. */
@@ -257,7 +280,9 @@ export default function CctvMonitoring() {
         plantCode: option.plantCode || option.id,
         stpId: siteStpId,
       } as PlantOption)
-      const mockSite = cctvSites.find((site) => site.stpId === siteStpId)
+      const mockSite = cctvSites.find(
+        (site) => site.stpId === siteStpId || site.stpId === option.plantCode || site.stpId === option.id,
+      )
 
       return {
         id: option.id,
@@ -377,9 +402,9 @@ export default function CctvMonitoring() {
     const el = ref.current
     if (!el) return
     if (document.fullscreenElement) {
-      await document.exitFullscreen().catch(() => {})
+      await document.exitFullscreen().catch(() => { })
     } else {
-      await el.requestFullscreen().catch(() => {})
+      await el.requestFullscreen().catch(() => { })
     }
   }
 
@@ -439,12 +464,6 @@ export default function CctvMonitoring() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-[18px] font-bold leading-6 text-[#102653]">CCTV Monitoring</h1>
-                {view === 'carousel' && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D2E4F8] bg-[#F0F7FF] px-2.5 py-0.5 text-[11px] font-semibold text-[#0768D2]">
-                    <Activity size={12} className="text-[#16A765]" />
-                    Parallel Influent & Effluent
-                  </span>
-                )}
               </div>
               <p className="text-[12px] font-medium text-[#7085A2]">
                 {view === 'carousel'
@@ -470,18 +489,16 @@ export default function CctvMonitoring() {
               <button
                 type="button"
                 onClick={() => setView('carousel')}
-                className={`h-[29px] rounded-[6px] px-3 text-[11px] font-semibold transition-colors ${
-                  view === 'carousel' ? 'bg-[#0768D2] text-white shadow-sm' : 'text-[#536981] hover:text-[#102653]'
-                }`}
+                className={`h-[29px] rounded-[6px] px-3 text-[11px] font-semibold transition-colors ${view === 'carousel' ? 'bg-[#0768D2] text-white shadow-sm' : 'text-[#536981] hover:text-[#102653]'
+                  }`}
               >
                 Auto view
               </button>
               <button
                 type="button"
                 onClick={() => setView('list')}
-                className={`h-[29px] rounded-[6px] px-3 text-[11px] font-semibold transition-colors ${
-                  view === 'list' ? 'bg-[#0768D2] text-white shadow-sm' : 'text-[#536981] hover:text-[#102653]'
-                }`}
+                className={`h-[29px] rounded-[6px] px-3 text-[11px] font-semibold transition-colors ${view === 'list' ? 'bg-[#0768D2] text-white shadow-sm' : 'text-[#536981] hover:text-[#102653]'
+                  }`}
               >
                 Camera list
               </button>
@@ -492,11 +509,10 @@ export default function CctvMonitoring() {
         {/* View 1: Auto view tab */}
         {view === 'carousel' ? (
           <div
-            className={`grid grid-cols-1 gap-3.5 bg-[#F3F8FD] p-2.5 sm:p-3.5 transition-all ${
-              showQueue
+            className={`grid grid-cols-1 gap-3.5 bg-[#F3F8FD] p-2.5 sm:p-3.5 transition-all ${showQueue
                 ? 'lg:grid-cols-[minmax(0,1fr)_250px] xl:grid-cols-[minmax(0,1fr)_260px]'
                 : 'grid-cols-1'
-            }`}
+              }`}
           >
             {/* Left Column: Enlarged Camera Stream View */}
             <div className="flex min-w-0 flex-col gap-3">
@@ -519,11 +535,10 @@ export default function CctvMonitoring() {
                         type="button"
                         onClick={() => setCameraLayout('parallel')}
                         title="Side-by-side parallel view"
-                        className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${
-                          cameraLayout === 'parallel'
+                        className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${cameraLayout === 'parallel'
                             ? 'bg-[#0768D2] text-white shadow-xs'
                             : 'text-[#536981] hover:text-[#102653]'
-                        }`}
+                          }`}
                       >
                         <Columns size={12} />
                         <span>Side-by-Side</span>
@@ -532,11 +547,10 @@ export default function CctvMonitoring() {
                         type="button"
                         onClick={() => setCameraLayout('stacked')}
                         title="Full-width large stacked rows"
-                        className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${
-                          cameraLayout === 'stacked'
+                        className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${cameraLayout === 'stacked'
                             ? 'bg-[#0768D2] text-white shadow-xs'
                             : 'text-[#536981] hover:text-[#102653]'
-                        }`}
+                          }`}
                       >
                         <Rows3 size={12} />
                         <span>Large Rows</span>
@@ -548,11 +562,10 @@ export default function CctvMonitoring() {
                       type="button"
                       onClick={() => setShowQueue((prev) => !prev)}
                       title={showQueue ? 'Hide queue to maximize cameras' : 'Show queue'}
-                      className={`flex h-[28px] items-center gap-1 rounded-[6px] border px-2 text-[10.5px] font-semibold transition-colors ${
-                        !showQueue
+                      className={`flex h-[28px] items-center gap-1 rounded-[6px] border px-2 text-[10.5px] font-semibold transition-colors ${!showQueue
                           ? 'border-[#0768D2] bg-[#EAF4FF] text-[#0768D2]'
                           : 'border-[#DCE8F5] bg-white text-[#536981] hover:bg-[#F3F8FD]'
-                      }`}
+                        }`}
                     >
                       {showQueue ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
                       <span className="hidden md:inline">{showQueue ? 'Hide Queue' : 'Show Queue'}</span>
@@ -563,21 +576,17 @@ export default function CctvMonitoring() {
 
               {/* Cameras Container: Resized to be larger and adaptable */}
               <div
-                className={`grid gap-3 ${
-                  cameraLayout === 'parallel' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
-                }`}
+                className={`grid gap-3 ${cameraLayout === 'parallel' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
+                  }`}
               >
                 {/* Influent Stream Card */}
                 <div className="flex flex-col overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-[#111C29] shadow-sm">
                   {/* Influent Header */}
                   <div className="flex items-center justify-between border-b border-white/10 bg-[#162334] px-3.5 py-1.5 text-white">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex items-center gap-1 rounded-full bg-[#0768D2]/30 border border-[#0768D2]/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#93C5FD]">
+                      <span className="flex items-center gap-1.5 rounded-full border border-[#0768D2]/50 bg-[#0768D2]/30 px-2.5 py-0.5 text-[11px] font-semibold text-[#93C5FD]">
                         <Waves size={12} className="text-[#60A5FA]" />
-                        Influent Feed
-                      </span>
-                      <span className="truncate text-[11px] font-medium text-white/70">
-                        Raw Sewage · {influent.id || 'CAM 1'}
+                        Influent (Sewage Water)
                       </span>
                     </div>
 
@@ -646,12 +655,7 @@ export default function CctvMonitoring() {
                       }}
                     />
 
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-6 text-white">
-                      <div>
-                        <p className="text-[12px] font-semibold text-white">
-                          {activeSite?.name} · Influent
-                        </p>
-                      </div>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-end bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-6 text-white">
                       <span className="rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] text-white/80">
                         Ch {cameraChannel(influent, activeSite?.stpId)}
                       </span>
@@ -664,12 +668,9 @@ export default function CctvMonitoring() {
                   {/* Effluent Header */}
                   <div className="flex items-center justify-between border-b border-white/10 bg-[#162334] px-3.5 py-1.5 text-white">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex items-center gap-1 rounded-full bg-[#059669]/30 border border-[#059669]/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#6EE7B7]">
+                      <span className="flex items-center gap-1.5 rounded-full border border-[#059669]/50 bg-[#059669]/30 px-2.5 py-0.5 text-[11px] font-semibold text-[#6EE7B7]">
                         <Waves size={12} className="text-[#34D399]" />
-                        Effluent Feed
-                      </span>
-                      <span className="truncate text-[11px] font-medium text-white/70">
-                        Treated Water · {effluent.id || 'CAM 2'}
+                        Effluent (Treated Water)
                       </span>
                     </div>
 
@@ -738,12 +739,7 @@ export default function CctvMonitoring() {
                       }}
                     />
 
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-6 text-white">
-                      <div>
-                        <p className="text-[12px] font-semibold text-white">
-                          {activeSite?.name} · Effluent
-                        </p>
-                      </div>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-end bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-6 text-white">
                       <span className="rounded-full border border-white/20 bg-black/40 px-1.5 py-0.5 text-[9px] text-white/80">
                         Ch {cameraChannel(effluent, activeSite?.stpId)}
                       </span>
@@ -814,11 +810,10 @@ export default function CctvMonitoring() {
             {/* Right Column: Resized Slim STP Queue List */}
             {showQueue && (
               <aside
-                className={`flex flex-col min-h-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white shadow-xs ${
-                  cameraLayout === 'stacked'
+                className={`flex flex-col min-h-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white shadow-xs ${cameraLayout === 'stacked'
                     ? 'max-h-[720px] lg:max-h-[calc(100vh-180px)]'
                     : 'max-h-[490px] xl:max-h-[530px]'
-                }`}
+                  }`}
               >
                 {/* Queue Header */}
                 <div className="flex shrink-0 items-center justify-between border-b border-[#E9EFF6] bg-[#FAFDFE] px-3 py-2.5">
@@ -867,21 +862,19 @@ export default function CctvMonitoring() {
                           key={site.id}
                           type="button"
                           onClick={() => handleSelectSite(originalIndex)}
-                          className={`relative flex w-full flex-col overflow-hidden rounded-[8px] p-2 text-left transition-all ${
-                            isSelected
+                          className={`relative flex w-full flex-col overflow-hidden rounded-[8px] p-2 text-left transition-all ${isSelected
                               ? 'border-2 border-[#0768D2] bg-[#EBF4FE] shadow-xs'
                               : 'border border-[#E4EDF6] bg-white hover:border-[#BBD8F6] hover:bg-[#F9FBFE]'
-                          }`}
+                            }`}
                         >
                           {/* Top row: Plant name + Status pill */}
                           <div className="flex items-center justify-between gap-1.5">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span
-                                className={`grid size-6 shrink-0 place-items-center rounded-[5px] text-[11px] font-bold ${
-                                  isSelected
+                                className={`grid size-6 shrink-0 place-items-center rounded-[5px] text-[11px] font-bold ${isSelected
                                     ? 'bg-[#0768D2] text-white shadow-xs'
                                     : 'bg-[#EAF4FF] text-[#0768D2]'
-                                }`}
+                                  }`}
                               >
                                 <Video size={12} />
                               </span>
@@ -907,35 +900,32 @@ export default function CctvMonitoring() {
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center gap-1 font-medium text-[#4B637F]">
                                 <span
-                                  className={`size-1.5 rounded-full ${
-                                    streams.influent.status === 'Live' && streams.influent.streamUrl
+                                  className={`size-1.5 rounded-full ${streams.influent.status === 'Live' && streams.influent.streamUrl
                                       ? 'bg-[#16B978]'
                                       : hasCpvRecordings(site.stpId, site.plantCode)
                                         ? 'bg-[#F59E0B]'
                                         : 'bg-[#EF4444]'
-                                  }`}
+                                    }`}
                                 />
                                 IN
                               </span>
 
                               <span className="inline-flex items-center gap-1 font-medium text-[#4B637F]">
                                 <span
-                                  className={`size-1.5 rounded-full ${
-                                    streams.effluent.status === 'Live' && streams.effluent.streamUrl
+                                  className={`size-1.5 rounded-full ${streams.effluent.status === 'Live' && streams.effluent.streamUrl
                                       ? 'bg-[#16B978]'
                                       : hasCpvRecordings(site.stpId, site.plantCode)
                                         ? 'bg-[#F59E0B]'
                                         : 'bg-[#EF4444]'
-                                  }`}
+                                    }`}
                                 />
                                 EF
                               </span>
                             </div>
 
                             <span
-                              className={`text-[9.5px] font-semibold ${
-                                hasLiveStream ? 'text-[#16A765]' : 'text-[#7A8DA3]'
-                              }`}
+                              className={`text-[9.5px] font-semibold ${hasLiveStream ? 'text-[#16A765]' : 'text-[#7A8DA3]'
+                                }`}
                             >
                               {hasLiveStream ? 'Live' : 'Offline'}
                             </span>

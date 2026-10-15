@@ -153,9 +153,8 @@ export default function DateRangeField({ value, onChange, className = '', compac
   return (
     <div ref={rootRef} className={`relative ${className}`}>
       <div
-        className={`relative flex items-center rounded-[9px] border border-line bg-white pl-[14px] pr-[38px] ${
-          compact ? 'h-[32px]' : 'h-[38px]'
-        }`}
+        className={`relative flex items-center rounded-[9px] border border-line bg-white pl-[14px] pr-[38px] ${compact ? 'h-[32px]' : 'h-[38px]'
+          }`}
       >
         <input
           value={value}

@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
           timeout: 0,
           proxyTimeout: 0,
           configure: (proxy) => {
-            ;(proxy as unknown as DashboardProxy).on('proxyRes', (proxyRes, _req, res) => {
+            ; (proxy as unknown as DashboardProxy).on('proxyRes', (proxyRes, _req, res) => {
               const contentType = String(proxyRes.headers['content-type'] ?? '')
               if (contentType.includes('text/event-stream')) {
                 res.setHeader('Cache-Control', 'no-cache, no-transform')

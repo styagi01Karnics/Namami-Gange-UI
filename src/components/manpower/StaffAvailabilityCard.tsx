@@ -11,12 +11,11 @@ import { staffAvailability, staffStatusFilterMap } from '../../data/mockData'
 import type { TodayStaffRow } from './todayManpower'
 
 const STAFF_COLUMNS = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Employee' },
-  { key: 'role', label: 'Role' },
+  { key: 'id', label: 'SN' },
+  { key: 'name', label: 'Employee Name' },
+  { key: 'role', label: 'Designation' },
+  { key: 'contactNo', label: 'Contact No.' },
   { key: 'dept', label: 'Department' },
-  { key: 'date', label: 'Date' },
-  { key: 'punchTime', label: 'Punch Time' },
   { key: 'status', label: 'Status' },
 ]
 
@@ -34,6 +33,7 @@ export default function StaffAvailabilityCard({
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [sortDir, setSortDir] = useState(null)
+
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: `Staff Availability — ${dateLabel}`,
     fileName: `staff-availability-${new Date().toISOString().slice(0, 10)}`,
@@ -48,7 +48,9 @@ export default function StaffAvailabilityCard({
       const matchesStatus = !wanted || r.status === wanted
       const matchesQuery =
         !q ||
-        [r.name, r.id, r.role, r.dept].some((v) => String(v ?? '').toLowerCase().includes(q))
+        [r.name, r.id, r.role, r.dept, r.contactNo, r.empId].some((v) =>
+          String(v ?? '').toLowerCase().includes(q),
+        )
       return matchesStatus && matchesQuery
     })
 
@@ -90,22 +92,22 @@ export default function StaffAvailabilityCard({
             <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
               <thead className="sticky top-0 z-[1]">
                 <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF] [&>th]:bg-[#EFF7FF]">
-                  <th className="w-[12%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                    ID
+                  <th className="w-[8%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    SN
                   </th>
-                  <th className="w-[22%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                    Employee
+                  <th className="w-[24%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Employee Name
                   </th>
                   <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                    Role
+                    Designation
                   </th>
-                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                    Contact No.
+                  </th>
+                  <th className="w-[18%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     Department
                   </th>
-                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
-                    Punch Time
-                  </th>
-                  <th className="w-[16%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
+                  <th className="w-[14%] px-[16px] py-[16px] text-left text-[14px] font-semibold leading-[22px] text-[#363636]">
                     <button
                       type="button"
                       onClick={() => setSortDir((v) => (v === 'asc' ? 'desc' : 'asc'))}
@@ -128,8 +130,11 @@ export default function StaffAvailabilityCard({
                       r.status === 'Absent' ? 'bg-[#FFF5F5]' : index % 2 === 1 ? 'bg-[rgba(248,248,248,0.9)]' : 'bg-white'
                     }`}
                   >
-                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#0768D2] underline">
-                      {r.id}
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#0768D2]">
+                      <span className="underline">{r.id}</span>
+                      {r.empId ? (
+                        <span className="block text-[11px] font-normal text-[#71829A]">{r.empId}</span>
+                      ) : null}
                     </td>
                     <td className="px-[16px] py-[18px]">
                       <span className="flex items-center gap-[9px] text-[14px] font-medium leading-[22px] text-[#07121E]">
@@ -140,11 +145,17 @@ export default function StaffAvailabilityCard({
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
                       {r.role}
                     </td>
+                    <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#0768D2]">
+                      {r.contactNo ? (
+                        <a href={`tel:${r.contactNo}`} className="hover:underline">
+                          {r.contactNo}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="px-[16px] py-[18px] text-[14px] font-medium leading-[22px] text-[#07121E]">
                       {r.dept}
-                    </td>
-                    <td className={`px-[16px] py-[18px] text-[14px] font-medium leading-[22px] ${r.status === 'Absent' ? 'text-[#B42318]' : 'text-[#07121E]'}`}>
-                      {r.punchTime}
                     </td>
                     <td className="px-[16px] py-[18px]">
                       <StatusPill

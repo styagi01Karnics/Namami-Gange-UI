@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Maximize2, X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
@@ -142,10 +143,16 @@ export default function StpHeaderCard({
   }
   plantCode?: string
 }) {
+  const navigate = useNavigate()
   const [showDetails, setShowDetails] = useState(false)
   const [vendorName, setVendorName] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
+
+  const handleViewLocation = () => {
+    const stpKey = plantCode || stp.vendor?.prefixId || stp.name
+    navigate(`/dashboard?stp=${encodeURIComponent(stpKey)}`)
+  }
 
   const rawImages = resolveImages(stp, plantCode)
   const images = rawImages.filter((src) => !failedImages[src])
@@ -186,13 +193,15 @@ export default function StpHeaderCard({
             </StatusPill>
           </div>
 
-          <p
-            className="mt-[8px] flex items-center gap-[6px] text-[14px] font-semibold leading-[22px] text-[#F69A30] underline decoration-solid underline-offset-[3px]"
-            title={stp.address}
+          <button
+            type="button"
+            onClick={handleViewLocation}
+            className="mt-[8px] flex cursor-pointer items-center gap-[6px] text-[14px] font-semibold leading-[22px] text-[#F69A30] underline decoration-solid underline-offset-[3px] transition-colors hover:text-[#D97706]"
+            title={`View ${stp.name} on map`}
           >
             <PinIcon size={16} className="shrink-0" />
             View Location
-          </p>
+          </button>
 
           <button
             type="button"

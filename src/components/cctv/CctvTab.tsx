@@ -65,11 +65,6 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
         return
       }
 
-      if (stpId && stpId !== 'jagjeetpur-68') {
-        setCameras([])
-        return
-      }
-
       await fetchCctvSites()
       const nextCameras = await fetchCctvCameras()
       setCameras(nextCameras)
