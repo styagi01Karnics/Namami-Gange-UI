@@ -1,4 +1,4 @@
-﻿import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { liveStpData } from '../../data/mockData'
 import { stpRealtimePath } from '../../routes'
@@ -133,9 +133,9 @@ export default function LiveStpDataCard() {
                   </Link>
                   <span
                     title={stp.operator}
-                    className={`inline-flex h-[22px] max-w-[112px] shrink-0 items-center truncate rounded-full px-[7px] text-[10px] font-semibold ${isActive ? 'bg-[#EAF3EC] text-[#168E3F]' : 'bg-[#FEECEC] text-[#C0392B]'}`}
+                    className="inline-flex h-[22px] max-w-[112px] shrink-0 items-center truncate rounded-full bg-[#EAF3EC] px-[7px] text-[10px] font-semibold text-[#168E3F]"
                   >
-                    {stp.operator} · {isActive ? 'Online' : 'Offline'}
+                    {stp.operator} · Online
                   </span>
                 </div>
                 <div className="mt-[6px] flex gap-[16px]">
