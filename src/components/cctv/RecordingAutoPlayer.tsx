@@ -24,7 +24,7 @@ export default function RecordingAutoPlayer({
         if (!clip) {
           const effluent =
             recording.channel === 2 || /effluent|outlet/i.test(recording.location ?? '')
-          setLabel(effluent ? 'Live stream error' : 'No recording available')
+          setLabel(effluent ? 'Live stream error' : 'Feed unavailable')
           return
         }
         setSrc(clip.streamUrl)
@@ -32,9 +32,9 @@ export default function RecordingAutoPlayer({
       })
       .catch((error) => {
         if (!cancelled) {
-          const raw = error instanceof Error ? error.message : 'Unable to play recording'
+          const raw = error instanceof Error ? error.message : 'Unable to play feed'
           if (/authorization|token|unauthorized/i.test(raw)) {
-            setLabel('Connecting to recording server…')
+            setLabel('Connecting to server…')
           } else {
             setLabel(raw)
           }
@@ -76,7 +76,7 @@ export default function RecordingAutoPlayer({
       onCanPlay={(event) => {
         event.currentTarget.play().catch(() => { })
       }}
-      onError={() => setLabel('Unable to play this recording')}
+      onError={() => setLabel('Unable to play this feed')}
     />
   )
 }

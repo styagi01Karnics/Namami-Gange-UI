@@ -994,7 +994,7 @@ export default function CctvMonitoring() {
           <div className="flex max-h-[min(72vh,760px)] min-h-0 flex-col gap-[12px] overflow-hidden p-3 sm:p-4">
             <div className="flex shrink-0 items-center justify-between gap-3">
               <p className="text-[12px] text-[#7085A2]">
-                Browse every STP and camera. STPs with active live streaming or recording are shown on top, followed by
+                Browse every STP and camera. STPs with active live streaming are shown on top, followed by
                 offline plants.
               </p>
               {expandAllButton}
