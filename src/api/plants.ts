@@ -39,6 +39,7 @@ export type PlantOption = {
 
 /** Official 13 STPs strictly aligned with master details. */
 export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
+  { id: '10mldbazpur', label: '10 MLD STP, Bazpur', plantCode: '10mldbazpur', stpId: 'bazpur-10' },
   { id: '14mldsarai', label: '14 MLD STP, Sarai, Haridwar', plantCode: '14mldsarai', stpId: 'sarai-14' },
   { id: '68mldjag', label: '68 MLD STP, Jagjeetpur, Haridwar', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
   { id: '27mldjag_upg', label: '27 MLD STP, Jagjeetpur', plantCode: '27mldjag_upg', stpId: 'jagjeetpur-27-upg' },
@@ -50,13 +51,13 @@ export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
   { id: '68mldkargi', label: '68 MLD STP, Kargi Chowk, Dehradun', plantCode: '68mldkargi', stpId: 'kargi-68' },
   { id: '20mldmoth_2', label: '20 MLD STP, Mothorowala-2, Dehradun', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
   { id: '33mldsali', label: '33 MLD STP, Saliyar, Roorkee', plantCode: '33mldsali', stpId: 'saliar-33' },
-  { id: '10mldbazpur', label: '10 MLD STP, Bazpur', plantCode: '10mldbazpur', stpId: 'bazpur-10' },
   { id: '10mldkashipur', label: '10 MLD STP, Kashipur', plantCode: '10mldkashipur', stpId: 'kashipur-10' },
 ]
 
 export const ALL_STP_FILTER_OPTION = { id: 'all', label: "All STP's" } as const
 
 const OFFICIAL_ORDER = [
+  '10mldbazpur',
   '14mldsarai',
   '68mldjag',
   '27mldjag_upg',
@@ -68,7 +69,6 @@ const OFFICIAL_ORDER = [
   '68mldkargi',
   '20mldmoth_2',
   '33mldsali',
-  '10mldbazpur',
   '10mldkashipur',
 ]
 

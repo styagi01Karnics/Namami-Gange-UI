@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import LiveCameraFeed from './LiveCameraFeed'
+import RecordingPlaybackCard from './RecordingPlaybackCard'
 import {
   fetchCctvCameras,
   fetchCctvSites,
   getCamerasForStp,
+  hasCpvRecordings,
   isCameraOnline,
   type CctvCamera,
 } from '../../api/cctv'
@@ -66,7 +68,7 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
       }
 
       await fetchCctvSites()
-      const nextCameras = await fetchCctvCameras()
+      const nextCameras = await fetchCctvCameras(plantCode || stpId)
       setCameras(nextCameras)
     } finally {
       setLoading(false)
@@ -79,10 +81,11 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
 
   const stats = useMemo(() => {
     const total = cameras.length
-    const online = cameras.filter(isCameraOnline).length
+    const canRecord = hasCpvRecordings(stpId, plantCode)
+    const online = cameras.filter((c) => isCameraOnline(c) || canRecord).length
     const offline = total - online
     return { total, online, offline }
-  }, [cameras])
+  }, [cameras, stpId, plantCode])
 
   return (
     <div className="space-y-[14px]">
@@ -94,6 +97,7 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
         </div>
         <LiveCameraFeed cameras={cameras} loading={loading} stpId={stpId} plantCode={plantCode} />
       </div>
+      <RecordingPlaybackCard cameras={cameras} stpId={stpId} plantCode={plantCode} />
     </div>
   )
 }

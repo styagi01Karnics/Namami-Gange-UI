@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ChevronLeft,
   ChevronRight,
@@ -6,6 +7,7 @@ import {
   ChevronsUpDown,
   Columns,
   Expand,
+  ExternalLink,
   Maximize,
   Maximize2,
   PanelRightClose,
@@ -77,40 +79,40 @@ function is10MldBazpur(item: { id?: string; plantCode?: string; stpId?: string }
 }
 
 const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
-  '14mldsarai': 0,
-  'sarai-14': 0,
-  '14mld': 0,
-  '68mldjag': 1,
-  'jagjeetpur-68': 1,
-  '68mld': 1,
-  '27mldjag_upg': 2,
-  'jagjeetpur-27-upg': 2,
-  '18mldsarai_upg': 3,
-  'sarai-18-upg': 3,
-  '18mldjag': 4,
-  'jagjeetpur-18': 4,
-  '26mldlkgt2': 5,
-  'lakkar-ghat-26': 5,
-  '26mld': 5,
-  '26mldlakkar': 5,
-  '26mldrishikesh': 5,
-  'rishikesh': 5,
-  '20mldrishikesh': 5,
-  '28mldindira': 6,
-  'indira-nagar-28': 6,
-  '20mldmothorowala': 7,
-  'mothorowala-20': 7,
-  '68mldkargi': 8,
-  'kargi-68': 8,
-  '20mldmoth_2': 9,
-  'mothorowala-20-2': 9,
-  '33mldsali': 10,
-  'saliar-33': 10,
-  '33mld_sal': 10,
-  '10mldbazpur': 11,
-  'bazpur-10': 11,
-  'bazpur': 11,
-  '10mld': 11,
+  '10mldbazpur': 0,
+  'bazpur-10': 0,
+  'bazpur': 0,
+  '10mld': 0,
+  '14mldsarai': 1,
+  'sarai-14': 1,
+  '14mld': 1,
+  '68mldjag': 2,
+  'jagjeetpur-68': 2,
+  '68mld': 2,
+  '27mldjag_upg': 3,
+  'jagjeetpur-27-upg': 3,
+  '18mldsarai_upg': 4,
+  'sarai-18-upg': 4,
+  '18mldjag': 5,
+  'jagjeetpur-18': 5,
+  '26mldlkgt2': 6,
+  'lakkar-ghat-26': 6,
+  '26mld': 6,
+  '26mldlakkar': 6,
+  '26mldrishikesh': 6,
+  'rishikesh': 6,
+  '20mldrishikesh': 6,
+  '28mldindira': 7,
+  'indira-nagar-28': 7,
+  '20mldmothorowala': 8,
+  'mothorowala-20': 8,
+  '68mldkargi': 9,
+  'kargi-68': 9,
+  '20mldmoth_2': 10,
+  'mothorowala-20-2': 10,
+  '33mldsali': 11,
+  'saliar-33': 11,
+  '33mld_sal': 11,
   '10mldkashipur': 12,
   'kashipur-10': 12,
 }
@@ -251,8 +253,20 @@ function getSiteStreams(site: StpSite) {
 }
 
 export default function CctvMonitoring() {
+  const [searchParams] = useSearchParams()
+  const plantParam = searchParams.get('plant') || searchParams.get('stp')
   const [stpOptions, setStpOptions] = useState(() => pinFilterPlantOptions(toFilterPlantOptions([])))
-  const [stpId, setStpId] = useState<string>(ALL_STP_FILTER_OPTION.id)
+  const [stpId, setStpId] = useState<string>(() => {
+    if (!plantParam) return ALL_STP_FILTER_OPTION.id
+    const initial = pinFilterPlantOptions(toFilterPlantOptions([]))
+    const match = initial.find(
+      (o) =>
+        o.id.toLowerCase() === plantParam.toLowerCase() ||
+        o.plantCode?.toLowerCase() === plantParam.toLowerCase() ||
+        o.stpId?.toLowerCase() === plantParam.toLowerCase(),
+    )
+    return match?.id ?? ALL_STP_FILTER_OPTION.id
+  })
   const [openIds, setOpenIds] = useState<string[]>(() =>
     pinFilterPlantOptions(toFilterPlantOptions([]))
       .filter((option) => option.id !== ALL_STP_FILTER_OPTION.id)
@@ -294,7 +308,17 @@ export default function CctvMonitoring() {
       if (cancelled) return
       const next = pinFilterPlantOptions(toFilterPlantOptions(plants))
       setStpOptions(next)
-      setStpId((current) => (next.some((option) => option.id === current) ? current : ALL_STP_FILTER_OPTION.id))
+
+      const fromQuery = plantParam
+        ? next.find(
+            (o) =>
+              o.id.toLowerCase() === plantParam.toLowerCase() ||
+              o.plantCode?.toLowerCase() === plantParam.toLowerCase() ||
+              o.stpId?.toLowerCase() === plantParam.toLowerCase(),
+          )?.id
+        : undefined
+
+      setStpId((current) => fromQuery ?? (next.some((option) => option.id === current) ? current : ALL_STP_FILTER_OPTION.id))
 
       const allIds = next
         .filter((option) => option.id !== ALL_STP_FILTER_OPTION.id)
@@ -306,7 +330,7 @@ export default function CctvMonitoring() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [plantParam])
 
   useEffect(() => {
     let cancelled = false
@@ -626,6 +650,15 @@ export default function CctvMonitoring() {
                       {showQueue ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
                       <span className="hidden md:inline">{showQueue ? 'Hide Queue' : 'Show Queue'}</span>
                     </button>
+
+                    <Link
+                      to={`/stp/cctv?plant=${encodeURIComponent(activeSite.plantCode || activeSite.stpId || activeSite.id)}`}
+                      title="Open in STP Management CCTV tab"
+                      className="flex h-[28px] items-center gap-1 rounded-[6px] border border-[#DCE8F5] bg-white px-2 text-[10.5px] font-semibold text-[#0768D2] hover:bg-[#F3F8FD] transition-colors"
+                    >
+                      <ExternalLink size={12} />
+                      <span className="hidden lg:inline">STP CCTV Tab</span>
+                    </Link>
                   </div>
                 </div>
               )}

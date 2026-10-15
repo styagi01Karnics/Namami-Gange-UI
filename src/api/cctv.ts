@@ -312,9 +312,12 @@ export async function fetchCctvSites() {
   }
 }
 
-export async function fetchCctvCameras() {
+export async function fetchCctvCameras(plantCode?: string) {
   try {
-    const response = await fetch(`${CCTV_API}/cameras`)
+    const url = plantCode
+      ? `${CCTV_API}/cameras?plantCode=${encodeURIComponent(plantCode)}`
+      : `${CCTV_API}/cameras`
+    const response = await fetch(url)
     if (!response.ok) return DEFAULT_CAMERAS
 
     const data = await parseJsonSafely<CctvCamera[]>(response)
