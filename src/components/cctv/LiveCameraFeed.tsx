@@ -22,6 +22,7 @@ function cameraToFeed(camera: CctvCamera) {
     status: online ? 'Live' : 'Offline',
     streamUrl: getStreamUrl(siteCode, camera.channel, camera),
     player: camera.player,
+
   }
 }
 
