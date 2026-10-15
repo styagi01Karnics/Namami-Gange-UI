@@ -21,21 +21,23 @@ export function CameraStill({
   recording,
   liveFailed = false,
 }: {
-  camera
+  camera: any
   sceneId: string
   recording?: RecordingTarget | null
   liveFailed?: boolean
 }) {
-  const claimedLive = Boolean(camera.streamUrl) && camera.status === 'Live' && !liveFailed
+  const hasLiveUrl = Boolean(camera.streamUrl) && !liveFailed
   // WHEP players (14 MLD) report their own errors — do not block them on the CCTV health API.
-  const needsProbe = claimedLive && camera.player !== 'whep'
-  const [liveOk, setLiveOk] = useState(!needsProbe)
+  const needsProbe = hasLiveUrl && camera.player !== 'whep'
+  const [liveOk, setLiveOk] = useState(!needsProbe && hasLiveUrl)
   const [whepFailed, setWhepFailed] = useState(false)
+  const [iframeFailed, setIframeFailed] = useState(false)
 
   useEffect(() => {
     setWhepFailed(false)
+    setIframeFailed(false)
     if (!needsProbe) {
-      setLiveOk(claimedLive)
+      setLiveOk(hasLiveUrl)
       return undefined
     }
 
@@ -48,9 +50,10 @@ export function CameraStill({
     return () => {
       cancelled = true
     }
-  }, [needsProbe, claimedLive, camera.streamUrl])
+  }, [needsProbe, hasLiveUrl, camera.streamUrl])
 
-  if (claimedLive && liveOk && !whepFailed) {
+  // Priority 1: Live streaming
+  if (hasLiveUrl && liveOk && !whepFailed && !iframeFailed) {
     if (camera.player === 'whep') {
       return (
         <MediaMtxWhepPlayer
@@ -66,15 +69,18 @@ export function CameraStill({
         title={camera.location}
         src={camera.streamUrl}
         allow="autoplay; fullscreen"
+        onError={() => setIframeFailed(true)}
         className="absolute inset-0 h-full w-full border-0"
       />
     )
   }
 
+  // Priority 2: Recording (fallback when camera live streaming is not working)
   if (recording) {
     return <RecordingAutoPlayer recording={recording} title={camera.location} />
   }
 
+  // Priority 3: Offline fallback still/scene
   const dimmed = camera.status !== 'Live'
   return (
     <>

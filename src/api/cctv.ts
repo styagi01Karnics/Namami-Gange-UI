@@ -412,16 +412,21 @@ function clipStartMs(clip: { startTime: string }) {
 }
 
 function sortClipsForPeriod(clips: RecordingClip[], period: RecordingPeriod) {
-  const playableFirst = (left: RecordingClip, right: RecordingClip) => {
-    const leftOk = left.sizeBytes <= AUTO_PLAY_MAX_BYTES ? 0 : 1
-    const rightOk = right.sizeBytes <= AUTO_PLAY_MAX_BYTES ? 0 : 1
-    if (leftOk !== rightOk) return leftOk - rightOk
-    return clipStartMs(right) - clipStartMs(left)
-  }
-  return [
-    ...clips.filter((clip) => clipPeriod(clip) === period).sort(playableFirst),
-    ...clips.filter((clip) => clipPeriod(clip) !== period).sort(playableFirst),
-  ]
+  const isPlayable = (clip: RecordingClip) =>
+    clip.sizeBytes <= AUTO_PLAY_MAX_BYTES && clip.sizeBytes >= 5 * 1024 * 1024
+
+  const playableClips = clips.filter(isPlayable)
+  const otherClips = clips.filter((c) => !isPlayable(c))
+
+  const byRecency = (a: RecordingClip, b: RecordingClip) => clipStartMs(b) - clipStartMs(a)
+
+  const playableInPeriod = playableClips.filter((c) => clipPeriod(c) === period).sort(byRecency)
+  const playableOtherPeriod = playableClips.filter((c) => clipPeriod(c) !== period).sort(byRecency)
+
+  const otherInPeriod = otherClips.filter((c) => clipPeriod(c) === period).sort(byRecency)
+  const otherOtherPeriod = otherClips.filter((c) => clipPeriod(c) !== period).sort(byRecency)
+
+  return [...playableInPeriod, ...playableOtherPeriod, ...otherInPeriod, ...otherOtherPeriod]
 }
 
 export type RecordingTarget = {
@@ -485,6 +490,39 @@ export async function startPeriodPlayback(input: {
 
 export async function loadPeriodRecording(input: RecordingTarget) {
   const period = input.period ?? currentRecordingPeriod()
+
+  // 1. Check if backend /api/feed endpoint returns an optimized ready clip for this camera/channel
+  try {
+    const params = new URLSearchParams()
+    if (input.stpId) params.set('stpId', input.stpId)
+    if (input.plantCode) params.set('plantCode', input.plantCode)
+    params.set('channel', String(input.channel))
+
+    const response = await fetch(`${CCTV_API}/feed?${params.toString()}`)
+    const feed = await response.json().catch(() => null)
+    if (
+      response.ok &&
+      feed?.success &&
+      feed?.streamUrl &&
+      (!feed.sizeBytes || feed.sizeBytes <= AUTO_PLAY_MAX_BYTES)
+    ) {
+      return {
+        id: String(feed.clipId ?? `${input.channel}`),
+        channel: Number(feed.channel ?? input.channel),
+        fileName: String(feed.fileName ?? ''),
+        startTime: String(feed.startTime ?? ''),
+        endTime: String(feed.endTime ?? ''),
+        sizeBytes: Number(feed.sizeBytes ?? 0),
+        player: 'mp4' as CameraPlayer,
+        ready: true,
+        streamUrl: String(feed.streamUrl),
+        period,
+      } satisfies ReadyRecording
+    }
+  } catch {
+    // Fall back to querying /api/recordings
+  }
+
   const listed = await fetchRecordings({
     plantCode: input.plantCode,
     stpId: input.stpId,

@@ -33,21 +33,16 @@ export default function CameraFeedTile({
   recording?: RecordingTarget
 }) {
   const isOffline = feed.status === 'Offline'
-  const [streaming, setStreaming] = useState(!isOffline && Boolean(feed.streamUrl))
+  const hasLiveUrl = Boolean(feed.streamUrl)
   // WHEP (14 MLD) connects in the browser; only iframe/MediaMTX pages need a backend probe.
-  const [liveOk, setLiveOk] = useState(feed.player === 'whep')
+  const [liveOk, setLiveOk] = useState(feed.player === 'whep' && hasLiveUrl)
+  const [liveFailed, setLiveFailed] = useState(false)
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const running = feed.status !== 'Offline' && Boolean(feed.streamUrl)
-    setStreaming(running)
-    setLiveOk(feed.player === 'whep')
-    setMessage('')
-  }, [feed.cameraId, feed.status, feed.streamUrl, feed.player])
-
-  useEffect(() => {
-    if (!streaming || !feed.streamUrl || isOffline) {
+    setLiveFailed(false)
+    if (!hasLiveUrl) {
       setLiveOk(false)
       return undefined
     }
@@ -65,11 +60,11 @@ export default function CameraFeedTile({
     return () => {
       cancelled = true
     }
-  }, [streaming, feed.streamUrl, feed.player, isOffline])
+  }, [hasLiveUrl, feed.streamUrl, feed.player])
 
   async function handleStart() {
     if (!feed.cameraId) {
-      setStreaming(true)
+      setLiveFailed(false)
       return
     }
 
@@ -78,7 +73,7 @@ export default function CameraFeedTile({
 
     try {
       await startCameraStream(feed.cameraId)
-      setStreaming(true)
+      setLiveFailed(false)
       setMessage('Start command sent. Waiting for stream...')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to start camera')
@@ -89,7 +84,7 @@ export default function CameraFeedTile({
 
   async function handleStop() {
     if (!feed.cameraId) {
-      setStreaming(false)
+      setLiveFailed(true)
       return
     }
 
@@ -97,14 +92,16 @@ export default function CameraFeedTile({
 
     try {
       await stopCameraStream(feed.cameraId)
-      setStreaming(false)
+      setLiveFailed(true)
       setMessage('Stop command sent.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Unable to stop camera')
     }
   }
 
-  const showStream = streaming && !isOffline && liveOk && Boolean(feed.streamUrl)
+  // Priority 1: Live streaming
+  const showStream = hasLiveUrl && liveOk && !liveFailed
+  // Priority 2: Recording (fallback if live streaming is not working)
   const showRecording = Boolean(recording) && !showStream
 
   return (
@@ -114,20 +111,21 @@ export default function CameraFeedTile({
           <MediaMtxWhepPlayer
             src={feed.streamUrl!}
             title={feed.location}
-            onError={() => setLiveOk(false)}
+            onError={() => setLiveFailed(true)}
           />
         ) : showStream ? (
           <iframe
             title={feed.location}
             src={feed.streamUrl}
             allow="autoplay; fullscreen"
+            onError={() => setLiveFailed(true)}
             className="absolute inset-0 h-full w-full border-0"
           />
         ) : showRecording && recording ? (
           <RecordingAutoPlayer recording={recording} title={feed.location} />
         ) : feed.image ? (
           <img src={feed.image} alt={`${feed.location} camera`} className="h-full w-full object-cover" />
-        ) : isOffline || !streaming ? (
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#1a2430] px-4 text-center">
             <div>
               <p className="text-[12px] font-medium uppercase tracking-wide text-[#9ca3af]">Camera stopped</p>
@@ -143,8 +141,6 @@ export default function CameraFeedTile({
               )}
             </div>
           </div>
-        ) : (
-          <PlantScene id={`scene-${feed.key}`} />
         )}
 
         {isOffline && feed.image && <div className="absolute inset-0 bg-white/45" />}
