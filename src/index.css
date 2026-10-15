@@ -61,6 +61,26 @@ body {
   background: transparent;
 }
 
+/* Explicitly visible camera queue scrollbar */
+.queue-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #94A3B8 #F1F5F9;
+}
+.queue-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.queue-scrollbar::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 4px;
+}
+.queue-scrollbar::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 4px;
+}
+.queue-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #0768D2;
+}
+
 /* Custom GIS callouts extend beyond the exact-coordinate marker. */
 .leaflet-marker-icon.stp-map-label-marker {
   border: 0;

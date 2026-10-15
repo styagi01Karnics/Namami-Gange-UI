@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import CameraFeedTile from './CameraFeedTile'
 import {
   cameraLocationLabel,
@@ -36,15 +37,24 @@ export default function LiveCameraFeed({
   plantCode?: string
 }) {
   const canRecord = hasCpvRecordings(stpId, plantCode)
+
+  const sortedCameras = useMemo(() => {
+    return [...cameras].sort((a, b) => {
+      const aLive = isCameraOnline(a) ? 1 : 0
+      const bLive = isCameraOnline(b) ? 1 : 0
+      return bLive - aLive
+    })
+  }, [cameras])
+
   return (
     <section className="rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       {loading ? (
-        <p className="text-[13px] text-ink-soft">Loading cameras...</p>
-      ) : cameras.length === 0 ? (
+        <p className="text-[13px] text-ink-soft">Loading...</p>
+      ) : sortedCameras.length === 0 ? (
         <p className="text-[13px] text-ink-soft">No cameras registered yet.</p>
       ) : (
         <div className="grid grid-cols-2 gap-[13px]">
-          {cameras.map((camera, i) => (
+          {sortedCameras.map((camera, i) => (
             <CameraFeedTile
               key={camera.id}
               feed={cameraToFeed(camera)}
@@ -52,11 +62,11 @@ export default function LiveCameraFeed({
               recording={
                 canRecord
                   ? {
-                      plantCode,
-                      stpId,
-                      channel: camera.channel,
-                      location: cameraLocationLabel(camera),
-                    }
+                    plantCode,
+                    stpId,
+                    channel: camera.channel,
+                    location: cameraLocationLabel(camera),
+                  }
                   : undefined
               }
             />

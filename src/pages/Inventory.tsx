@@ -23,7 +23,7 @@ export default function Inventory() {
           <DateRangeField value={range} onChange={setRange} className="ml-auto w-[54%]" />
 
           <div className="mt-[15px]">
-            <InventoryTab />
+            <InventoryTab stpId={stpId} />
           </div>
         </Card>
       </div>

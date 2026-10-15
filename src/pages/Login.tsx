@@ -139,11 +139,10 @@ export default function Login() {
                   type="button"
                   onClick={() => setLoginRole(role.id)}
                   aria-pressed={selected}
-                  className={`h-9 rounded-[9px] text-[13px] font-semibold leading-5 transition-colors sm:text-[14px] [@media(min-height:820px)]:h-[44px] [@media(min-height:820px)]:text-[14.5px] ${
-                    selected
+                  className={`h-9 rounded-[9px] text-[13px] font-semibold leading-5 transition-colors sm:text-[14px] [@media(min-height:820px)]:h-[44px] [@media(min-height:820px)]:text-[14.5px] ${selected
                       ? 'bg-[#003C7A] text-white shadow-sm'
                       : 'bg-[#DFEFFF] text-[#003C7A] hover:bg-white/70'
-                  }`}
+                    }`}
                 >
                   {role.label}
                 </button>

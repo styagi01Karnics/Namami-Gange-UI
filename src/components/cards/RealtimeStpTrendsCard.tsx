@@ -255,7 +255,6 @@ export default function RealtimeStpTrendsCard() {
       <section className="mt-3 rounded-[9px] border border-[#E5EEF8] bg-white p-2">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <h3 className="text-[11px] font-bold text-[#243955]">All STPs - Current Reading ({parameter})</h3>
-          <div className="flex items-center gap-2 text-[11px] text-[#637891]"><span className="size-2.5 rounded-full bg-[#16B98B]" /> Normal <span className="size-2.5 rounded-full bg-[#F5B700]" /> Warning <span className="size-2.5 rounded-full bg-[#F04444]" /> Breach</div>
         </div>
         <div className="mt-1.5 grid grid-cols-1 gap-2 xl:grid-cols-2">
           {visibleGroups.map((group, groupIndex) => (

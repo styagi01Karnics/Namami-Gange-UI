@@ -4,6 +4,7 @@ import { TrendingUp } from 'lucide-react'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
+import { formatParameterName } from '../../lib/parameters'
 
 type CriticalTab = (typeof criticalStps.tabs)[number]
 
@@ -12,7 +13,8 @@ const COLUMNS = [
   { key: 'capacity', label: 'Capacity (MLD)' },
   { key: 'district', label: 'District' },
   { key: 'omDept', label: 'O&M Dept' },
-  { key: 'param', label: 'Non-Complying Param' },
+  { key: 'param', label: 'Non-Complying Parameter (Outlet)' },
+  { key: 'value', label: 'Exceeded Value' },
   { key: 'range', label: 'Range' },
   { key: 'time', label: 'Time' },
 ] as const
@@ -81,13 +83,16 @@ export default function CriticalStpCard() {
                 <td className="px-[12px] py-[16px]">
                   <div className="flex flex-col items-start gap-[6px]">
                     <span className="inline-flex h-[28px] min-w-[72px] items-center justify-center rounded-[4px] bg-[#F4FAFF] px-[8px] text-[12px] font-semibold leading-4 text-[#0768D2]">
-                      {row.param.label}
+                      {formatParameterName(row.param.label)}
                     </span>
                     <span className="inline-flex h-[20px] items-center gap-[2px] rounded-full bg-[#F5E7E7] px-[6px] text-[10px] font-medium leading-[14px] text-[#DC2626]">
                       <TrendingUp size={12} strokeWidth={2.4} />
                       {row.param.delta}
                     </span>
                   </div>
+                </td>
+                <td className="px-[12px] py-[16px] text-[13px] font-bold text-[#DC2626]">
+                  {'value' in row.param && row.param.value ? row.param.value : '—'}
                 </td>
                 <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.range}</td>
                 <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.time}</td>

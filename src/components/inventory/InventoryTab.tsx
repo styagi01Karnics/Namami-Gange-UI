@@ -4,7 +4,7 @@ import EquipmentOverviewCard from './EquipmentOverviewCard'
 import InventorySubTabs, { type InventorySubTab } from './InventorySubTabs'
 
 /** Shared by the Inventory page and the Inventory tab in STP Management. */
-export default function InventoryTab() {
+export default function InventoryTab({ stpId, plantCode }: { stpId?: string; plantCode?: string } = {}) {
   const [subTab, setSubTab] = useState<InventorySubTab>('Chemical')
 
   const isChemical = subTab === 'Chemical'
@@ -14,7 +14,7 @@ export default function InventoryTab() {
       <InventorySubTabs active={subTab} onChange={setSubTab} />
 
       {isChemical ? (
-        <ChemicalOverviewCard />
+        <ChemicalOverviewCard stpId={stpId} plantCode={plantCode} />
       ) : (
         <EquipmentOverviewCard />
       )}

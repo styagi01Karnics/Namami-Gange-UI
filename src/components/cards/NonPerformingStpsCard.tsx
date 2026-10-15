@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
-
-
+import { formatParameterName } from '../../lib/parameters'
 
 const COLUMNS = [
   { key: 'number', label: '#' },
@@ -11,15 +10,19 @@ const COLUMNS = [
   { key: 'capacity', label: 'Capacity (MLD)' },
   { key: 'district', label: 'District' },
   { key: 'omDept', label: 'O&M Dept' },
-  { key: 'param', label: 'Non-Complying Parameter' },
+  { key: 'param', label: 'Non-Complying Parameter (Outlet)' },
+  { key: 'value', label: 'Exceeded Value' },
   { key: 'range', label: 'Limit' },
   { key: 'time', label: 'Time' },
 ] as const
 
-function ParamBreachCell({ label }: { label: string }) {
+function ParamBreachCell({ label, value }: { label: string; value?: string }) {
   return (
-    <span className="inline-flex max-w-full items-center justify-center truncate rounded-[5px] bg-[#F4FAFF] px-[7px] py-1 text-[11px] font-semibold leading-4 text-[#0768D2]">
-      {label.replaceAll('_', ' ').toUpperCase()}
+    <span
+      className="inline-flex max-w-full items-center justify-center truncate rounded-[5px] bg-[#F4FAFF] px-[7px] py-1 text-[11px] font-semibold leading-4 text-[#0768D2]"
+      title={value ? `${formatParameterName(label)}: ${value}` : formatParameterName(label)}
+    >
+      {formatParameterName(label)}
     </span>
   )
 }
@@ -42,14 +45,14 @@ export default function NonPerformingStpsCard() {
         </div>
       </div>
 
-      <div className="mt-[10px] min-h-0 flex-1 overflow-hidden px-[8px]">
-        <table className="w-full table-fixed border-collapse">
+      <div className="mt-[10px] min-h-0 flex-1 overflow-auto scroll-thin px-[8px] max-h-[calc(4*42px+34px)]">
+        <table className="w-full min-w-[720px] table-fixed border-collapse">
           <thead className="sticky top-0 z-[1]">
-            <tr className="border-y border-[#D8EDFF] bg-[#EFF7FF]">
+            <tr className="h-[34px] border-y border-[#D8EDFF] bg-[#EFF7FF]">
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-[5px] py-[8px] text-left text-[11px] font-semibold leading-[14px] text-[#40536B] ${col.key === 'number' ? 'w-[28px]' : ''} ${col.key === 'capacity' ? 'w-[64px]' : ''} ${col.key === 'district' ? 'w-[78px]' : ''} ${col.key === 'omDept' ? 'w-[96px]' : ''} ${col.key === 'param' ? 'w-[126px]' : ''} ${col.key === 'range' ? 'w-[60px]' : ''} ${col.key === 'time' ? 'w-[104px]' : ''}`}
+                  className={`px-[5px] py-[8px] text-left text-[11px] font-semibold leading-[14px] text-[#40536B] ${col.key === 'number' ? 'w-[24px]' : ''} ${col.key === 'capacity' ? 'w-[56px]' : ''} ${col.key === 'district' ? 'w-[72px]' : ''} ${col.key === 'omDept' ? 'w-[88px]' : ''} ${col.key === 'param' ? 'w-[130px]' : ''} ${col.key === 'value' ? 'w-[86px]' : ''} ${col.key === 'range' ? 'w-[54px]' : ''} ${col.key === 'time' ? 'w-[94px]' : ''}`}
                 >
                   {col.label}
                 </th>
@@ -79,7 +82,10 @@ export default function NonPerformingStpsCard() {
                   {row.omDept}
                 </td>
                 <td className="px-[4px] py-[5px] align-middle">
-                  <ParamBreachCell label={row.param.label} />
+                  <ParamBreachCell label={row.param.label} value={'value' in row.param ? row.param.value : undefined} />
+                </td>
+                <td className="px-[5px] py-[6px] align-middle text-[11px] font-bold text-[#DC2626]">
+                  {'value' in row.param && row.param.value ? row.param.value : '—'}
                 </td>
                 <td className="px-[5px] py-[6px] align-middle text-[11px] font-medium text-[#07121E]">
                   {row.range}

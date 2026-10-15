@@ -57,9 +57,10 @@ export const MENU_ITEMS: MenuItem[] = [
  * they pick up the same accent colour and icon as the STP Management tabs.
  */
 export const REPORT_TABS: ReportTab[] = [
+  { label: 'STP Parameter', path: '/reports/parameters' },
+  { label: 'CCTV', path: '/reports/cctv-monitoring' },
   { label: 'Manpower', path: '/reports/manpower' },
   { label: 'Inventory', path: '/reports/inventory' },
-  { label: 'CCTV', path: '/reports/cctv-monitoring' },
   { label: 'Contracts', path: '/reports/contracts' },
   { label: 'Violation', path: '/reports/compliance' },
 ]

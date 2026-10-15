@@ -13,6 +13,7 @@ import SupportTickets from './pages/SupportTickets'
 import SupportTicketsAdmin from './pages/SupportTicketsAdmin'
 import LiveDelayOffline from './pages/LiveDelayOffline'
 import Inventory from './pages/Inventory'
+import StpParameterReport from './pages/reports/StpParameterReport'
 import ContractsReport from './pages/reports/ContractsReport'
 import ComplianceReport from './pages/reports/ComplianceReport'
 import ManpowerReport from './pages/reports/ManpowerReport'
@@ -39,6 +40,8 @@ const BUILT_PATHS = [
   '/support-tickets-admin',
   '/live-delay-offline',
   '/inventory',
+  '/reports',
+  '/reports/parameters',
   '/reports/contracts',
   '/reports/compliance',
   '/reports/manpower',
@@ -79,6 +82,8 @@ function AppRoutesInner() {
       <Route path="/support-tickets-admin/:ticketId" element={<SupportTicketsAdmin />} />
       <Route path="/live-delay-offline" element={<LiveDelayOffline />} />
       <Route path="/inventory" element={<Inventory />} />
+      <Route path="/reports" element={<Navigate to="/reports/parameters" replace />} />
+      <Route path="/reports/parameters" element={<StpParameterReport />} />
       <Route path="/reports/contracts" element={<ContractsReport />} />
       <Route path="/reports/compliance" element={<ComplianceReport />} />
       <Route path="/reports/manpower" element={<ManpowerReport />} />

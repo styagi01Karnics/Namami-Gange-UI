@@ -26,6 +26,7 @@ import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
 import {
   FALLBACK_PLANT_OPTIONS,
+  PLANT_CODE_TO_STP_ID,
   loadPlantPickerOptions,
   resolveStpDetail,
   type PlantOption,
@@ -46,10 +47,18 @@ const TAB_BODY = {
 
 function resolvePlantId(options: PlantOption[], plantParam: string | null) {
   if (!plantParam) return null
-  const byCode = options.find((option) => option.id === plantParam || option.plantCode === plantParam)
-  if (byCode) return byCode.id
-  const byStp = options.find((option) => option.stpId === plantParam)
-  return byStp?.id ?? plantParam
+  const clean = plantParam.trim().toLowerCase()
+  const match = options.find(
+    (option) =>
+      option.id.toLowerCase() === clean ||
+      option.plantCode.toLowerCase() === clean ||
+      option.stpId?.toLowerCase() === clean ||
+      option.label.toLowerCase() === clean ||
+      clean.includes(option.id.toLowerCase()) ||
+      clean.includes(option.stpId?.toLowerCase() ?? ''),
+  )
+  if (match) return match.id
+  return plantParam
 }
 
 function currentInventoryMonth() {
@@ -67,7 +76,7 @@ export default function StpManagement() {
   const { tab: slug } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const plantParam = searchParams.get('plant')
+  const plantParam = searchParams.get('plant') || searchParams.get('stp')
   const focusParam = searchParams.get('focus')
   const [plantOptions, setPlantOptions] = useState(FALLBACK_PLANT_OPTIONS)
   const [plantCode, setPlantCode] = useState(
@@ -144,7 +153,7 @@ export default function StpManagement() {
             id: plantParam,
             label: searchParams.get('name') ?? plantParam,
             plantCode: plantParam,
-            stpId: plantParam,
+            stpId: PLANT_CODE_TO_STP_ID[plantParam] ?? plantParam,
           }
         : plantOptions[0]),
     [plantOptions, plantCode, plantParam, searchParams],
@@ -218,7 +227,7 @@ export default function StpManagement() {
       <span className="flex h-[32px] shrink-0 items-center whitespace-nowrap rounded-[9px] border border-line bg-white px-[14px] text-[13px] font-medium text-ink">
         {previousMonth.label}
       </span>
-    ) : (
+    ) : tab === 'CCTV' ? null : (
       <DateRangeField compact value={range} onChange={setRange} className="w-[236px] shrink-0" />
     )
 

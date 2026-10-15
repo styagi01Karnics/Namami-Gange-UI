@@ -8,18 +8,21 @@ export type DashboardPlant = {
   tables?: Record<string, string>
 }
 
-/** Maps API plant codes to existing mock STP detail keys used by CCTV and headers. */
-const PLANT_CODE_TO_STP_ID: Record<string, string> = {
-  '68mldjag': 'jagjeetpur-68',
-  '68mldkargi': 'kargi-68',
-  '18mldjag': 'sarai-18',
-  '33mldsali': 'saliar-33',
+export const PLANT_CODE_TO_STP_ID: Record<string, string> = {
   '14mldsarai': 'sarai-14',
-  '20mldmothorowala': 'mothorowala-20',
-  '20mldmoth_2': 'mothorowala-20-2',
-  '27mldknh4': 'kankhal-27',
-  '5mldbgp6': 'bhagwanpur-5',
+  '68mldjag': 'jagjeetpur-68',
+  '27mldjag_upg': 'jagjeetpur-27-upg',
+  '18mldsarai_upg': 'sarai-18-upg',
+  '18mldjag': 'jagjeetpur-18',
   '26mldlkgt2': 'lakkar-ghat-26',
+  '26mldlakkar': 'lakkar-ghat-26',
+  '28mldindira': 'indira-nagar-28',
+  '20mldmothorowala': 'mothorowala-20',
+  '68mldkargi': 'kargi-68',
+  '20mldmoth_2': 'mothorowala-20-2',
+  '33mldsali': 'saliar-33',
+  '10mldbazpur': 'bazpur-10',
+  '10mldkashipur': 'kashipur-10',
 }
 
 export type PlantOption = {
@@ -29,27 +32,46 @@ export type PlantOption = {
   stpId: string
 }
 
-/** Used before `/dashboard/plants` loads (and if that call fails). */
+/** Official 13 STPs strictly aligned with master details. */
 export const FALLBACK_PLANT_OPTIONS: PlantOption[] = [
-  { id: '68mldjag', label: '68 MLD Jagjeetpur', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
-  { id: '68mldkargi', label: '68 MLD Kargi', plantCode: '68mldkargi', stpId: 'kargi-68' },
-  { id: '18mldjag', label: '18 MLD Jagjeetpur', plantCode: '18mldjag', stpId: 'sarai-18' },
-  { id: '33mldsali', label: '33 MLD Saliar', plantCode: '33mldsali', stpId: 'saliar-33' },
-  { id: '14mldsarai', label: '14 MLD Sarai', plantCode: '14mldsarai', stpId: 'sarai-14' },
-  { id: '20mldmothorowala', label: '20 MLD Mothorowala', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
-  { id: '20mldmoth_2', label: '20 MLD Mothorowala 2', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
-  { id: '27mldknh4', label: '27 MLD Kankhal', plantCode: '27mldknh4', stpId: 'kankhal-27' },
-  { id: '5mldbgp6', label: '5 MLD Bhagwanpur', plantCode: '5mldbgp6', stpId: 'bhagwanpur-5' },
-  { id: '26mldlkgt2', label: '26 MLD Lakkar Ghat', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26' },
+  { id: '14mldsarai', label: '14 MLD STP, Sarai, Haridwar', plantCode: '14mldsarai', stpId: 'sarai-14' },
+  { id: '68mldjag', label: '68 MLD STP, Jagjeetpur, Haridwar', plantCode: '68mldjag', stpId: 'jagjeetpur-68' },
+  { id: '27mldjag_upg', label: '27 MLD STP, Jagjeetpur', plantCode: '27mldjag_upg', stpId: 'jagjeetpur-27-upg' },
+  { id: '18mldsarai_upg', label: '18 MLD STP, Sarai', plantCode: '18mldsarai_upg', stpId: 'sarai-18-upg' },
+  { id: '18mldjag', label: '18 MLD STP, Jagjeetpur, Haridwar', plantCode: '18mldjag', stpId: 'jagjeetpur-18' },
+  { id: '26mldlkgt2', label: '26 MLD STP, Lakkarghat, Rishikesh', plantCode: '26mldlkgt2', stpId: 'lakkar-ghat-26' },
+  { id: '28mldindira', label: '28 MLD STP, Indira Nagar, Haldwani', plantCode: '28mldindira', stpId: 'indira-nagar-28' },
+  { id: '20mldmothorowala', label: '20 MLD STP, Mothorowala-1, Dehradun', plantCode: '20mldmothorowala', stpId: 'mothorowala-20' },
+  { id: '68mldkargi', label: '68 MLD STP, Kargi Chowk, Dehradun', plantCode: '68mldkargi', stpId: 'kargi-68' },
+  { id: '20mldmoth_2', label: '20 MLD STP, Mothorowala-2, Dehradun', plantCode: '20mldmoth_2', stpId: 'mothorowala-20-2' },
+  { id: '33mldsali', label: '33 MLD STP, Saliyar, Roorkee', plantCode: '33mldsali', stpId: 'saliar-33' },
+  { id: '10mldbazpur', label: '10 MLD STP, Bazpur', plantCode: '10mldbazpur', stpId: 'bazpur-10' },
+  { id: '10mldkashipur', label: '10 MLD STP, Kashipur', plantCode: '10mldkashipur', stpId: 'kashipur-10' },
 ]
 
 export const ALL_STP_FILTER_OPTION = { id: 'all', label: "All STP's" } as const
 
-/** Dropdown options for Data Reports / Live Camera Feed: All STP's + plantName. */
+const OFFICIAL_ORDER = [
+  '14mldsarai',
+  '68mldjag',
+  '27mldjag_upg',
+  '18mldsarai_upg',
+  '18mldjag',
+  '26mldlkgt2',
+  '28mldindira',
+  '20mldmothorowala',
+  '68mldkargi',
+  '20mldmoth_2',
+  '33mldsali',
+  '10mldbazpur',
+  '10mldkashipur',
+]
+
+/** Dropdown options for Data Reports / Live Camera Feed: All STP's + 13 official plants. */
 export function toFilterPlantOptions(
   plants: DashboardPlant[],
 ): Array<{ id: string; label: string; plantCode?: string; stpId?: string }> {
-  const options = plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
+  const options = toPlantOptions(plants)
   return [
     ALL_STP_FILTER_OPTION,
     ...options.map((plant) => ({
@@ -61,39 +83,41 @@ export function toFilterPlantOptions(
   ]
 }
 
-function sortPlants(plants: DashboardPlant[]) {
-  return [...plants].sort((a, b) => a.plantName.localeCompare(b.plantName, undefined, { numeric: true }))
-}
+function matchStpId(plantCode: string, plantName?: string) {
+  if (PLANT_CODE_TO_STP_ID[plantCode]) return PLANT_CODE_TO_STP_ID[plantCode]
 
-function matchStpId(plant: DashboardPlant) {
-  if (PLANT_CODE_TO_STP_ID[plant.plantCode]) return PLANT_CODE_TO_STP_ID[plant.plantCode]
-
-  const name = plant.plantName.toLowerCase()
+  const name = (plantName ?? '').toLowerCase()
   const match = Object.entries(stpDetails).find(([, detail]) => {
     const detailName = detail.name.toLowerCase()
-    return detailName.includes(name) || name.includes(detailName.replace(/\s*stp,?\s*/i, ' ').trim())
+    return detailName.includes(name) || (name && detailName.replace(/\s*stp,?\s*/i, ' ').trim().includes(name))
   })
 
-  return match?.[0] ?? plant.plantCode
+  return match?.[0] ?? plantCode
 }
 
-/** One dropdown option per API plant — label is `plantName` from /dashboard/plants. */
+/**
+ * Returns all 13 official STPs in strictly canonical order.
+ * Merges any live API data (e.g. tables) from /dashboard/plants, while guaranteeing
+ * the exact 13 names and ordering from the official master list.
+ */
 export function toPlantOptions(plants: DashboardPlant[]): PlantOption[] {
-  const seen = new Set<string>()
+  const byCode = new Map<string, DashboardPlant>()
+  for (const plant of plants || []) {
+    if (plant?.plantCode) {
+      byCode.set(plant.plantCode.toLowerCase().trim(), plant)
+    }
+  }
 
-  return sortPlants(plants)
-    .filter((plant) => Boolean(plant?.plantCode && plant?.plantName))
-    .filter((plant) => {
-      if (seen.has(plant.plantCode)) return false
-      seen.add(plant.plantCode)
-      return true
-    })
-    .map((plant) => ({
-      id: plant.plantCode,
-      label: String(plant.plantName).trim(),
-      plantCode: plant.plantCode,
-      stpId: matchStpId(plant),
-    }))
+  return FALLBACK_PLANT_OPTIONS.map((canonical) => {
+    const apiPlant = byCode.get(canonical.plantCode.toLowerCase())
+    return {
+      id: canonical.plantCode,
+      label: canonical.label,
+      plantCode: canonical.plantCode,
+      stpId: canonical.stpId,
+      ...(apiPlant?.tables ? { tables: apiPlant.tables } : {}),
+    }
+  })
 }
 
 export function resolveStpDetail(option: PlantOption | undefined) {
@@ -101,9 +125,10 @@ export function resolveStpDetail(option: PlantOption | undefined) {
 
   if (!option) return fallback
 
-  const base = stpDetails[option.stpId]
+  const stpKey = option.stpId || PLANT_CODE_TO_STP_ID[option.plantCode] || PLANT_CODE_TO_STP_ID[option.id] || option.id
+  const base = stpDetails[stpKey] || stpDetails[PLANT_CODE_TO_STP_ID[option.plantCode]] || stpDetails[PLANT_CODE_TO_STP_ID[option.id]]
   if (base) {
-    return { ...base, name: option.label }
+    return base
   }
 
   return {
@@ -122,15 +147,9 @@ export function resolveStpDetail(option: PlantOption | undefined) {
 
 export function toPlantNameByCode(plants: DashboardPlant[]): Record<string, string> {
   const map: Record<string, string> = {}
-  for (const plant of plants.length > 0 ? plants : FALLBACK_PLANT_OPTIONS.map((p) => ({
-    plantCode: p.plantCode,
-    plantName: p.label,
-  }))) {
-    map[plant.plantCode] = plant.plantName
-  }
-  // Fallbacks always available even when API succeeds for a subset.
   for (const plant of FALLBACK_PLANT_OPTIONS) {
-    if (!map[plant.plantCode]) map[plant.plantCode] = plant.label
+    map[plant.plantCode] = plant.label
+    map[plant.stpId] = plant.label
   }
   return map
 }
@@ -155,5 +174,5 @@ export function dashboardResourceUrl(plantCode: string, resource: 'live' | 'inle
 
 export async function loadPlantPickerOptions(): Promise<PlantOption[]> {
   const plants = await fetchDashboardPlants()
-  return plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
+  return toPlantOptions(plants)
 }
