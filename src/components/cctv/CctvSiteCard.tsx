@@ -11,7 +11,7 @@ const PinIcon = ico('fluent:location-24-filled')
 
 function channelOf(camera: LiveSiteCamera, siteStpId?: string) {
   if (camera.channel) return camera.channel
-  const is20Mld = /mothorowala-20|20mld/i.test(siteStpId ?? '')
+  const is20Mld = /mothorowala|20mldmoth/i.test(siteStpId ?? '')
   const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
   if (is20Mld) {
     return isEffluent ? 1 : 2

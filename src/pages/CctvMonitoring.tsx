@@ -66,40 +66,59 @@ function is20MldMothorowala2(item: { id?: string; plantCode?: string; stpId?: st
   return plantKey(item).some((key) => key === '20mldmoth_2' || key === 'mothorowala-20-2')
 }
 
-const OFFICIAL_CCTV_ORDER = [
-  '14mldsarai',
-  'sarai-14',
-  '68mldjag',
-  'jagjeetpur-68',
-  '27mldjag_upg',
-  'jagjeetpur-27-upg',
-  '18mldsarai_upg',
-  'sarai-18-upg',
-  '18mldjag',
-  'jagjeetpur-18',
-  '26mldlkgt2',
-  'lakkar-ghat-26',
-  '28mldindira',
-  'indira-nagar-28',
-  '20mldmothorowala',
-  'mothorowala-20',
-  '68mldkargi',
-  'kargi-68',
-  '20mldmoth_2',
-  'mothorowala-20-2',
-  '33mldsali',
-  'saliar-33',
-  '10mldbazpur',
-  'bazpur-10',
-  '10mldkashipur',
-  'kashipur-10',
-]
+function is26MldRishikesh(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some(
+    (key) => key === '26mldlkgt2' || key === 'lakkar-ghat-26' || key === '26mld' || key === 'rishikesh',
+  )
+}
+
+function is10MldBazpur(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some((key) => key === '10mldbazpur' || key === 'bazpur-10' || key === 'bazpur')
+}
+
+const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
+  '14mldsarai': 0,
+  'sarai-14': 0,
+  '14mld': 0,
+  '68mldjag': 1,
+  'jagjeetpur-68': 1,
+  '68mld': 1,
+  '27mldjag_upg': 2,
+  'jagjeetpur-27-upg': 2,
+  '18mldsarai_upg': 3,
+  'sarai-18-upg': 3,
+  '18mldjag': 4,
+  'jagjeetpur-18': 4,
+  '26mldlkgt2': 5,
+  'lakkar-ghat-26': 5,
+  '26mld': 5,
+  '26mldlakkar': 5,
+  '26mldrishikesh': 5,
+  'rishikesh': 5,
+  '20mldrishikesh': 5,
+  '28mldindira': 6,
+  'indira-nagar-28': 6,
+  '20mldmothorowala': 7,
+  'mothorowala-20': 7,
+  '68mldkargi': 8,
+  'kargi-68': 8,
+  '20mldmoth_2': 9,
+  'mothorowala-20-2': 9,
+  '33mldsali': 10,
+  'saliar-33': 10,
+  '33mld_sal': 10,
+  '10mldbazpur': 11,
+  'bazpur-10': 11,
+  'bazpur': 11,
+  '10mld': 11,
+  '10mldkashipur': 12,
+  'kashipur-10': 12,
+}
 
 function officialOrderIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
   const keys = plantKey(item)
   for (const k of keys) {
-    const idx = OFFICIAL_CCTV_ORDER.indexOf(k)
-    if (idx !== -1) return Math.floor(idx / 2)
+    if (k in OFFICIAL_CCTV_ORDER_MAP) return OFFICIAL_CCTV_ORDER_MAP[k]
   }
   return 999
 }
@@ -152,7 +171,7 @@ function pinFilterPlantOptions(
 
 function cameraChannel(camera: LiveSiteCamera, siteStpId?: string) {
   if (camera.channel) return camera.channel
-  const is20Mld = /mothorowala-20|20mld/i.test(siteStpId ?? '')
+  const is20Mld = /mothorowala|20mldmoth/i.test(siteStpId ?? '')
   const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
   if (is20Mld) {
     return isEffluent ? 1 : 2
@@ -206,7 +225,7 @@ function getSiteStreams(site: StpSite) {
     effluent = cameras[1]
   }
 
-  const is20Mld = /mothorowala-20|20mld/i.test(site.stpId)
+  const is20Mld = /mothorowala|20mldmoth/i.test(site.stpId)
   const defaultInfluentChannel = is20Mld ? 2 : 1
   const defaultEffluentChannel = is20Mld ? 1 : 2
 

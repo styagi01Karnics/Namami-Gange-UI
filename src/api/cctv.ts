@@ -120,6 +120,40 @@ const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = [
   },
 ]
 
+const STP_26MLD_CAMERAS: CctvCamera[] = [
+  {
+    id: 'lakkar-ghat-26-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP26MLD',
+  },
+  {
+    id: 'lakkar-ghat-26-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP26MLD',
+  },
+]
+
+const STP_10MLD_BAZPUR_CAMERAS: CctvCamera[] = [
+  {
+    id: 'bazpur-10-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP10MLDBAZ',
+  },
+  {
+    id: 'bazpur-10-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP10MLDBAZ',
+  },
+]
+
 function defaultPlantCameras(siteCode: string): CctvCamera[] {
   return [
     {
@@ -204,8 +238,16 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   if (key === 'jagjeetpur-18' || key === '18mldjag') {
     return STP_68MLD_CAMERAS
   }
-  if (key === 'lakkar-ghat-26' || key === '26mldlkgt2' || key === '26mldlakkar') {
-    return defaultPlantCameras('26mldlkgt2')
+  if (
+    key === 'lakkar-ghat-26' ||
+    key === '26mldlkgt2' ||
+    key === '26mldlakkar' ||
+    key === '26mld' ||
+    key === 'rishikesh' ||
+    key === '26mldrishikesh' ||
+    key === '20mldrishikesh'
+  ) {
+    return STP_26MLD_CAMERAS
   }
   if (key === 'indira-nagar-28' || key === '28mldindira') {
     return defaultPlantCameras('28mldindira')
@@ -222,8 +264,13 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   if (key === 'saliar-33' || key === '33mldsali') {
     return STP_33MLD_CAMERAS
   }
-  if (key === 'bazpur-10' || key === '10mldbazpur') {
-    return defaultPlantCameras('10mldbazpur')
+  if (
+    key === 'bazpur-10' ||
+    key === '10mldbazpur' ||
+    key === 'bazpur' ||
+    key === '10mld'
+  ) {
+    return STP_10MLD_BAZPUR_CAMERAS
   }
   if (key === 'kashipur-10' || key === '10mldkashipur') {
     return defaultPlantCameras('10mldkashipur')
@@ -647,6 +694,17 @@ const CPV_RECORDING_PLANTS = new Set([
   'mothorowala-20-2',
   '20mldmoth_2',
   '20mld2',
+  'lakkar-ghat-26',
+  '26mldlkgt2',
+  '26mldlakkar',
+  '26mld',
+  '26mldrishikesh',
+  'rishikesh',
+  '20mldrishikesh',
+  'bazpur-10',
+  '10mldbazpur',
+  'bazpur',
+  '10mld',
 ])
 
 export function hasCpvRecordings(stpId?: string, plantCode?: string) {

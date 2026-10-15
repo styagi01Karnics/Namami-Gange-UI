@@ -16,12 +16,17 @@ export const PLANT_CODE_TO_STP_ID: Record<string, string> = {
   '18mldjag': 'jagjeetpur-18',
   '26mldlkgt2': 'lakkar-ghat-26',
   '26mldlakkar': 'lakkar-ghat-26',
+  '26mld': 'lakkar-ghat-26',
+  '26mldrishikesh': 'lakkar-ghat-26',
+  'rishikesh': 'lakkar-ghat-26',
   '28mldindira': 'indira-nagar-28',
   '20mldmothorowala': 'mothorowala-20',
   '68mldkargi': 'kargi-68',
   '20mldmoth_2': 'mothorowala-20-2',
   '33mldsali': 'saliar-33',
   '10mldbazpur': 'bazpur-10',
+  'bazpur': 'bazpur-10',
+  '10mld': 'bazpur-10',
   '10mldkashipur': 'kashipur-10',
 }
 
