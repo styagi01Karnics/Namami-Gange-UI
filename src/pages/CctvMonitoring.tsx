@@ -173,9 +173,9 @@ function pinFilterPlantOptions(
 
 function cameraChannel(camera: LiveSiteCamera, siteStpId?: string) {
   if (camera.channel) return camera.channel
-  const is20Mld = /mothorowala|20mldmoth/i.test(siteStpId ?? '')
+  const isUnit2 = /mothorowala-20-2|20mldmoth_2|unit2/i.test(siteStpId ?? '')
   const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
-  if (is20Mld) {
+  if (isUnit2) {
     return isEffluent ? 1 : 2
   }
   return isEffluent ? 2 : 1
@@ -227,9 +227,9 @@ function getSiteStreams(site: StpSite) {
     effluent = cameras[1]
   }
 
-  const is20Mld = /mothorowala|20mldmoth/i.test(site.stpId)
-  const defaultInfluentChannel = is20Mld ? 2 : 1
-  const defaultEffluentChannel = is20Mld ? 1 : 2
+  const isUnit2 = is20MldMothorowala2(site)
+  const defaultInfluentChannel = isUnit2 ? 2 : 1
+  const defaultEffluentChannel = isUnit2 ? 1 : 2
 
   const fallbackInfluent: LiveSiteCamera = influent ?? {
     key: `${site.stpId}-influent`,

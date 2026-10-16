@@ -34,8 +34,14 @@ export default function RecordingVideo({
         autoPlay
         muted
         playsInline
+        loop
         onCanPlay={(e) => {
           props.onCanPlay?.(e)
+          e.currentTarget.play().catch(() => {})
+        }}
+        onEnded={(e) => {
+          props.onEnded?.(e)
+          e.currentTarget.currentTime = 0
           e.currentTarget.play().catch(() => {})
         }}
         onPause={(e) => {

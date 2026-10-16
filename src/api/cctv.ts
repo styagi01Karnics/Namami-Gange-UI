@@ -90,14 +90,14 @@ const STP_20MLD_UNIT1_CAMERAS: CctvCamera[] = [
   {
     id: 'mothorowala-20-cam-1',
     name: 'Influent',
-    channel: 2,
+    channel: 1,
     status: 'LIVE',
     siteCode: 'STP20MLD1',
   },
   {
     id: 'mothorowala-20-cam-2',
     name: 'Effluent',
-    channel: 1,
+    channel: 2,
     status: 'LIVE',
     siteCode: 'STP20MLD1',
   },
@@ -413,16 +413,24 @@ export async function fetchRecordings(input: {
   if (input.date) params.set('date', input.date)
 
   const query = params.toString()
-  const response = await fetch(`${CCTV_API}/recordings${query ? `?${query}` : ''}`)
-  const payload = await response.json()
-  if (!response.ok) {
-    throw new Error(payload.message ?? 'Unable to load recordings')
+  try {
+    const response = await fetch(`${CCTV_API}/recordings${query ? `?${query}` : ''}`)
+    if (!response.ok) {
+      const payload = await parseJsonSafely<{ message?: string }>(response)
+      throw new Error(payload?.message ?? 'Unable to connect to CCTV server')
+    }
+    const payload = await parseJsonSafely<{ data?: RecordingClip[] }>(response)
+    const clips = payload?.data
+    return Array.isArray(clips) ? (clips as RecordingClip[]) : []
+  } catch (error) {
+    if (error instanceof Error && !error.message.includes('connect')) {
+      throw error
+    }
+    throw new Error('Unable to connect to CCTV server')
   }
-  const clips = payload.data
-  return Array.isArray(clips) ? (clips as RecordingClip[]) : []
 }
 
-const AUTO_PLAY_MAX_BYTES = 80 * 1024 * 1024
+const AUTO_PLAY_MAX_BYTES = 2 * 1024 * 1024 * 1024
 
 export type RecordingPeriod = 'day' | 'evening' | 'night'
 
@@ -463,7 +471,7 @@ function clipStartMs(clip: { startTime: string }) {
 
 function sortClipsForPeriod(clips: RecordingClip[], period: RecordingPeriod) {
   const isPlayable = (clip: RecordingClip) =>
-    clip.sizeBytes <= AUTO_PLAY_MAX_BYTES && clip.sizeBytes >= 5 * 1024 * 1024
+    clip.sizeBytes <= AUTO_PLAY_MAX_BYTES && clip.sizeBytes >= 1024 * 1024
 
   const playableClips = clips.filter(isPlayable)
   const otherClips = clips.filter((c) => !isPlayable(c))
@@ -495,7 +503,7 @@ export async function startRecordingPlayback(input: PlaybackStartInput) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   })
-  const payload = await response.json().catch(() => ({}))
+  const payload = (await parseJsonSafely<any>(response)) ?? {}
   if (!response.ok || !payload?.success || !payload?.data?.clips?.length) {
     throw new Error(payload?.message ?? 'No recording for this time range')
   }
@@ -549,7 +557,7 @@ export async function loadPeriodRecording(input: RecordingTarget) {
     params.set('channel', String(input.channel))
 
     const response = await fetch(`${CCTV_API}/feed?${params.toString()}`)
-    const feed = await response.json().catch(() => null)
+    const feed = await parseJsonSafely<any>(response)
     if (
       response.ok &&
       feed?.success &&
@@ -628,8 +636,9 @@ export async function probeLiveStream(url?: string | null) {
 
   try {
     const response = await fetch(`${CCTV_API}/stream/health?url=${encodeURIComponent(url)}`)
-    const payload = await response.json().catch(() => ({}))
-    return Boolean(payload.live)
+    if (!response.ok) return false
+    const payload = await parseJsonSafely<{ live?: boolean }>(response)
+    return Boolean(payload?.live)
   } catch {
     return false
   }

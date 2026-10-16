@@ -53,7 +53,7 @@ export default function CameraLightbox({ camera, siteName, plantCode, stpId, onC
                     stpId,
                     channel:
                       camera.channel ??
-                      (/mothorowala|20mldmoth/i.test(stpId ?? plantCode ?? '')
+                      (/mothorowala-20-2|20mldmoth_2|unit2/i.test(stpId ?? plantCode ?? '')
                         ? (String(camera.location ?? '').toLowerCase().includes('effluent') ? 1 : 2)
                         : (String(camera.location ?? '').toLowerCase().includes('effluent') ? 2 : 1)),
                     location: camera.location,
