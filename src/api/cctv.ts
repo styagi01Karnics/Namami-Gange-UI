@@ -154,6 +154,23 @@ const STP_10MLD_BAZPUR_CAMERAS: CctvCamera[] = [
   },
 ]
 
+const STP_68MLD_KARGI_CAMERAS: CctvCamera[] = [
+  {
+    id: 'kargi-68-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP68MLDKAR',
+  },
+  {
+    id: 'kargi-68-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP68MLDKAR',
+  },
+]
+
 function defaultPlantCameras(siteCode: string): CctvCamera[] {
   return [
     {
@@ -255,8 +272,21 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   if (key === 'mothorowala-20' || key === '20mldmothorowala') {
     return STP_20MLD_UNIT1_CAMERAS
   }
-  if (key === 'kargi-68' || key === '68mldkargi') {
-    return defaultPlantCameras('68mldkargi')
+  if (
+    key === 'kargi-68' ||
+    key === '68mldkargi' ||
+    key === '68mld_kargi' ||
+    key === '68mld-kargi' ||
+    key === '68mld kargi' ||
+    key === '68 mld kargi' ||
+    key === 'kargi' ||
+    key === 'kargi chowk' ||
+    key === 'kargichowk' ||
+    key === '68mld_kargi_chowk' ||
+    key === '68mld kargi chowk' ||
+    key === 'stp68mldkar'
+  ) {
+    return STP_68MLD_KARGI_CAMERAS
   }
   if (key === 'mothorowala-20-2' || key === '20mldmoth_2') {
     return STP_20MLD_UNIT2_CAMERAS
@@ -693,6 +723,18 @@ const CPV_RECORDING_PLANTS = new Set([
   'jagjeetpur-68',
   '68mldjag',
   '68mld',
+  'kargi-68',
+  '68mldkargi',
+  '68mld_kargi',
+  '68mld-kargi',
+  '68mld kargi',
+  '68 mld kargi',
+  'kargi',
+  'kargi chowk',
+  'kargichowk',
+  '68mld_kargi_chowk',
+  '68mld kargi chowk',
+  'stp68mldkar',
   'sarai-14',
   '14mldsarai',
   '14mld',

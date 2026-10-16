@@ -1,6 +1,7 @@
 import DashboardKpiRow from '../components/cards/DashboardKpiRow'
 import StpLocationsMapCard from '../components/cards/StpLocationsGISMapCard'
 import CapacityUtilizationCard from '../components/cards/CapacityUtilizationCard'
+import LatestViolationsSliderCard from '../components/cards/LatestViolationsSliderCard'
 import LiveStpDataCard from '../components/cards/LiveStpDataCard'
 import RealtimeStpTrendsCard from '../components/cards/RealtimeStpTrendsCard'
 import TopPerformingStpsCard from '../components/cards/TopPerformingStpsCard'
@@ -13,7 +14,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 items-stretch gap-[10px] xl:grid-cols-[minmax(0,624fr)_minmax(0,496fr)]">
         <StpLocationsMapCard />
-        <CapacityUtilizationCard />
+        <div className="flex flex-col gap-[10px] min-h-0">
+          <CapacityUtilizationCard />
+          <LatestViolationsSliderCard className="flex-1 min-h-[220px]" />
+        </div>
       </div>
 
       <LiveStpDataCard />
