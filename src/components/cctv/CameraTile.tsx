@@ -20,11 +20,13 @@ export function CameraStill({
   sceneId,
   recording,
   liveFailed = false,
+  onLiveFailed,
 }: {
   camera: any
   sceneId: string
   recording?: RecordingTarget | null
   liveFailed?: boolean
+  onLiveFailed?: () => void
 }) {
   const hasLiveUrl = Boolean(camera.streamUrl) && !liveFailed
   // WHEP players (14 MLD) report their own errors — do not block them on the CCTV health API.
@@ -38,6 +40,9 @@ export function CameraStill({
     setIframeFailed(false)
     if (!needsProbe) {
       setLiveOk(hasLiveUrl)
+      if (!hasLiveUrl && !recording) {
+        onLiveFailed?.()
+      }
       return undefined
     }
 
@@ -45,12 +50,17 @@ export function CameraStill({
     setLiveOk(false)
     let cancelled = false
     probeLiveStream(camera.streamUrl).then((ok) => {
-      if (!cancelled) setLiveOk(ok)
+      if (!cancelled) {
+        setLiveOk(ok)
+        if (!ok && !recording) {
+          onLiveFailed?.()
+        }
+      }
     })
     return () => {
       cancelled = true
     }
-  }, [needsProbe, hasLiveUrl, camera.streamUrl])
+  }, [needsProbe, hasLiveUrl, camera.streamUrl, recording, onLiveFailed])
 
   // Priority 1: Live streaming
   if (hasLiveUrl && liveOk && !whepFailed && !iframeFailed) {
@@ -59,7 +69,10 @@ export function CameraStill({
         <MediaMtxWhepPlayer
           src={camera.streamUrl}
           title={camera.location}
-          onError={() => setWhepFailed(true)}
+          onError={() => {
+            setWhepFailed(true)
+            if (!recording) onLiveFailed?.()
+          }}
         />
       )
     }
@@ -69,7 +82,10 @@ export function CameraStill({
         title={camera.location}
         src={camera.streamUrl}
         allow="autoplay; fullscreen"
-        onError={() => setIframeFailed(true)}
+        onError={() => {
+          setIframeFailed(true)
+          if (!recording) onLiveFailed?.()
+        }}
         className="absolute inset-0 h-full w-full border-0"
       />
     )
@@ -80,18 +96,17 @@ export function CameraStill({
     return <RecordingAutoPlayer recording={recording} title={camera.location} />
   }
 
-  // Priority 3: Offline fallback still/scene
-  const dimmed = camera.status !== 'Live'
+  // Priority 3: Offline fallback still/scene (always dimmed/grayscale since no feed is showing)
   return (
     <>
-      <div className={dimmed ? 'h-full w-full grayscale' : 'h-full w-full'}>
+      <div className="h-full w-full grayscale">
         {camera.image ? (
           <img src={camera.image} alt={`${camera.location} camera`} className="h-full w-full object-cover" />
         ) : (
           <PlantScene id={sceneId} />
         )}
       </div>
-      {dimmed && <div className="absolute inset-0 bg-white/45" />}
+      <div className="absolute inset-0 bg-white/45" />
     </>
   )
 }
@@ -109,20 +124,35 @@ export default function CameraTile({
   recording?: RecordingTarget | null
   hideTags?: boolean
 }) {
+  const [feedFailed, setFeedFailed] = useState(false)
+
+  useEffect(() => {
+    setFeedFailed(false)
+  }, [camera.key, camera.streamUrl])
+
+  const isActuallyOffline =
+    camera.status !== 'Live' || (!camera.streamUrl && !recording) || feedFailed
+  const effectiveStatus = isActuallyOffline ? 'Offline' : (camera.status ?? 'Offline')
+
   return (
     <div className="min-w-0 rounded-[12px] bg-[#EAF2FC] p-[12px]">
       <div className="flex items-center justify-between gap-3">
         <h4 className="truncate text-[13.5px] font-semibold leading-5 text-ink">{camera.location}</h4>
         {!hideTags && (
           <span className="inline-flex shrink-0 items-center gap-[6px] rounded-full bg-white px-[10px] py-[4px] text-[11.5px] font-semibold leading-4 text-ink">
-            <span className={`h-[7px] w-[7px] rounded-full ${STATUS_DOT[camera.status] ?? 'bg-ink-muted'}`} />
-            {camera.status === 'Live' ? 'Online' : camera.status}
+            <span className={`h-[7px] w-[7px] rounded-full ${STATUS_DOT[effectiveStatus] ?? 'bg-ink-muted'}`} />
+            {effectiveStatus === 'Live' ? 'Online' : effectiveStatus}
           </span>
         )}
       </div>
 
       <div className="relative mt-[10px] aspect-[16/9] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
-        <CameraStill camera={camera} sceneId={`tile-${camera.key}`} recording={recording} />
+        <CameraStill
+          camera={camera}
+          sceneId={`tile-${camera.key}`}
+          recording={recording}
+          onLiveFailed={() => setFeedFailed(true)}
+        />
 
         {onPlayRecording && !hideTags && (
           <button
@@ -157,7 +187,7 @@ export default function CameraTile({
           <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 hidden w-max min-w-[280px] rounded-[9px] bg-white p-[11px] shadow-pop group-focus-within/info:block group-hover/info:block">
             {[
               ['Camera ID:', camera.id],
-              ['Last Active:', camera.lastActive],
+              ['Last Active:', isActuallyOffline && camera.lastActive === 'Live now' ? 'Unavailable' : camera.lastActive],
             ].map(([label, value]) => (
               <div key={label} className="flex items-baseline justify-between gap-[16px] whitespace-nowrap py-[3px]">
                 <span className="text-[11.5px] leading-4 text-ink-soft">{label}</span>

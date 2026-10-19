@@ -26,7 +26,7 @@ const LIVE_STREAM_OVERRIDES: Record<string, string> = {
   'PLANT001:2': 'https://stream.karnics.com/site/PLANT001/camera/2/',
 }
 
-/** 68 MLD live streams — also used for 18 MLD Jagjeetpur until its own cameras are online. */
+/** 68 MLD live streams. */
 const STP_68MLD_CAMERAS: CctvCamera[] = [
   {
     id: 1,
@@ -253,7 +253,7 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
     return defaultPlantCameras('18mldsarai_upg')
   }
   if (key === 'jagjeetpur-18' || key === '18mldjag') {
-    return STP_68MLD_CAMERAS
+    return defaultPlantCameras('18mldjag')
   }
   if (
     key === 'lakkar-ghat-26' ||

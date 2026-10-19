@@ -28,10 +28,10 @@ function ParamBreachCell({ label, value }: { label: string; value?: string }) {
 }
 
 export default function NonPerformingStpsCard() {
-  const rows = criticalStps['Parameter Breach'].slice(0, 5)
+  const rows = criticalStps['Parameter Breach']
 
   return (
-    <Card className="flex h-[400px] flex-col overflow-hidden rounded-[14px] pt-[12px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
+    <Card className="flex h-[400px] flex-col overflow-hidden rounded-[14px] pt-[12px] pb-[8px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
       <div className="shrink-0 px-[12px]">
         <h3 className="text-[15px] font-bold leading-5 text-[#DC2626]">Non Performing STPs</h3>
         <p className="mt-[2px] text-[11px] font-medium leading-4 text-[#64748B]">
@@ -40,12 +40,12 @@ export default function NonPerformingStpsCard() {
 
         <div className="mt-[8px] inline-flex h-[28px] items-center gap-1 rounded-[8px] bg-[#F2F7FC] p-[3px]">
           <span className="h-[24px] whitespace-nowrap rounded-[6px] bg-[#0768D2] px-[10px] text-[11px] font-semibold text-white shadow-sm inline-flex items-center">
-            Parameter Breach (5)
+            Parameter Breach ({rows.length})
           </span>
         </div>
       </div>
 
-      <div className="mt-[10px] min-h-0 flex-1 overflow-auto scroll-thin px-[8px] max-h-[calc(4*42px+34px)]">
+      <div className="mt-[10px] min-h-0 flex-1 overflow-auto scroll-thin px-[8px]">
         <table className="w-full min-w-[720px] table-fixed border-collapse">
           <thead className="sticky top-0 z-[1]">
             <tr className="h-[34px] border-y border-[#D8EDFF] bg-[#EFF7FF]">
@@ -60,41 +60,79 @@ export default function NonPerformingStpsCard() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.id} className="h-[42px] border-b border-[#E2EBF5] bg-white last:border-0">
-                <td className="px-[5px] py-[6px] align-middle text-[11px] text-[#51647C]">{index + 1}</td>
-                <td className="px-[5px] py-[6px] align-middle">
-                  <Link
-                    to={stpCompliancePath(row.plantCode)}
-                    className="block truncate text-[11px] font-semibold leading-[15px] text-[#0768D2] underline hover:opacity-80"
-                    title={row.name}
-                  >
-                    {row.name}
-                  </Link>
-                </td>
-                <td className="px-[5px] py-[6px] align-middle text-[11px] font-medium text-[#07121E]">
-                  {row.capacityMld}
-                </td>
-                <td className="px-[5px] py-[6px] align-middle text-[11px] font-medium text-[#07121E]">
-                  {row.district}
-                </td>
-                <td className="truncate px-[5px] py-[6px] align-middle text-[11px] font-medium text-[#07121E]" title={row.omDept}>
-                  {row.omDept}
-                </td>
-                <td className="px-[4px] py-[5px] align-middle">
-                  <ParamBreachCell label={row.param.label} value={'value' in row.param ? row.param.value : undefined} />
-                </td>
-                <td className="px-[5px] py-[6px] align-middle text-[11px] font-bold text-[#DC2626]">
-                  {'value' in row.param && row.param.value ? row.param.value : '—'}
-                </td>
-                <td className="px-[5px] py-[6px] align-middle text-[11px] font-medium text-[#07121E]">
-                  {row.range}
-                </td>
-                <td className="px-[5px] py-[6px] align-middle text-[10px] font-medium leading-[13px] text-[#07121E]">
-                  {row.time}
-                </td>
-              </tr>
-            ))}
+            {rows.map((row, index) => {
+              const params =
+                'parameters' in row && Array.isArray(row.parameters) && row.parameters.length > 0
+                  ? row.parameters
+                  : [
+                      {
+                        label: row.param.label,
+                        value: 'value' in row.param && row.param.value ? row.param.value : '—',
+                        range: row.range,
+                        time: row.time,
+                      },
+                    ]
+
+              return (
+                <tr key={row.id} className="border-b border-[#E2EBF5] bg-white transition-colors hover:bg-[#F8FAFC] last:border-0">
+                  <td className="px-[5px] py-[8px] align-top pt-[10px] text-[11px] text-[#51647C]">{index + 1}</td>
+                  <td className="px-[5px] py-[8px] align-top pt-[10px]">
+                    <Link
+                      to={stpCompliancePath(row.plantCode)}
+                      className="block truncate text-[11px] font-semibold leading-[15px] text-[#0768D2] underline hover:opacity-80"
+                      title={row.name}
+                    >
+                      {row.name}
+                    </Link>
+                  </td>
+                  <td className="px-[5px] py-[8px] align-top pt-[10px] text-[11px] font-medium text-[#07121E]">
+                    {row.capacityMld}
+                  </td>
+                  <td className="px-[5px] py-[8px] align-top pt-[10px] text-[11px] font-medium text-[#07121E]">
+                    {row.district}
+                  </td>
+                  <td className="truncate px-[5px] py-[8px] align-top pt-[10px] text-[11px] font-medium text-[#07121E]" title={row.omDept}>
+                    {row.omDept}
+                  </td>
+                  <td className="px-[4px] py-[8px] align-top">
+                    <div className="flex flex-col gap-[6px]">
+                      {params.map((p, pIdx) => (
+                        <div key={pIdx} className="flex min-h-[22px] items-center">
+                          <ParamBreachCell label={p.label} value={p.value} />
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-[5px] py-[8px] align-top">
+                    <div className="flex flex-col gap-[6px]">
+                      {params.map((p, pIdx) => (
+                        <div key={pIdx} className="flex min-h-[22px] items-center text-[11px] font-bold text-[#DC2626]">
+                          {p.value}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-[5px] py-[8px] align-top">
+                    <div className="flex flex-col gap-[6px]">
+                      {params.map((p, pIdx) => (
+                        <div key={pIdx} className="flex min-h-[22px] items-center text-[11px] font-medium text-[#07121E]">
+                          {p.range}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-[5px] py-[8px] align-top">
+                    <div className="flex flex-col gap-[6px]">
+                      {params.map((p, pIdx) => (
+                        <div key={pIdx} className="flex min-h-[22px] items-center text-[10px] font-medium leading-[13px] text-[#07121E]">
+                          {p.time || row.time}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
 
             {rows.length === 0 && (
               <tr>

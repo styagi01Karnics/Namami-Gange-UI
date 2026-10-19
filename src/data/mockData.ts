@@ -1185,6 +1185,14 @@ const PARAM_SAMPLES = [
   { param: { label: 'COD', value: '185.2', delta: '23.5%' }, range: '0-150', time: '10.00am-3.00pm' },
   { param: { label: 'TSS', value: '68.4', delta: '36.8%' }, range: '0-50', time: '7.30am-12.00pm' },
   { param: { label: 'pH', value: '9.14', delta: '7.1%' }, range: '6.5-8.5', time: '9.00am-1.00pm' },
+  { param: { label: 'TSS', value: '72.5', delta: '45.0%' }, range: '0-50', time: '6.30am-10.45am' },
+  { param: { label: 'BOD', value: '38.6', delta: '28.7%' }, range: '0-30', time: '11.00am-2.30pm' },
+  { param: { label: 'NH₄-N', value: '14.2', delta: '42.0%' }, range: '0-10', time: '8.30am-1.15pm' },
+  { param: { label: 'COD', value: '172.0', delta: '14.7%' }, range: '0-150', time: '9.00am-1.30pm' },
+  { param: { label: 'TSS', value: '58.6', delta: '17.2%' }, range: '0-50', time: '10.30am-3.15pm' },
+  { param: { label: 'pH', value: '8.85', delta: '4.1%' }, range: '6.5-8.5', time: '7.45am-11.15am' },
+  { param: { label: 'BOD', value: '45.1', delta: '50.3%' }, range: '0-30', time: '8.15am-12.45pm' },
+  { param: { label: 'COD', value: '192.4', delta: '28.3%' }, range: '0-150', time: '10.15am-2.30pm' },
 ] as const
 
 const EQUIPMENT_SAMPLES = [
@@ -1210,15 +1218,142 @@ function toCriticalRows(
   })
 }
 
+export type NonPerformingStpParam = {
+  label: string
+  value: string
+  range: string
+  time?: string
+}
+
+export type NonPerformingStpRow = {
+  id: string
+  name: string
+  plantCode: string
+  stpId: string
+  capacityMld: number
+  district: string
+  omDept: string
+  time: string
+  range: string
+  param: { label: string; value: string; delta?: string }
+  parameters: NonPerformingStpParam[]
+}
+
+export const parameterBreachRows: NonPerformingStpRow[] = [
+  {
+    id: 'sarai-14',
+    name: '14 MLD STP, Sarai, Haridwar',
+    plantCode: '14mldsarai',
+    stpId: 'sarai-14',
+    capacityMld: 14,
+    district: 'Haridwar',
+    omDept: 'UKPJN',
+    time: '9.30am-2.00pm',
+    range: '0-10',
+    param: { label: 'NH₄-N', value: '15.1', delta: '5.1%' },
+    parameters: [
+      { label: 'NH₄-N', value: '15.1', range: '0-10', time: '9.30am-2.00pm' },
+      { label: 'BOD', value: '38.4', range: '0-30', time: '10.00am-1.30pm' },
+    ],
+  },
+  {
+    id: 'jagjeetpur-68',
+    name: '68 MLD STP, Jagjeetpur, Haridwar',
+    plantCode: '68mldjag',
+    stpId: 'jagjeetpur-68',
+    capacityMld: 68,
+    district: 'Haridwar',
+    omDept: 'UKPJN',
+    time: '8.00am-11.30am',
+    range: '0-30',
+    param: { label: 'BOD', value: '42.3', delta: '41.0%' },
+    parameters: [
+      { label: 'BOD', value: '42.3', range: '0-30', time: '8.00am-11.30am' },
+      { label: 'TSS', value: '64.2', range: '0-50', time: '9.15am-12.00pm' },
+    ],
+  },
+  {
+    id: 'jagjeetpur-27-upg',
+    name: '27 MLD STP, Jagjeetpur',
+    plantCode: '27mldjag_upg',
+    stpId: 'jagjeetpur-27-upg',
+    capacityMld: 27,
+    district: 'Haridwar',
+    omDept: 'UJS',
+    time: '10.00am-3.00pm',
+    range: '0-150',
+    param: { label: 'COD', value: '185.2', delta: '23.5%' },
+    parameters: [
+      { label: 'COD', value: '185.2', range: '0-150', time: '10.00am-3.00pm' },
+    ],
+  },
+  {
+    id: 'sarai-18-upg',
+    name: '18 MLD STP, Sarai',
+    plantCode: '18mldsarai_upg',
+    stpId: 'sarai-18-upg',
+    capacityMld: 18,
+    district: 'Haridwar',
+    omDept: 'UJS',
+    time: '7.30am-12.00pm',
+    range: '0-50',
+    param: { label: 'TSS', value: '68.4', delta: '36.8%' },
+    parameters: [
+      { label: 'TSS', value: '68.4', range: '0-50', time: '7.30am-12.00pm' },
+    ],
+  },
+  {
+    id: 'mothorowala-20',
+    name: '20 MLD STP, Mothorowala-1, Dehradun',
+    plantCode: '20mldmothorowala',
+    stpId: 'mothorowala-20',
+    capacityMld: 20,
+    district: 'Dehradun',
+    omDept: 'UJS',
+    time: '8.30am-1.15pm',
+    range: '0-10',
+    param: { label: 'NO₃-N', value: '66.1', delta: '56.1%' },
+    parameters: [
+      { label: 'NO₃-N', value: '66.1', range: '0-10', time: '8.30am-1.15pm' },
+      { label: 'pH', value: '4.21', range: '5.5-9.0', time: '12.15pm-2.30pm' },
+      { label: 'COD', value: '168.0', range: '0-150', time: '9.00am-1.30pm' },
+    ],
+  },
+  {
+    id: 'lakkar-ghat-26',
+    name: '26 MLD STP, Lakkarghat, Rishikesh',
+    plantCode: '26mldlkgt2',
+    stpId: 'lakkar-ghat-26',
+    capacityMld: 26,
+    district: 'Rishikesh',
+    omDept: 'UKPJN',
+    time: '3.00pm-5.30pm',
+    range: '6.5-8.5',
+    param: { label: 'pH', value: '9.35', delta: '10.0%' },
+    parameters: [
+      { label: 'pH', value: '9.35', range: '6.5-8.5', time: '3.00pm-5.30pm' },
+    ],
+  },
+  {
+    id: 'saliar-33',
+    name: '33 MLD STP, Saliyar, Roorkee',
+    plantCode: '33mldsali',
+    stpId: 'saliar-33',
+    capacityMld: 33,
+    district: 'Roorkee',
+    omDept: 'UJS',
+    time: '6.30am-10.45am',
+    range: '0-30',
+    param: { label: 'BOD', value: '41.5', delta: '38.3%' },
+    parameters: [
+      { label: 'BOD', value: '41.5', range: '0-30', time: '6.30am-10.45am' },
+    ],
+  },
+]
+
 export const criticalStps = {
   tabs: ['Parameter Breach', 'Equipment Failure'] as const,
-  'Parameter Breach': toCriticalRows(PARAM_SAMPLES, {
-    '14mldsarai': {
-      param: { label: 'NH₄-N', value: '15.1', delta: '5.1%' },
-      range: '0-10',
-      time: '9.30am-2.00pm',
-    },
-  }),
+  'Parameter Breach': parameterBreachRows,
   'Equipment Failure': toCriticalRows(EQUIPMENT_SAMPLES),
 }
 
@@ -2834,8 +2969,8 @@ const cctvSiteCameras = [
   {
     stpId: 'jagjeetpur-18',
     cameras: [
-      { key: 'influent', id: 'CAM-IN-18J', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
-      { key: 'effluent', id: 'CAM-EF-18J', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'influent', id: 'CAM-IN-18J', location: 'Influent', status: 'Offline', lastActive: 'Unavailable', timecode: null, image: null },
+      { key: 'effluent', id: 'CAM-EF-18J', location: 'Effluent', status: 'Offline', lastActive: 'Unavailable', timecode: null, image: null },
     ],
   },
   {

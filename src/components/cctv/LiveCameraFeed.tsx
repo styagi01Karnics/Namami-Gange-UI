@@ -1,48 +1,32 @@
-import { useMemo } from 'react'
-import CameraFeedTile from './CameraFeedTile'
+import { useMemo, useState } from 'react'
+import CameraTile from './CameraTile'
+import CameraLightbox from './CameraLightbox'
 import {
-  cameraLocationLabel,
-  getCameraSiteCode,
-  getStreamUrl,
   hasCpvRecordings,
   isCameraOnline,
-  type CctvCamera,
+  type LiveSiteCamera,
 } from '../../api/cctv'
-
-function cameraToFeed(camera: CctvCamera) {
-  const siteCode = getCameraSiteCode(camera)
-  const online = isCameraOnline(camera)
-
-  return {
-    key: String(camera.id),
-    cameraId: typeof camera.id === 'number' ? camera.id : undefined,
-    id: camera.name,
-    location: cameraLocationLabel(camera),
-    lastSeen: online ? 'Live now' : 'Unavailable',
-    status: online ? 'Live' : 'Offline',
-    streamUrl: getStreamUrl(siteCode, camera.channel, camera),
-    player: camera.player,
-
-  }
-}
 
 export default function LiveCameraFeed({
   cameras = [],
   loading = false,
   stpId,
   plantCode,
+  siteName,
 }: {
-  cameras?: CctvCamera[]
+  cameras?: LiveSiteCamera[]
   loading?: boolean
   stpId?: string
   plantCode?: string
+  siteName?: string
 }) {
+  const [expandedCamera, setExpandedCamera] = useState<LiveSiteCamera | null>(null)
   const canRecord = hasCpvRecordings(stpId, plantCode)
 
   const sortedCameras = useMemo(() => {
     return [...cameras].sort((a, b) => {
-      const aLive = isCameraOnline(a) ? 1 : 0
-      const bLive = isCameraOnline(b) ? 1 : 0
+      const aLive = a.status === 'Live' || isCameraOnline(a as any) ? 1 : 0
+      const bLive = b.status === 'Live' || isCameraOnline(b as any) ? 1 : 0
       return bLive - aLive
     })
   }, [cameras])
@@ -50,30 +34,51 @@ export default function LiveCameraFeed({
   return (
     <section className="rounded-[12px] border border-line bg-white p-[15px] shadow-card">
       {loading ? (
-        <p className="text-[13px] text-ink-soft">Loading...</p>
+        <p className="text-[13px] text-ink-soft">Loading cameras...</p>
       ) : sortedCameras.length === 0 ? (
         <p className="text-[13px] text-ink-soft">No cameras registered yet.</p>
       ) : (
         <div className="grid grid-cols-2 gap-[13px]">
-          {sortedCameras.map((camera, i) => (
-            <CameraFeedTile
-              key={camera.id}
-              feed={cameraToFeed(camera)}
-              divider={i % 2 === 1}
+          {sortedCameras.map((camera) => (
+            <CameraTile
+              key={camera.key}
+              camera={camera}
+              onExpand={setExpandedCamera}
               recording={
                 canRecord
                   ? {
-                    plantCode,
-                    stpId,
-                    channel: camera.channel,
-                    location: cameraLocationLabel(camera),
-                  }
+                      plantCode,
+                      stpId,
+                      channel:
+                        camera.channel ||
+                        (/mothorowala-20-2|20mldmoth_2|unit2/i.test(stpId ?? plantCode ?? '')
+                          ? String(camera.location ?? '').toLowerCase().includes('effluent') ||
+                            String(camera.location ?? '').toLowerCase().includes('treated')
+                            ? 1
+                            : 2
+                          : String(camera.location ?? '').toLowerCase().includes('effluent') ||
+                            String(camera.location ?? '').toLowerCase().includes('treated')
+                            ? 2
+                            : 1),
+                      location: camera.location,
+                    }
                   : undefined
               }
             />
           ))}
         </div>
       )}
+
+      {expandedCamera && (
+        <CameraLightbox
+          camera={expandedCamera}
+          siteName={siteName}
+          plantCode={plantCode}
+          stpId={stpId}
+          onClose={() => setExpandedCamera(null)}
+        />
+      )}
     </section>
   )
 }
+

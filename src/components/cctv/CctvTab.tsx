@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import LiveCameraFeed from './LiveCameraFeed'
-import RecordingPlaybackCard from './RecordingPlaybackCard'
 import {
   fetchCctvCameras,
   fetchCctvSites,
   getCamerasForStp,
   hasCpvRecordings,
   isCameraOnline,
-  type CctvCamera,
+  toSiteCameras,
+  type LiveSiteCamera,
 } from '../../api/cctv'
+import { cctvSites, stpDetails } from '../../data/mockData'
 
 function CameraStatCard({
   label,
@@ -51,9 +52,16 @@ function CameraStatCard({
   )
 }
 
-/** Shared by the CCTV Monitoring page and the CCTV tab in STP Management. */
+function normalizeLocation(loc?: string) {
+  const l = String(loc ?? '')
+  if (l.toLowerCase().includes('influent') || l.toLowerCase().includes('cam-in')) return 'Sewage Water'
+  if (l.toLowerCase().includes('effluent') || l.toLowerCase().includes('cam-ef')) return 'Treated Water'
+  return l || 'Sewage Water'
+}
+
+/** CCTV tab in STP Management. */
 export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCode?: string }) {
-  const [cameras, setCameras] = useState<CctvCamera[]>([])
+  const [cameras, setCameras] = useState<LiveSiteCamera[]>([])
   const [loading, setLoading] = useState(true)
 
   async function loadCameras() {
@@ -61,15 +69,54 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
     setLoading(true)
 
     try {
-      const configured = getCamerasForStp(stpId) ?? getCamerasForStp(plantCode)
+      const siteStpId = stpId || plantCode || ''
+      const configured = getCamerasForStp(siteStpId) ?? getCamerasForStp(plantCode)
       if (configured) {
-        setCameras(configured)
+        setCameras(
+          toSiteCameras(siteStpId, configured).map((c) => ({
+            ...c,
+            location: normalizeLocation(c.location),
+          })),
+        )
+        return
+      }
+
+      // 68 MLD pulls live streams from the CCTV API
+      if (siteStpId === 'jagjeetpur-68' || siteStpId === '68mldjag') {
+        const liveCameras = await fetchCctvCameras()
+        setCameras(
+          toSiteCameras(siteStpId, liveCameras).map((c) => ({
+            ...c,
+            location: normalizeLocation(c.location),
+          })),
+        )
+        return
+      }
+
+      const mockSite = cctvSites.find(
+        (site) =>
+          site.stpId === siteStpId ||
+          site.stpId.toLowerCase() === siteStpId.toLowerCase() ||
+          (plantCode && site.stpId.toLowerCase().includes(plantCode.toLowerCase())),
+      )
+      if (mockSite) {
+        setCameras(
+          mockSite.cameras.map((c) => ({
+            ...c,
+            location: normalizeLocation(c.location),
+          })),
+        )
         return
       }
 
       await fetchCctvSites()
       const nextCameras = await fetchCctvCameras(plantCode || stpId)
-      setCameras(nextCameras)
+      setCameras(
+        toSiteCameras(siteStpId, nextCameras).map((c) => ({
+          ...c,
+          location: normalizeLocation(c.location),
+        })),
+      )
     } finally {
       setLoading(false)
     }
@@ -82,10 +129,12 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
   const stats = useMemo(() => {
     const total = cameras.length
     const canRecord = hasCpvRecordings(stpId, plantCode)
-    const online = cameras.filter((c) => isCameraOnline(c) || canRecord).length
+    const online = cameras.filter((c) => c.status === 'Live' || isCameraOnline(c as any) || canRecord).length
     const offline = total - online
     return { total, online, offline }
   }, [cameras, stpId, plantCode])
+
+  const siteName = (stpId && stpDetails[stpId]?.name) || stpId || 'STP Plant'
 
   return (
     <div className="space-y-[14px]">
@@ -95,9 +144,15 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
           <CameraStatCard label="Active Camera" value={stats.online} tone="ok" />
           <CameraStatCard label="Non-Active Camera" value={stats.offline} tone="danger" />
         </div>
-        <LiveCameraFeed cameras={cameras} loading={loading} stpId={stpId} plantCode={plantCode} />
+        <LiveCameraFeed
+          cameras={cameras}
+          loading={loading}
+          stpId={stpId}
+          plantCode={plantCode}
+          siteName={siteName}
+        />
       </div>
-      <RecordingPlaybackCard cameras={cameras} stpId={stpId} plantCode={plantCode} />
     </div>
   )
 }
+
