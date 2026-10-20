@@ -70,22 +70,41 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
 
     try {
       const siteStpId = stpId || plantCode || ''
+      // 1. Sarai 14 MLD has custom Tailnet WHEP live player configured
+      if (siteStpId === 'sarai-14' || siteStpId === '14mldsarai') {
+        const configured = getCamerasForStp(siteStpId)
+        if (configured) {
+          setCameras(
+            toSiteCameras(siteStpId, configured).map((c) => ({
+              ...c,
+              location: normalizeLocation(c.location),
+            })),
+          )
+          return
+        }
+      }
+
+      // 2. Fetch from CCTV API (returns liveUrl or recordingStreamUrl + mode for all plants)
+      try {
+        const apiCameras = await fetchCctvCameras(plantCode || undefined, siteStpId || undefined)
+        if (apiCameras && apiCameras.length > 0) {
+          setCameras(
+            toSiteCameras(siteStpId, apiCameras).map((c) => ({
+              ...c,
+              location: normalizeLocation(c.location),
+            })),
+          )
+          return
+        }
+      } catch {
+        // Fall through to configured / mock data if API is unreachable
+      }
+
+      // 3. Fallback to hardcoded configured cameras if API is down
       const configured = getCamerasForStp(siteStpId) ?? getCamerasForStp(plantCode)
       if (configured) {
         setCameras(
           toSiteCameras(siteStpId, configured).map((c) => ({
-            ...c,
-            location: normalizeLocation(c.location),
-          })),
-        )
-        return
-      }
-
-      // 68 MLD pulls live streams from the CCTV API
-      if (siteStpId === 'jagjeetpur-68' || siteStpId === '68mldjag') {
-        const liveCameras = await fetchCctvCameras()
-        setCameras(
-          toSiteCameras(siteStpId, liveCameras).map((c) => ({
             ...c,
             location: normalizeLocation(c.location),
           })),

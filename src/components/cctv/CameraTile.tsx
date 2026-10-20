@@ -4,6 +4,7 @@ import { ico } from '../ui/Ico'
 import PlantScene from './PlantScene'
 import MediaMtxWhepPlayer from './MediaMtxWhepPlayer'
 import RecordingAutoPlayer from './RecordingAutoPlayer'
+import RecordingVideo from './RecordingVideo'
 import { probeLiveStream, type RecordingTarget } from '../../api/cctv'
 
 const ExpandIcon = ico('fluent:full-screen-maximize-24-filled')
@@ -29,14 +30,16 @@ export function CameraStill({
   onLiveFailed?: () => void
 }) {
   const hasLiveUrl = Boolean(camera.streamUrl) && !liveFailed
-  // WHEP players (14 MLD) report their own errors — do not block them on the CCTV health API.
-  const needsProbe = hasLiveUrl && camera.player !== 'whep'
+  // WHEP and MP4 players report their own errors — do not block them on the CCTV health API.
+  const needsProbe = hasLiveUrl && camera.player !== 'whep' && camera.player !== 'mp4'
   const [liveOk, setLiveOk] = useState(!needsProbe && hasLiveUrl)
   const [whepFailed, setWhepFailed] = useState(false)
+  const [mp4Failed, setMp4Failed] = useState(false)
   const [iframeFailed, setIframeFailed] = useState(false)
 
   useEffect(() => {
     setWhepFailed(false)
+    setMp4Failed(false)
     setIframeFailed(false)
     if (!needsProbe) {
       setLiveOk(hasLiveUrl)
@@ -62,8 +65,8 @@ export function CameraStill({
     }
   }, [needsProbe, hasLiveUrl, camera.streamUrl, recording, onLiveFailed])
 
-  // Priority 1: Live streaming
-  if (hasLiveUrl && liveOk && !whepFailed && !iframeFailed) {
+  // Priority 1: Live streaming or direct recording MP4 stream
+  if (hasLiveUrl && liveOk && !whepFailed && !mp4Failed && !iframeFailed) {
     if (camera.player === 'whep') {
       return (
         <MediaMtxWhepPlayer
@@ -71,6 +74,29 @@ export function CameraStill({
           title={camera.location}
           onError={() => {
             setWhepFailed(true)
+            if (!recording) onLiveFailed?.()
+          }}
+        />
+      )
+    }
+
+    if (camera.player === 'mp4') {
+      return (
+        <RecordingVideo
+          key={camera.streamUrl}
+          title={camera.location}
+          src={camera.streamUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="pointer-events-none"
+          onCanPlay={(event) => {
+            event.currentTarget.play().catch(() => {})
+          }}
+          onError={() => {
+            setMp4Failed(true)
             if (!recording) onLiveFailed?.()
           }}
         />

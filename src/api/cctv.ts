@@ -10,6 +10,10 @@ export type CctvCamera = {
   status: string
   siteCode?: string
   streamUrl?: string
+  /** URL to the latest recording clip served by /api/recordings/{id}/media */
+  recordingStreamUrl?: string
+  /** LIVE | RECORDING | AUTO | OFFLINE — from /api/cameras */
+  mode?: string
   player?: CameraPlayer
   enabled?: boolean
   nvr?: { agent?: { site?: { siteCode?: string } } }
@@ -312,7 +316,13 @@ export function isCameraOnline(camera: CctvCamera) {
   if (camera.enabled === false) return false
 
   const status = String(camera.status ?? '').trim().toUpperCase()
-  return status === 'LIVE' || status === 'ONLINE' || status === 'STARTING' || status === 'ACTIVE'
+  return (
+    status === 'LIVE' ||
+    status === 'ONLINE' ||
+    status === 'STARTING' ||
+    status === 'ACTIVE' ||
+    status === 'RECORDING'
+  )
 }
 
 export function isCameraRecording(camera: CctvCamera) {
@@ -342,17 +352,34 @@ export async function fetchCctvSites() {
   }
 }
 
-export async function fetchCctvCameras(plantCode?: string) {
+export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
   try {
-    const url = plantCode
-      ? `${CCTV_API}/cameras?plantCode=${encodeURIComponent(plantCode)}`
-      : `${CCTV_API}/cameras`
+    const params = new URLSearchParams()
+    if (plantCode) params.set('plantCode', plantCode)
+    if (stpId) params.set('stpId', stpId)
+    const query = params.toString()
+    const url = query ? `${CCTV_API}/cameras?${query}` : `${CCTV_API}/cameras`
     const response = await fetch(url)
     if (!response.ok) return DEFAULT_CAMERAS
 
-    const data = await parseJsonSafely<CctvCamera[]>(response)
-    const cameras = Array.isArray(data) ? data : []
-    return cameras.length > 0 ? (cameras as CctvCamera[]) : DEFAULT_CAMERAS
+    const raw = await parseJsonSafely<any[]>(response)
+    const items = Array.isArray(raw) ? raw : []
+    if (items.length === 0) return DEFAULT_CAMERAS
+    // Map server response fields (camelCase) to CctvCamera, preserving
+    // recordingStreamUrl and mode that are now returned by the API.
+    const cameras: CctvCamera[] = items.map((item) => ({
+      id: item.id ?? item.channel,
+      name: item.name,
+      channel: item.channel,
+      status: item.status,
+      siteCode: item.siteCode,
+      streamUrl: item.liveUrl || item.streamUrl || undefined,
+      recordingStreamUrl: item.recordingStreamUrl ?? item.recordingUrl ?? undefined,
+      mode: item.mode ?? undefined,
+      player: item.player,
+      enabled: item.enabled,
+    }))
+    return cameras
   } catch {
     return DEFAULT_CAMERAS
   }
@@ -702,6 +729,14 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
     const siteCode = getCameraSiteCode(camera)
     const online = isCameraOnline(camera)
     const location = cameraLocationLabel(camera)
+    const isRecordingMode = String(camera.mode ?? '').toUpperCase() === 'RECORDING'
+
+    // When mode=RECORDING the camera has no live stream but has a recording
+    // clip ready — surface the recordingStreamUrl as the streamUrl so the
+    // CameraStill iframe / RecordingAutoPlayer picks it up automatically.
+    const effectiveStreamUrl = isRecordingMode
+      ? (camera.recordingStreamUrl ?? null)
+      : getStreamUrl(siteCode, camera.channel, camera)
 
     return {
       key: `${stpId}-${camera.id}`,
@@ -712,17 +747,56 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
       lastActive: online ? 'Live now' : 'Unavailable',
       timecode: null,
       image: null,
-      streamUrl: getStreamUrl(siteCode, camera.channel, camera),
-      player: camera.player,
+      streamUrl: effectiveStreamUrl,
+      player: isRecordingMode ? 'mp4' : camera.player,
       channel: camera.channel,
     }
   })
 }
 
 const CPV_RECORDING_PLANTS = new Set([
+  // 14 MLD Sarai, Haridwar
+  'sarai-14',
+  '14mldsarai',
+  '14_mld_sarai',
+  '14mld_sarai',
+  '14mld',
+  'sarai',
+  // 68 MLD Jagjeetpur, Haridwar
   'jagjeetpur-68',
   '68mldjag',
+  '68mld_jag',
   '68mld',
+  '68mldjagjeetpur',
+  'jagjeetpur',
+  // 26 MLD Rishikesh / Lakkarghat
+  'lakkar-ghat-26',
+  '26mldlkgt2',
+  '26_mld_rishikesh',
+  '26mldlakkar',
+  '26mld',
+  '26mldrishikesh',
+  'rishikesh',
+  '20mldrishikesh',
+  'lakkarghat',
+  // 28 MLD Indira Nagar, Haldwani
+  'indira-nagar-28',
+  '28mldindira',
+  '28_mld_haldwani',
+  '28mld_haldwani',
+  '28mldhaldwani',
+  '28mld',
+  'haldwani',
+  'indiranagar',
+  // 20 MLD Mothorowala Unit 1
+  'mothorowala-20',
+  '20mldmothorowala',
+  '20_mld_mothorwala_unit1',
+  '20mld_mothorwala_unit1',
+  '20mld',
+  'mothorowala',
+  'unit1',
+  // 68 MLD Kargi Chowk, Dehradun
   'kargi-68',
   '68mldkargi',
   '68mld_kargi',
@@ -735,35 +809,42 @@ const CPV_RECORDING_PLANTS = new Set([
   '68mld_kargi_chowk',
   '68mld kargi chowk',
   'stp68mldkar',
-  'sarai-14',
-  '14mldsarai',
-  '14mld',
+  // 20 MLD Mothorowala Unit 2
+  'mothorowala-20-2',
+  '20mldmoth_2',
+  '20mld_mothorwala_unit2',
+  '20_mld_mothorwala_unit2',
+  '20mld2',
+  'unit2',
+  // 33 MLD Saliyar, Roorkee
   'saliar-33',
   '33mldsali',
   '33mld_sal',
   '38mldsaliar',
-  'mothorowala-20',
-  '20mldmothorowala',
-  '20mld',
-  'mothorowala-20-2',
-  '20mldmoth_2',
-  '20mld2',
-  'lakkar-ghat-26',
-  '26mldlkgt2',
-  '26mldlakkar',
-  '26mld',
-  '26mldrishikesh',
-  'rishikesh',
-  '20mldrishikesh',
+  'saliar',
+  'saliyar',
+  // 10 MLD Bazpur
   'bazpur-10',
   '10mldbazpur',
+  '10_mld_bazpur',
+  '10mld_bazpur',
   'bazpur',
   '10mld',
+  // 10 MLD Kashipur
+  'kashipur-10',
+  '10mldkashipur',
+  '10_mld_kashipur',
+  '10mld_kashipur',
+  'kashipur',
 ])
 
 export function hasCpvRecordings(stpId?: string, plantCode?: string) {
-  const keys = [stpId, plantCode].map((value) => String(value ?? '').trim().toLowerCase())
-  return keys.some((key) => CPV_RECORDING_PLANTS.has(key))
+  const candidates = [stpId, plantCode].filter(Boolean)
+  return candidates.some((cand) => {
+    const raw = String(cand).trim().toLowerCase()
+    const clean = raw.replace(/[-_\s]+/g, '')
+    return CPV_RECORDING_PLANTS.has(raw) || CPV_RECORDING_PLANTS.has(clean)
+  })
 }
 
 export function toPlaybackCameras(cameras: LiveSiteCamera[]): CctvCamera[] {
@@ -814,7 +895,10 @@ type PlantCameraOption = { id: string; label: string; plantCode?: string; stpId?
 
 /**
  * Same camera resolution as Live Camera Feed:
- * configured STP cameras → 68 MLD live API → mock site cameras → empty placeholders.
+ * 1. 14 MLD Sarai WHEP live stream (custom Tailnet client stream)
+ * 2. CCTV API (all 13 STPs, returns recordingStreamUrl + mode for recorded feeds)
+ * 3. Configured STP cameras
+ * 4. Mock site cameras -> empty placeholders.
  */
 export async function loadLiveCamerasByStp(
   plantOptions: PlantCameraOption[],
@@ -825,16 +909,31 @@ export async function loadLiveCamerasByStp(
 
   for (const option of plantOptions) {
     const siteStpId = option.stpId || option.id
+
+    // 1. Sarai 14 MLD has custom Tailnet WHEP live player configured
+    if (siteStpId === 'sarai-14' || siteStpId === '14mldsarai') {
+      const configured = getCamerasForStp(siteStpId)
+      if (configured) {
+        next[siteStpId] = toSiteCameras(siteStpId, configured)
+        continue
+      }
+    }
+
+    // 2. All STPs: fetch from CCTV API which returns recordingStreamUrl + mode
+    // so the Live Camera Feed tab can play recordings when live is down.
+    try {
+      const cameras = await fetchCctvCameras(option.plantCode, siteStpId)
+      if (cameras && cameras.length > 0) {
+        next[siteStpId] = toSiteCameras(siteStpId, cameras)
+        continue
+      }
+    } catch {
+      // Fall through to configured / mock site data if API is unreachable
+    }
+
     const configured = getCamerasForStp(siteStpId) ?? getCamerasForStp(option.plantCode)
     if (configured) {
       next[siteStpId] = toSiteCameras(siteStpId, configured)
-      continue
-    }
-
-    // 68 MLD pulls live streams from the CCTV API (do not use mock stills).
-    if (siteStpId === 'jagjeetpur-68') {
-      const cameras = await fetchCctvCameras()
-      next[siteStpId] = toSiteCameras(siteStpId, cameras)
       continue
     }
 
