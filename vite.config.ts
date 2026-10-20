@@ -44,6 +44,10 @@ export default defineConfig(({ mode }) => {
             })
           },
         },
+        '/stp-cctv': {
+          target: env.VITE_STP_CCTV_BASE_URL || 'http://45.195.229.15:18085',
+          changeOrigin: true,
+        },
         '/penalty-api': {
           target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:18088',
           changeOrigin: true,

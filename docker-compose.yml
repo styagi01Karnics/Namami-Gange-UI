@@ -12,3 +12,6 @@ services:
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+    volumes:
+      - /opt/stp-cctv:/opt/stp-cctv:ro
