@@ -891,6 +891,14 @@ export function emptyCameras(stpId: string): LiveSiteCamera[] {
   ]
 }
 
+/** Influent clips served by nginx from /opt/stp-cctv (see nginx.conf). */
+const LOCAL_INFLUENT_VIDEOS: Record<string, string> = {
+  'saliar-33': '/stp-cctv/33mld_sal/Inlet.mp4',
+  '33mldsali': '/stp-cctv/33mld_sal/Inlet.mp4',
+  '33mld_sal': '/stp-cctv/33mld_sal/Inlet.mp4',
+  stp33mld: '/stp-cctv/33mld_sal/Inlet.mp4',
+}
+
 type PlantCameraOption = { id: string; label: string; plantCode?: string; stpId?: string }
 
 /**
@@ -959,6 +967,16 @@ export async function loadLiveCamerasByStp(
     }
 
     next[siteStpId] = emptyCameras(siteStpId)
+  }
+
+  for (const [stpId, cams] of Object.entries(next)) {
+    const url = LOCAL_INFLUENT_VIDEOS[stpId.toLowerCase()]
+    if (!url) continue
+    next[stpId] = cams.map((cam) =>
+      String(cam.location || cam.id).toLowerCase().includes('influent')
+        ? { ...cam, status: 'Live', streamUrl: url, player: 'mp4' as CameraPlayer }
+        : cam,
+    )
   }
 
   return next
