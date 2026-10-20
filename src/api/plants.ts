@@ -214,3 +214,15 @@ export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusDa
   }
 }
 
+export async function fetchLatestViolations(): Promise<any[] | null> {
+  try {
+    const response = await fetch(`${DASHBOARD_API}/dashboard/latest-violations`)
+    if (!response.ok) throw new Error('Failed to load latest violations')
+    const payload = await response.json()
+    return Array.isArray(payload?.data) ? payload.data : null
+  } catch {
+    return null
+  }
+}
+
+

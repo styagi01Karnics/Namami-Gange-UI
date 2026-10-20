@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Card from '../ui/Card'
 import { monthlyViolations, type StpMonthlyViolation } from '../../data/mockData'
-import { FALLBACK_PLANT_OPTIONS } from '../../api/plants'
+import { FALLBACK_PLANT_OPTIONS, fetchLatestViolations } from '../../api/plants'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
 
@@ -102,13 +102,35 @@ export default function LatestViolationsSliderCard({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [dbViolations, setDbViolations] = useState<StpMonthlyViolation[] | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Get strictly unique latest violation per STP without duplicates
+  useEffect(() => {
+    let isMounted = true
+    fetchLatestViolations()
+      .then((data) => {
+        if (isMounted && data && Array.isArray(data) && data.length > 0) {
+          setDbViolations(data as StpMonthlyViolation[])
+        }
+      })
+      .catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Get strictly unique latest violation per STP without duplicates (only showing STPs with actual non-complying parameters)
   const slides = useMemo(() => {
-    const base = violations && violations.length > 0 ? violations : monthlyViolations
-    return getLatestUniqueStpViolations(base)
-  }, [violations])
+    const base =
+      violations && violations.length > 0
+        ? violations
+        : dbViolations && dbViolations.length > 0
+          ? dbViolations
+          : monthlyViolations
+    const unique = getLatestUniqueStpViolations(base)
+    const withViolations = unique.filter((item) => item.parameters && item.parameters.length > 0)
+    return withViolations.length > 0 ? withViolations : unique
+  }, [violations, dbViolations])
 
   const total = slides.length
 
@@ -269,30 +291,39 @@ export default function LatestViolationsSliderCard({
                 </div>
 
                 {/* Non-Complying Parameters Box */}
-                <div className="mt-2.5 rounded-[12px] border border-[#FEE2E2] bg-gradient-to-r from-[#FFF5F5] to-[#FFF9F9] p-2.5 sm:p-3">
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#991B1B]">
-                      Non-complying Parameters ({item.parameters.length})
-                    </span>
-                  </div>
+                {item.parameters && item.parameters.length > 0 ? (
+                  <div className="mt-2.5 rounded-[12px] border border-[#FEE2E2] bg-gradient-to-r from-[#FFF5F5] to-[#FFF9F9] p-2.5 sm:p-3">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-[#991B1B]">
+                        Non-complying Parameters ({item.parameters.length})
+                      </span>
+                    </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {item.parameters.map((p, pIdx) => (
-                      <div
-                        key={pIdx}
-                        className="flex items-center gap-2 rounded-lg border border-[#FCA5A5]/60 bg-white px-2.5 py-1.5 shadow-xs"
-                      >
-                        <div className="text-[12px] font-bold text-[#1E293B]">
-                          <span>{formatParameterName(p.name)}: </span>
-                          <span className="text-[#DC2626] font-extrabold">{p.observedValue}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {item.parameters.map((p, pIdx) => (
+                        <div
+                          key={pIdx}
+                          className="flex items-center gap-2 rounded-lg border border-[#FCA5A5]/60 bg-white px-2.5 py-1.5 shadow-xs"
+                        >
+                          <div className="text-[12px] font-bold text-[#1E293B]">
+                            <span>{formatParameterName(p.name)}: </span>
+                            <span className="text-[#DC2626] font-extrabold">{p.observedValue}</span>
+                          </div>
+                          <span className="text-[11px] font-medium text-[#64748B]">
+                            (Range: {p.range})
+                          </span>
                         </div>
-                        <span className="text-[11px] font-medium text-[#64748B]">
-                          (Range: {p.range})
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="mt-2.5 rounded-[12px] border border-[#BBF7D0] bg-gradient-to-r from-[#F0FDF4] to-[#F7FEE7] p-2.5 sm:p-3">
+                    <div className="flex items-center gap-2 text-[12px] font-bold text-[#15803D]">
+                      <span className="grid size-4 place-items-center rounded-full bg-[#DCFCE7] text-[#16A34A] text-[10px]">✓</span>
+                      <span>All Parameters Within Permissible Limits (Compliant)</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Date & Non-Compliance Time Bar */}
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
