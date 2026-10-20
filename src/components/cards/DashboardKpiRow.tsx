@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
+import { fetchStpActiveStatus, type StpActiveStatusData } from '../../api/plants'
 import NonActiveStpModal from './NonActiveStpModal'
 
 const TONE = {
@@ -39,11 +40,29 @@ export default function DashboardKpiRow() {
   const [nonActiveOpen, setNonActiveOpen] = useState(false)
   const [totalDropdownOpen, setTotalDropdownOpen] = useState(false)
   const [activeDropdownOpen, setActiveDropdownOpen] = useState(false)
+  const [statusData, setStatusData] = useState<StpActiveStatusData | null>(null)
 
   const totalDropdownRef = useRef<HTMLDivElement>(null)
   const totalTriggerRef = useRef<HTMLButtonElement>(null)
   const activeDropdownRef = useRef<HTMLDivElement>(null)
   const activeTriggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const loadStatus = () => {
+      fetchStpActiveStatus(4).then((data) => {
+        if (!cancelled && data) {
+          setStatusData(data)
+        }
+      })
+    }
+    loadStatus()
+    const interval = setInterval(loadStatus, 5000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [])
 
   useEffect(() => {
     if (!totalDropdownOpen && !activeDropdownOpen) return undefined
@@ -80,6 +99,15 @@ export default function DashboardKpiRow() {
     }
   }, [totalDropdownOpen, activeDropdownOpen])
 
+  const activeList =
+    statusData?.activeStps && statusData.activeStps.length > 0
+      ? statusData.activeStps.map((s) => ({
+          plantCode: s.plantCode,
+          stpId: s.plantCode,
+          name: s.plantName,
+        }))
+      : active12StpDetails
+
   return (
     <>
       <div className="grid grid-cols-4 gap-[10px]">
@@ -90,6 +118,15 @@ export default function DashboardKpiRow() {
           const valueClass = `text-[20px] font-bold leading-[26px] ${tone.value} ${
             isClickable ? 'underline underline-offset-[3px] cursor-pointer' : ''
           }`
+
+          const displayValue =
+            kpi.key === 'total' && statusData?.totalCount != null
+              ? String(statusData.totalCount)
+              : kpi.key === 'active' && statusData?.activeCount != null
+                ? String(statusData.activeCount)
+                : kpi.key === 'nonActive' && statusData?.nonActiveCount != null
+                  ? String(statusData.nonActiveCount)
+                  : kpi.value
 
           return (
             <div
@@ -111,7 +148,7 @@ export default function DashboardKpiRow() {
                     title="Click to view all 13 STPs"
                     aria-expanded={totalDropdownOpen}
                   >
-                    <span>{kpi.value}</span>
+                    <span>{displayValue}</span>
                     <ChevronDown
                       size={15}
                       className={`text-[#0768D2] transition-transform duration-200 ${
@@ -128,10 +165,10 @@ export default function DashboardKpiRow() {
                       setTotalDropdownOpen(false)
                     }}
                     className="inline-flex items-center gap-1.5 w-fit text-left text-[20px] font-bold leading-[26px] text-[#168E3F] underline underline-offset-[3px] cursor-pointer"
-                    title="Click to view 12 Active STPs"
+                    title={`Click to view ${displayValue} Active STPs`}
                     aria-expanded={activeDropdownOpen}
                   >
-                    <span>{kpi.value}</span>
+                    <span>{displayValue}</span>
                     <ChevronDown
                       size={15}
                       className={`text-[#168E3F] transition-transform duration-200 ${
@@ -146,14 +183,14 @@ export default function DashboardKpiRow() {
                     className={`w-fit text-left ${valueClass}`}
                     title="View Non-Active STPs"
                   >
-                    {kpi.value}
+                    {displayValue}
                   </button>
                 ) : 'href' in kpi && kpi.href ? (
                   <Link to={kpi.href} className={`w-fit ${valueClass}`}>
-                    {kpi.value}
+                    {displayValue}
                   </Link>
                 ) : (
-                  <p className={valueClass}>{kpi.value}</p>
+                  <p className={valueClass}>{displayValue}</p>
                 )}
               </div>
               {'badge' in kpi && kpi.badge ? (
@@ -187,16 +224,16 @@ export default function DashboardKpiRow() {
                 </div>
               )}
 
-              {/* 12 Active STPs Dropdown (showing only STP names) */}
+              {/* Active STPs Dropdown (showing only STP names) */}
               {'openActiveStp' in kpi && kpi.openActiveStp && activeDropdownOpen && (
                 <div
                   ref={activeDropdownRef}
                   className="absolute left-0 top-[calc(100%+6px)] z-50 w-[320px] max-w-[90vw] overflow-hidden rounded-[10px] border border-[#CDE0F5] bg-white shadow-[0_12px_28px_rgba(22,142,63,0.18)]"
                 >
                   <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
-                    {active12StpDetails.map((stp) => (
+                    {activeList.map((stp) => (
                       <Link
-                        key={stp.stpId}
+                        key={stp.plantCode || stp.stpId}
                         to={`/stp-management?plant=${encodeURIComponent(stp.plantCode || stp.stpId)}&name=${encodeURIComponent(stp.name)}`}
                         onClick={() => setActiveDropdownOpen(false)}
                         className="block truncate px-3.5 py-2.5 text-[12.5px] font-medium text-[#1E293B] transition-colors hover:bg-[#F0FDF4] hover:text-[#168E3F]"
@@ -213,7 +250,12 @@ export default function DashboardKpiRow() {
         })}
       </div>
 
-      <NonActiveStpModal open={nonActiveOpen} onClose={() => setNonActiveOpen(false)} />
+      <NonActiveStpModal
+        open={nonActiveOpen}
+        onClose={() => setNonActiveOpen(false)}
+        items={statusData?.nonActiveStps}
+      />
     </>
   )
 }
+

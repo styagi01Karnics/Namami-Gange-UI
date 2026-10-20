@@ -12,18 +12,6 @@ export default function StpParameterReport() {
         columns={stpParameterReportColumns}
         rows={stpParameterReportRows}
         renderCell={(r, col) => {
-          if (col.key === 'status') {
-            const isNonComplying = r.status === 'Non-Complying'
-            return (
-              <span
-                className={`inline-flex rounded-full px-[10px] py-[3px] text-[12px] font-bold ${
-                  isNonComplying ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#DCFCE7] text-[#16A34A]'
-                }`}
-              >
-                {r.status}
-              </span>
-            )
-          }
           if (col.key === 'bod' || col.key === 'cod' || col.key === 'tss') {
             const isNonComplying = r.status === 'Non-Complying'
             return (

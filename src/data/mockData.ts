@@ -3345,16 +3345,15 @@ export const inventoryReportRows = [
 ]
 
 export const stpParameterReportColumns = [
-  { key: 'sn', label: 'S/N', width: '5%' },
-  { key: 'date', label: 'Date', width: '11%' },
-  { key: 'time', label: 'Time', width: '10%' },
-  { key: 'bod', label: 'BOD (mg/L)', width: '11%' },
-  { key: 'cod', label: 'COD (mg/L)', width: '11%' },
-  { key: 'tss', label: 'TSS (mg/L)', width: '11%' },
-  { key: 'ph', label: 'pH', width: '9%' },
-  { key: 'temp', label: 'Temp (°C)', width: '10%' },
-  { key: 'nh4n', label: 'NH₄-N (mg/L)', width: '10%' },
-  { key: 'status', label: 'Compliance Status', width: '12%' },
+  { key: 'sn', label: 'S/N', width: '6%' },
+  { key: 'date', label: 'Date', width: '12%' },
+  { key: 'time', label: 'Time', width: '11%' },
+  { key: 'bod', label: 'BOD (mg/L)', width: '12%' },
+  { key: 'cod', label: 'COD (mg/L)', width: '12%' },
+  { key: 'tss', label: 'TSS (mg/L)', width: '12%' },
+  { key: 'ph', label: 'pH', width: '11%' },
+  { key: 'temp', label: 'Temp (°C)', width: '12%' },
+  { key: 'nh4n', label: 'NH₄-N (mg/L)', width: '12%' },
 ]
 
 export const buildParameterReportRows = () => {
