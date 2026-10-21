@@ -56,6 +56,17 @@ function is68MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: stri
   return plantKey(item).some((key) => key === '68mldjag' || key === 'jagjeetpur-68')
 }
 
+function is18MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some(
+    (key) =>
+      key === '18mldjag' ||
+      key === 'jagjeetpur-18' ||
+      key === '18mld_jagjeetpur' ||
+      key === '18mld' ||
+      key === 'stp18mldjag',
+  )
+}
+
 function is33MldSaliar(item: { id?: string; plantCode?: string; stpId?: string }) {
   return plantKey(item).some((key) => key === '33mldsali' || key === 'saliar-33')
 }
@@ -96,6 +107,8 @@ const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
   'sarai-18-upg': 4,
   '18mldjag': 5,
   'jagjeetpur-18': 5,
+  '18mld_jagjeetpur': 5,
+  'stp18mldjag': 5,
   '26mldlkgt2': 6,
   'lakkar-ghat-26': 6,
   '26mld': 6,
@@ -157,6 +170,7 @@ function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: stri
 const TOP_PINNED_STP_MATCHERS = [
   is14MldSarai, // 14 MLD STP, Sarai, Haridwar
   is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
+  is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
   is26MldRishikesh, // 26 MLD STP, Lakkarghat, Rishikesh
   (item: { id?: string; plantCode?: string; stpId?: string }) =>
     plantKey(item).some((key) => key === '68mldkargi' || key === 'kargi-68'), // 68 MLD STP, Kargi Chowk, Dehradun

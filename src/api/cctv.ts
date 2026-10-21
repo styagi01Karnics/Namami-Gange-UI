@@ -175,6 +175,23 @@ const STP_68MLD_KARGI_CAMERAS: CctvCamera[] = [
   },
 ]
 
+const STP_18MLD_JAG_CAMERAS: CctvCamera[] = [
+  {
+    id: 'jagjeetpur-18-cam-1',
+    name: 'Influent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP18MLDJAG',
+  },
+  {
+    id: 'jagjeetpur-18-cam-2',
+    name: 'Effluent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP18MLDJAG',
+  },
+]
+
 function defaultPlantCameras(siteCode: string): CctvCamera[] {
   return [
     {
@@ -199,7 +216,7 @@ const DEFAULT_SITES: CctvSite[] = [
   { id: 2, siteCode: 'PLANT001', name: '68 MLD STP, Jagjeetpur, Haridwar' },
   { id: 3, siteCode: '27mldjag_upg', name: '27 MLD STP, Jagjeetpur' },
   { id: 4, siteCode: '18mldsarai_upg', name: '18 MLD STP, Sarai' },
-  { id: 5, siteCode: '18mldjag', name: '18 MLD STP, Jagjeetpur, Haridwar' },
+  { id: 5, siteCode: 'STP18MLDJAG', name: '18 MLD STP, Jagjeetpur, Haridwar' },
   { id: 6, siteCode: '26mldlkgt2', name: '26 MLD STP, Lakkarghat, Rishikesh' },
   { id: 7, siteCode: '28mldindira', name: '28 MLD STP, Indira Nagar, Haldwani' },
   { id: 8, siteCode: 'STP20MLD1', name: '20 MLD STP, Mothorowala-1, Dehradun' },
@@ -256,8 +273,15 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   if (key === 'sarai-18-upg' || key === '18mldsarai_upg' || key === 'sarai-18') {
     return defaultPlantCameras('18mldsarai_upg')
   }
-  if (key === 'jagjeetpur-18' || key === '18mldjag') {
-    return defaultPlantCameras('18mldjag')
+  if (
+    key === 'jagjeetpur-18' ||
+    key === '18mldjag' ||
+    key === '18mld_jagjeetpur' ||
+    key === '18mld' ||
+    key === '18mldjagjeetpur' ||
+    key === 'stp18mldjag'
+  ) {
+    return STP_18MLD_JAG_CAMERAS
   }
   if (
     key === 'lakkar-ghat-26' ||
@@ -360,11 +384,21 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
     const query = params.toString()
     const url = query ? `${CCTV_API}/cameras?${query}` : `${CCTV_API}/cameras`
     const response = await fetch(url)
-    if (!response.ok) return DEFAULT_CAMERAS
+    if (!response.ok) {
+      if (plantCode || stpId) {
+        return getCamerasForStp(stpId) ?? getCamerasForStp(plantCode) ?? []
+      }
+      return DEFAULT_CAMERAS
+    }
 
     const raw = await parseJsonSafely<any[]>(response)
     const items = Array.isArray(raw) ? raw : []
-    if (items.length === 0) return DEFAULT_CAMERAS
+    if (items.length === 0) {
+      if (plantCode || stpId) {
+        return getCamerasForStp(stpId) ?? getCamerasForStp(plantCode) ?? []
+      }
+      return DEFAULT_CAMERAS
+    }
     // Map server response fields (camelCase) to CctvCamera, preserving
     // recordingStreamUrl and mode that are now returned by the API.
     const cameras: CctvCamera[] = items.map((item) => ({
@@ -381,6 +415,9 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
     }))
     return cameras
   } catch {
+    if (plantCode || stpId) {
+      return getCamerasForStp(stpId) ?? getCamerasForStp(plantCode) ?? []
+    }
     return DEFAULT_CAMERAS
   }
 }
@@ -769,6 +806,13 @@ const CPV_RECORDING_PLANTS = new Set([
   '68mld',
   '68mldjagjeetpur',
   'jagjeetpur',
+  // 18 MLD Jagjeetpur, Haridwar
+  'jagjeetpur-18',
+  '18mldjag',
+  '18mld_jagjeetpur',
+  '18mldjagjeetpur',
+  '18mld',
+  'stp18mldjag',
   // 26 MLD Rishikesh / Lakkarghat
   'lakkar-ghat-26',
   '26mldlkgt2',

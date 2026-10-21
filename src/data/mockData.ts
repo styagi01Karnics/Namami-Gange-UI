@@ -2969,8 +2969,8 @@ const cctvSiteCameras = [
   {
     stpId: 'jagjeetpur-18',
     cameras: [
-      { key: 'influent', id: 'CAM-IN-18J', location: 'Influent', status: 'Offline', lastActive: 'Unavailable', timecode: null, image: null },
-      { key: 'effluent', id: 'CAM-EF-18J', location: 'Effluent', status: 'Offline', lastActive: 'Unavailable', timecode: null, image: null },
+      { key: 'influent', id: 'CAM-IN-18J', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'effluent', id: 'CAM-EF-18J', location: 'Effluent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
     ],
   },
   {
