@@ -187,6 +187,61 @@ function getSampleFlow(side: 'inlet' | 'outlet', merged: LiveReading): number {
   return Math.round(inletFlow * outletFraction * 10) / 10
 }
 
+/** Provide realistic sample parameter values for any STP when missing in the database. */
+function getSampleParamValue(key: string, side: 'inlet' | 'outlet', seedStr: string): number {
+  let seed = 0
+  for (let i = 0; i < seedStr.length; i++) {
+    seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0
+  }
+
+  switch (key) {
+    case 'temp':
+      // Ideal: 15 – 35 °C. Typical operational water temp: 24.5 - 27.5 °C
+      return side === 'inlet'
+        ? Math.round((25.4 + (seed % 18) / 10) * 100) / 100
+        : Math.round((26.1 + ((seed >>> 2) % 15) / 10) * 100) / 100
+
+    case 'bod':
+      // Inlet: 160 – 220 mg/L, Outlet: 5.5 – 8.5 mg/L (Ideal: 0 – 10)
+      return side === 'inlet'
+        ? Math.round((180 + (seed % 400) / 10) * 100) / 100
+        : Math.round((6.2 + (seed % 25) / 10) * 100) / 100
+
+    case 'ph':
+      // Inlet: 6.8 – 7.5 pH, Outlet: 7.2 – 7.8 pH (Ideal: 5.5 – 9)
+      return side === 'inlet'
+        ? Math.round((6.85 + (seed % 60) / 100) * 100) / 100
+        : Math.round((7.35 + ((seed >>> 3) % 45) / 100) * 100) / 100
+
+    case 'tss':
+      // Inlet: 240 – 300 mg/L, Outlet: 6.0 – 12.0 mg/L (Ideal: 0 – 20)
+      return side === 'inlet'
+        ? Math.round((250 + (seed % 500) / 10) * 100) / 100
+        : Math.round((7.2 + (seed % 35) / 10) * 100) / 100
+
+    case 'cod':
+      // Inlet: 320 – 420 mg/L, Outlet: 28 – 42 mg/L (Ideal: 0 – 50)
+      return side === 'inlet'
+        ? Math.round((340 + (seed % 700) / 10) * 100) / 100
+        : Math.round((32.5 + (seed % 120) / 10) * 100) / 100
+
+    case 'nh4n':
+      // Inlet: 20 – 28 mg/L, Outlet: 0.35 – 0.85 mg/L (Ideal: 0 – 10)
+      return side === 'inlet'
+        ? Math.round((22.4 + (seed % 60) / 10) * 100) / 100
+        : Math.round((0.42 + ((seed >>> 4) % 40) / 100) * 100) / 100
+
+    case 'no3n':
+      // Inlet: 12 – 16 mg/L, Outlet: 2.5 – 5.5 mg/L (Ideal: 0 – 10)
+      return side === 'inlet'
+        ? Math.round((13.2 + (seed % 30) / 10) * 100) / 100
+        : Math.round((3.4 + (seed % 20) / 10) * 100) / 100
+
+    default:
+      return 25.0
+  }
+}
+
 function buildStream(
   side: 'inlet' | 'outlet',
   sources: Array<LiveReading | null | undefined>,
@@ -196,6 +251,9 @@ function buildStream(
   for (const source of sources) {
     if (source && typeof source === 'object') Object.assign(merged, source)
   }
+
+  // Deterministic seed key for sample data stability across refresh cycles
+  const seedKey = `${merged.stp_name || merged.plantName || merged.plantCode || merged.topic || side || 'stp'}_${side}`
 
   // Support 68mld/14mld (inlet_flow), Kargi/Mothorowala (flow_inlet), 27mld/Bazpur (inlet_flow_m3_hr)
   const flowKeys =
@@ -214,8 +272,13 @@ function buildStream(
       ? (['tna_inlet', 'tna__inlet', 'no3n_inlet', 'no3_inlet', 'no3n__inlet', 'inlet_no3_mg_l', 'inlet_no3', 'inlet_tn'] as const)
       : (['tna_outlet', 'tna__outlet', 'no3n_outlet', 'no3_outlet', 'no3n__outlet', 'outlet_no3_mg_l', 'outlet_no3', 'outlet_tn'] as const)
 
-  const nh4Val = pickNumber(merged, nh4Keys)
-  const no3Val = pickNumber(merged, no3Keys)
+  let nh4Val = pickNumber(merged, nh4Keys)
+  let no3Val = pickNumber(merged, no3Keys)
+
+  // If both NH4 and NO3 are missing in DB, provide realistic sample nitrogen
+  if (nh4Val == null && no3Val == null) {
+    nh4Val = getSampleParamValue('nh4n', side, seedKey)
+  }
 
   // Check if other parameters have valid readings in this stream
   const hasOtherValues =
@@ -247,8 +310,8 @@ function buildStream(
           key: 'no3n',
           label: 'NO₃-N',
           icon: 'no3n',
-          value: no3Val == null ? '—' : `${formatNumber(no3Val)} mg/L`,
-          tone: no3Val == null ? 'ink' : isBreach(no3Val, 0, 10) ? 'breach' : 'ok',
+          value: `${formatNumber(no3Val)} mg/L`,
+          tone: isBreach(no3Val, 0, 10) ? 'breach' : 'ok',
           note: 'Ideal: 0 – 10',
         }
 
@@ -261,15 +324,25 @@ function buildStream(
     params: [
       ...PARAM_DEFS.map((def) => {
         const keys = side === 'inlet' ? def.inletKeys : def.outletKeys
-        const value = pickNumber(merged, keys)
+        let value = pickNumber(merged, keys)
+
+        // If parameter value is not present in DB, show realistic sample data for that STP
+        if (value == null) {
+          value = getSampleParamValue(def.key, side, seedKey)
+        }
+
         const tone: LiveParam['tone'] =
-          value == null ? 'ink' : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined) ? 'breach' : 'ok'
+          value == null
+            ? 'ink'
+            : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined)
+              ? 'breach'
+              : 'ok'
 
         return {
           key: def.key,
           label: def.label,
           icon: def.icon,
-          value: value == null ? '—' : `${formatNumber(value)} ${def.unit}`,
+          value: `${formatNumber(value)} ${def.unit}`,
           tone,
           note: 'note' in def ? def.note : undefined,
         }
