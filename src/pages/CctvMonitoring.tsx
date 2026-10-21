@@ -63,7 +63,14 @@ function is18MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: stri
       key === 'jagjeetpur-18' ||
       key === '18mld_jagjeetpur' ||
       key === '18mld' ||
-      key === 'stp18mldjag',
+      key === 'stp18mldjag' ||
+      key === '18mldjagjeetpur',
+  )
+}
+
+function is18MldSarai(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some(
+    (key) => key === '18mldsarai_upg' || key === 'sarai-18-upg' || key === 'sarai-18',
   )
 }
 
@@ -91,24 +98,26 @@ function is10MldBazpur(item: { id?: string; plantCode?: string; stpId?: string }
 
 
 const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
-  '10mldbazpur': 0,
-  'bazpur-10': 0,
-  'bazpur': 0,
-  '10mld': 0,
-  '14mldsarai': 1,
-  'sarai-14': 1,
-  '14mld': 1,
-  '68mldjag': 2,
-  'jagjeetpur-68': 2,
-  '68mld': 2,
-  '27mldjag_upg': 3,
-  'jagjeetpur-27-upg': 3,
-  '18mldsarai_upg': 4,
-  'sarai-18-upg': 4,
-  '18mldjag': 5,
-  'jagjeetpur-18': 5,
-  '18mld_jagjeetpur': 5,
-  'stp18mldjag': 5,
+  '18mldjag': 0,
+  'jagjeetpur-18': 0,
+  '18mld_jagjeetpur': 0,
+  'stp18mldjag': 0,
+  '18mld': 0,
+  '18mldsarai_upg': 1,
+  'sarai-18-upg': 1,
+  'sarai-18': 1,
+  '14mldsarai': 2,
+  'sarai-14': 2,
+  '14mld': 2,
+  '68mldjag': 3,
+  'jagjeetpur-68': 3,
+  '68mld': 3,
+  '10mldbazpur': 4,
+  'bazpur-10': 4,
+  'bazpur': 4,
+  '10mld': 4,
+  '27mldjag_upg': 5,
+  'jagjeetpur-27-upg': 5,
   '26mldlkgt2': 6,
   'lakkar-ghat-26': 6,
   '26mld': 6,
@@ -168,9 +177,10 @@ function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: stri
 
 /** STPs always shown first, in this exact order; the rest follow. */
 const TOP_PINNED_STP_MATCHERS = [
+  is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
+  is18MldSarai, // 18 MLD STP, Sarai
   is14MldSarai, // 14 MLD STP, Sarai, Haridwar
   is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
-  is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
   is26MldRishikesh, // 26 MLD STP, Lakkarghat, Rishikesh
   (item: { id?: string; plantCode?: string; stpId?: string }) =>
     plantKey(item).some((key) => key === '68mldkargi' || key === 'kargi-68'), // 68 MLD STP, Kargi Chowk, Dehradun
