@@ -12,7 +12,6 @@ import AddUserModal from './AddUserModal'
 import ConfirmModal from '../ui/ConfirmModal'
 import { ROLE_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
-import { buildTeamUserStats, teamUserColumns } from '../../data/mockData'
 import {
   fetchUsers,
   createUser,
@@ -22,6 +21,30 @@ import {
   type UserRequest,
 } from '../../api/users'
 import { fetchRoles } from '../../api/roles'
+
+export const teamUserColumns = [
+  { key: 'name', label: 'User', width: '19%' },
+  { key: 'phone', label: 'Phone', width: '15%' },
+  { key: 'email', label: 'Email', width: '22%' },
+  { key: 'role', label: 'Role', width: '15%', sortable: true },
+  { key: 'status', label: 'Status', width: '11%', sortable: true },
+  { key: 'lastLogin', label: 'Last Login', width: '13%' },
+  { key: 'actions', label: 'Actions', width: '10%' },
+]
+
+export const buildTeamUserStats = (rows: any[], roleCount: number) => {
+  const count = (status: string) => rows.filter((r) => r.status === status).length
+  const share = (n: number) => (rows.length === 0 ? '0%' : `${((n / rows.length) * 100).toFixed(1)}%`)
+  const active = count('Active')
+  const inactive = count('Inactive')
+
+  return [
+    { key: 'total', label: 'Total Users', value: rows.length, note: "Across all STP's", tone: 'brand' as const },
+    { key: 'active', label: 'Active Users', value: active, note: share(active), tone: 'ok' as const },
+    { key: 'inactive', label: 'Non-Active Users', value: inactive, note: share(inactive), tone: 'danger' as const },
+    { key: 'roles', label: 'Roles', value: roleCount, note: 'System Roles', tone: 'violet' as const },
+  ]
+}
 
 const PencilIcon = ico('fluent:edit-24-filled')
 const PlusIcon = ico('fluent:add-24-filled')
@@ -129,17 +152,22 @@ export default function UserManagementTab({
     }
   }
 
+  const [roleItems, setRoleItems] = useState<{ id: string; name: string }[]>([])
+
   // Load available roles from database
   const loadRoles = async () => {
     try {
       const roleCards = await fetchRoles()
       if (roleCards?.length) {
+        setRoleItems(roleCards.map((r) => ({ id: r.id, name: r.name })))
         const names = roleCards.map((r) => r.name).filter(Boolean)
         setAvailableRoles(Array.from(new Set(names)))
       } else {
+        setRoleItems([])
         setAvailableRoles([])
       }
     } catch {
+      setRoleItems([])
       setAvailableRoles([])
     }
   }
@@ -164,7 +192,12 @@ export default function UserManagementTab({
 
   // POST /api/users
   const handleAddUser = async (userPayload: UserRequest) => {
-    await createUser(userPayload)
+    const matched = roleItems.find((r) => r.name.toLowerCase() === (userPayload.role || '').toLowerCase())
+    const payloadWithRoleId: UserRequest = {
+      ...userPayload,
+      roleId: userPayload.roleId || matched?.id,
+    }
+    await createUser(payloadWithRoleId)
     await loadUsers()
   }
 

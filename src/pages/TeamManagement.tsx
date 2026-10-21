@@ -4,10 +4,10 @@ import AuditLogsTab from '../components/team/AuditLogsTab'
 import RoleManagementTab from '../components/team/RoleManagementTab'
 import TeamTabs from '../components/team/TeamTabs'
 import UserManagementTab from '../components/team/UserManagementTab'
-import { teamTabs } from '../data/mockData'
+const TEAM_TABS = ['User Management', 'Role Management', 'Audit Logs']
 
 export default function TeamManagement() {
-  const [tab, setTab] = useState(teamTabs[0])
+  const [tab, setTab] = useState(TEAM_TABS[0])
   const [userRoleFilter, setUserRoleFilter] = useState('All Roles')
   const [printDoc, setPrintDoc] = useState(null)
 
@@ -20,7 +20,7 @@ export default function TeamManagement() {
 
   return (
     <div className="flex flex-col gap-[16px] pb-[22px]">
-      <TeamTabs tabs={teamTabs} active={tab} onChange={setTab} />
+      <TeamTabs tabs={TEAM_TABS} active={tab} onChange={setTab} />
 
       {tab === 'User Management' && (
         <UserManagementTab

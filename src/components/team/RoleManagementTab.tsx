@@ -23,6 +23,7 @@ export default function RoleManagementTab({ onViewUsers }: { onViewUsers?: (role
   const [loading, setLoading] = useState(true)
   const [apiError, setApiError] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<RoleCardItem | null>(null)
   const [pendingDelete, setPendingDelete] = useState<RoleCardItem | null>(null)
@@ -67,14 +68,17 @@ export default function RoleManagementTab({ onViewUsers }: { onViewUsers?: (role
 
   // 7. DELETE /api/roles/{id}
   const confirmDelete = async () => {
-    if (!pendingDelete) return
+    if (!pendingDelete || deleting) return
     try {
+      setDeleting(true)
       setDeleteError('')
       await deleteRole(pendingDelete.id)
       setPendingDelete(null)
       await loadRoles()
     } catch (err: any) {
       setDeleteError(err?.message || 'Failed to delete role')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -195,7 +199,14 @@ export default function RoleManagementTab({ onViewUsers }: { onViewUsers?: (role
         open={Boolean(pendingDelete)}
         title="Delete Role"
         message={`Are you sure you want to delete "${pendingDelete?.name}"? This cannot be undone.`}
-        onClose={() => setPendingDelete(null)}
+        loading={deleting}
+        error={deleteError}
+        onClose={() => {
+          if (!deleting) {
+            setPendingDelete(null)
+            setDeleteError('')
+          }
+        }}
         onConfirm={confirmDelete}
       />
     </div>

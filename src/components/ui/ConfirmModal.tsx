@@ -11,6 +11,8 @@ type ConfirmModalProps = {
   title?: string
   message?: string
   confirmLabel?: string
+  loading?: boolean
+  error?: string
 }
 
 export default function ConfirmModal({
@@ -20,20 +22,24 @@ export default function ConfirmModal({
   title = 'Delete',
   message = 'Are you sure you want to delete this?',
   confirmLabel = 'Delete',
+  loading = false,
+  error,
 }: ConfirmModalProps) {
   useEffect(() => {
     if (!open) return undefined
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => !loading && e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, loading])
 
   if (!open) return null
 
   return (
     <div
       role="presentation"
-      onClick={onClose}
+      onClick={() => {
+        if (!loading) onClose()
+      }}
       className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/45 p-[24px]"
     >
       <div
@@ -52,15 +58,22 @@ export default function ConfirmModal({
         </h2>
         <p className="mt-[8px] text-[13.5px] leading-5 text-ink-muted">{message}</p>
 
+        {error && (
+          <div className="mt-[14px] rounded-[8px] border border-red-200 bg-red-50 p-2.5 text-left text-[12.5px] leading-[18px] text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="mt-[24px] flex items-center gap-[12px]">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>
+          <Button variant="ghost" className="flex-1" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button
-            className="flex-1 border-danger bg-danger text-white hover:bg-[#C8353A]"
+            className="flex-1 border-danger bg-danger text-white hover:bg-[#C8353A] disabled:opacity-60"
             onClick={onConfirm}
+            disabled={loading}
           >
-            {confirmLabel}
+            {loading ? 'Deleting...' : confirmLabel}
           </Button>
         </div>
       </div>

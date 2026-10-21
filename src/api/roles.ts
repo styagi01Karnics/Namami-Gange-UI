@@ -3,7 +3,7 @@
  * Microservice endpoint: /api/roles
  */
 
-const ROLE_API_URL = import.meta.env.VITE_ROLE_API_URL ?? '/role-api'
+const ROLE_API_URL = import.meta.env.VITE_ROLE_API_URL ?? 'http://45.195.229.15:18089/api'
 
 export type LabeledValue = {
   id: string

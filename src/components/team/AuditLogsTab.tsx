@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import { ChevronDown, RefreshCw } from 'lucide-react'
 import Avatar from '../ui/Avatar'
 import DataTable from '../ui/DataTable'
 import Select from '../ui/Select'
@@ -8,15 +8,34 @@ import StatusPill from '../ui/StatusPill'
 import TeamSectionHeader from './TeamSectionHeader'
 import { ACTION_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
-import { auditActions, auditLogColumns, auditLogStats, auditLogs } from '../../data/mockData'
+
+export const auditLogColumns = [
+  { key: 'id', label: 'Log ID', width: '9%' },
+  { key: 'member', label: 'Member', width: '18%' },
+  { key: 'action', label: 'Action', width: '13%', sortable: true },
+  { key: 'change', label: 'Change Description', width: '22%' },
+  { key: 'module', label: 'Module', width: '13%', sortable: true },
+  { key: 'performedBy', label: 'Performed By', width: '17%' },
+  { key: 'details', label: 'Details', width: '8%' },
+]
 
 const CSV_COLUMNS = auditLogColumns
   .filter((c) => c.key !== 'details')
   .map((c) => ({ key: c.key, label: c.label }))
 
-const ACTION_FILTER = ['All Actions', ...auditActions]
+const AUDIT_ACTIONS = ['Role Updated', 'User Removed', 'Status Change', 'Member Added']
+const ACTION_FILTER = ['All Actions', ...AUDIT_ACTIONS]
 
-function Person({ name, id }) {
+function computeAuditStats(items: any[]) {
+  return [
+    { key: 'total', label: 'Total Logs', value: items.length, note: 'System events', tone: 'brand' as const },
+    { key: 'roleUpdated', label: 'Role Changes', value: items.filter((i) => i.action === 'Role Updated').length, note: 'Security updates', tone: 'violet' as const },
+    { key: 'userActions', label: 'User Actions', value: items.filter((i) => i.action === 'Member Added' || i.action === 'User Removed').length, note: 'Membership changes', tone: 'ok' as const },
+    { key: 'statusChanges', label: 'Status Changes', value: items.filter((i) => i.action === 'Status Change').length, note: 'State modifications', tone: 'danger' as const },
+  ]
+}
+
+function Person({ name, id }: { name: string; id: string }) {
   return (
     <span className="flex items-center gap-[10px]">
       <Avatar size={30} />
@@ -28,13 +47,38 @@ function Person({ name, id }) {
   )
 }
 
-export default function AuditLogsTab({ onExportPdf }) {
+export default function AuditLogsTab({ onExportPdf }: { onExportPdf?: any }) {
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
   const [action, setAction] = useState('All Actions')
 
+  useEffect(() => {
+    // Audit logs fetched from API
+    const loadAuditLogs = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`${import.meta.env.VITE_USER_API_URL ?? 'http://localhost:8904/api'}/audit-logs`)
+        if (res.ok) {
+          const json = await res.json()
+          setLogs(Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [])
+        } else {
+          setLogs([])
+        }
+      } catch {
+        setLogs([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadAuditLogs()
+  }, [])
+
   const rows = useMemo(
-    () => (action === 'All Actions' ? auditLogs : auditLogs.filter((l) => l.action === action)),
-    [action],
+    () => (action === 'All Actions' ? logs : logs.filter((l) => l.action === action)),
+    [action, logs],
   )
+
+  const stats = useMemo(() => computeAuditStats(logs), [logs])
 
   const renderCell = (row, col, { expanded, toggleExpanded }) => {
     if (col.key === 'member') return <Person name={row.member} id={row.memberId} />
@@ -104,7 +148,7 @@ export default function AuditLogsTab({ onExportPdf }) {
     <div className="flex flex-col gap-[16px]">
       <TeamSectionHeader tab="Audit Logs" />
 
-      <SoftStatCardsRow items={auditLogStats} columns={4} gap={14} />
+      <SoftStatCardsRow items={stats} columns={4} gap={14} />
 
       <DataTable
         columns={auditLogColumns}

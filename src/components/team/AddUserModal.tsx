@@ -166,14 +166,14 @@ export default function AddUserModal({
     <div
       role="presentation"
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/45 p-[12px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-[12px]"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-user-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[600px] rounded-[16px] bg-white p-[22px] shadow-pop"
+        className="max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-[16px] bg-white p-[22px] shadow-pop"
       >
         <div className="flex items-center gap-[10px]">
           <TitleIcon size={20} className="text-brand" />
