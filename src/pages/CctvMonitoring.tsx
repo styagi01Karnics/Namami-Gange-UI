@@ -78,6 +78,7 @@ function is10MldBazpur(item: { id?: string; plantCode?: string; stpId?: string }
   return plantKey(item).some((key) => key === '10mldbazpur' || key === 'bazpur-10' || key === 'bazpur')
 }
 
+
 const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
   '10mldbazpur': 0,
   'bazpur-10': 0,
@@ -328,11 +329,11 @@ export default function CctvMonitoring() {
 
       const fromQuery = plantParam
         ? next.find(
-            (o) =>
-              o.id.toLowerCase() === plantParam.toLowerCase() ||
-              o.plantCode?.toLowerCase() === plantParam.toLowerCase() ||
-              o.stpId?.toLowerCase() === plantParam.toLowerCase(),
-          )?.id
+          (o) =>
+            o.id.toLowerCase() === plantParam.toLowerCase() ||
+            o.plantCode?.toLowerCase() === plantParam.toLowerCase() ||
+            o.stpId?.toLowerCase() === plantParam.toLowerCase(),
+        )?.id
         : undefined
 
       setStpId((current) => fromQuery ?? (next.some((option) => option.id === current) ? current : ALL_STP_FILTER_OPTION.id))
@@ -607,8 +608,8 @@ export default function CctvMonitoring() {
         {view === 'carousel' ? (
           <div
             className={`grid grid-cols-1 gap-3.5 bg-[#F3F8FD] p-2.5 sm:p-3.5 transition-all ${showQueue
-                ? 'lg:grid-cols-[minmax(0,1fr)_250px] xl:grid-cols-[minmax(0,1fr)_260px]'
-                : 'grid-cols-1'
+              ? 'lg:grid-cols-[minmax(0,1fr)_250px] xl:grid-cols-[minmax(0,1fr)_260px]'
+              : 'grid-cols-1'
               }`}
           >
             {/* Left Column: Enlarged Camera Stream View */}
@@ -633,8 +634,8 @@ export default function CctvMonitoring() {
                         onClick={() => setCameraLayout('parallel')}
                         title="Side-by-side parallel view"
                         className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${cameraLayout === 'parallel'
-                            ? 'bg-[#0768D2] text-white shadow-xs'
-                            : 'text-[#536981] hover:text-[#102653]'
+                          ? 'bg-[#0768D2] text-white shadow-xs'
+                          : 'text-[#536981] hover:text-[#102653]'
                           }`}
                       >
                         <Columns size={12} />
@@ -645,8 +646,8 @@ export default function CctvMonitoring() {
                         onClick={() => setCameraLayout('stacked')}
                         title="Full-width large stacked rows"
                         className={`flex h-[22px] items-center gap-1 rounded-[4px] px-2 text-[10.5px] font-semibold transition-colors ${cameraLayout === 'stacked'
-                            ? 'bg-[#0768D2] text-white shadow-xs'
-                            : 'text-[#536981] hover:text-[#102653]'
+                          ? 'bg-[#0768D2] text-white shadow-xs'
+                          : 'text-[#536981] hover:text-[#102653]'
                           }`}
                       >
                         <Rows3 size={12} />
@@ -660,8 +661,8 @@ export default function CctvMonitoring() {
                       onClick={() => setShowQueue((prev) => !prev)}
                       title={showQueue ? 'Hide queue to maximize cameras' : 'Show queue'}
                       className={`flex h-[28px] items-center gap-1 rounded-[6px] border px-2 text-[10.5px] font-semibold transition-colors ${!showQueue
-                          ? 'border-[#0768D2] bg-[#EAF4FF] text-[#0768D2]'
-                          : 'border-[#DCE8F5] bg-white text-[#536981] hover:bg-[#F3F8FD]'
+                        ? 'border-[#0768D2] bg-[#EAF4FF] text-[#0768D2]'
+                        : 'border-[#DCE8F5] bg-white text-[#536981] hover:bg-[#F3F8FD]'
                         }`}
                     >
                       {showQueue ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}
@@ -917,8 +918,8 @@ export default function CctvMonitoring() {
             {showQueue && (
               <aside
                 className={`flex flex-col min-h-0 overflow-hidden rounded-[13px] border border-[#D9E5F1] bg-white shadow-xs ${cameraLayout === 'stacked'
-                    ? 'max-h-[720px] lg:max-h-[calc(100vh-180px)]'
-                    : 'max-h-[490px] xl:max-h-[530px]'
+                  ? 'max-h-[720px] lg:max-h-[calc(100vh-180px)]'
+                  : 'max-h-[490px] xl:max-h-[530px]'
                   }`}
               >
                 {/* Queue Header */}
@@ -969,8 +970,8 @@ export default function CctvMonitoring() {
                           type="button"
                           onClick={() => handleSelectSite(originalIndex)}
                           className={`relative flex w-full flex-col overflow-hidden rounded-[8px] p-2 text-left transition-all ${isSelected
-                              ? 'border-2 border-[#0768D2] bg-[#EBF4FE] shadow-xs'
-                              : 'border border-[#E4EDF6] bg-white hover:border-[#BBD8F6] hover:bg-[#F9FBFE]'
+                            ? 'border-2 border-[#0768D2] bg-[#EBF4FE] shadow-xs'
+                            : 'border border-[#E4EDF6] bg-white hover:border-[#BBD8F6] hover:bg-[#F9FBFE]'
                             }`}
                         >
                           {/* Top row: Plant name + Status pill */}
@@ -978,8 +979,8 @@ export default function CctvMonitoring() {
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span
                                 className={`grid size-6 shrink-0 place-items-center rounded-[5px] text-[11px] font-bold ${isSelected
-                                    ? 'bg-[#0768D2] text-white shadow-xs'
-                                    : 'bg-[#EAF4FF] text-[#0768D2]'
+                                  ? 'bg-[#0768D2] text-white shadow-xs'
+                                  : 'bg-[#EAF4FF] text-[#0768D2]'
                                   }`}
                               >
                                 <Video size={12} />
@@ -1007,10 +1008,10 @@ export default function CctvMonitoring() {
                               <span className="inline-flex items-center gap-1 font-medium text-[#4B637F]">
                                 <span
                                   className={`size-1.5 rounded-full ${streams.influent.status === 'Live' && streams.influent.streamUrl
-                                      ? 'bg-[#16B978]'
-                                      : hasCpvRecordings(site.stpId, site.plantCode)
-                                        ? 'bg-[#F59E0B]'
-                                        : 'bg-[#EF4444]'
+                                    ? 'bg-[#16B978]'
+                                    : hasCpvRecordings(site.stpId, site.plantCode)
+                                      ? 'bg-[#F59E0B]'
+                                      : 'bg-[#EF4444]'
                                     }`}
                                 />
                                 IN
@@ -1019,10 +1020,10 @@ export default function CctvMonitoring() {
                               <span className="inline-flex items-center gap-1 font-medium text-[#4B637F]">
                                 <span
                                   className={`size-1.5 rounded-full ${streams.effluent.status === 'Live' && streams.effluent.streamUrl
-                                      ? 'bg-[#16B978]'
-                                      : hasCpvRecordings(site.stpId, site.plantCode)
-                                        ? 'bg-[#F59E0B]'
-                                        : 'bg-[#EF4444]'
+                                    ? 'bg-[#16B978]'
+                                    : hasCpvRecordings(site.stpId, site.plantCode)
+                                      ? 'bg-[#F59E0B]'
+                                      : 'bg-[#EF4444]'
                                     }`}
                                 />
                                 EF
