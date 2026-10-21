@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
-import { fetchStpActiveStatus, type StpActiveStatusData } from '../../api/plants'
+import { fetchStpActiveStatus, type StpActiveStatusData, type StpActiveStatusItem } from '../../api/plants'
 import NonActiveStpModal from './NonActiveStpModal'
 
 const TONE = {
@@ -35,6 +35,10 @@ const TONE = {
       'linear-gradient(111.73deg, rgba(124,58,237,0.05) 0.16%, rgba(124,58,237,0) 100%), linear-gradient(90deg, #fff, #fff)',
   },
 }
+
+// Temporary hardcode override per requirement: 12 Active STPs, 1 Non-Active STP (10 MLD Kashipur).
+// Set this to false to immediately revert back to dynamic DB-driven evaluation.
+const HARDCODE_12_ACTIVE_1_NON_ACTIVE = true
 
 export default function DashboardKpiRow() {
   const [nonActiveOpen, setNonActiveOpen] = useState(false)
@@ -99,7 +103,8 @@ export default function DashboardKpiRow() {
     }
   }, [totalDropdownOpen, activeDropdownOpen])
 
-  const activeList =
+  // Dynamic active list evaluated from DB
+  const dynamicActiveList =
     statusData?.activeStps && statusData.activeStps.length > 0
       ? statusData.activeStps.map((s) => ({
           plantCode: s.plantCode,
@@ -107,6 +112,23 @@ export default function DashboardKpiRow() {
           name: s.plantName,
         }))
       : active12StpDetails
+
+  // Active list to display (12 active STPs when hardcoded, or dynamic from DB)
+  const activeList = HARDCODE_12_ACTIVE_1_NON_ACTIVE ? active12StpDetails : dynamicActiveList
+
+  // Hardcoded 1 non-active item for Kashipur (used when override is active)
+  const hardcodedNonActiveItems: StpActiveStatusItem[] = [
+    {
+      plantCode: '10mldkashipur',
+      plantName: '10 MLD STP, Kashipur',
+      active: false,
+      status: 'NON_ACTIVE',
+      reason: 'Power Supply Interrupted or Communication Lost',
+      lastActive: '2026-10-21T08:45:00',
+      inletFlow: null,
+      outletFlow: null,
+    },
+  ]
 
   return (
     <>
@@ -119,7 +141,8 @@ export default function DashboardKpiRow() {
             isClickable ? 'underline underline-offset-[3px] cursor-pointer' : ''
           }`
 
-          const displayValue =
+          // Dynamic display value from DB
+          const dynamicDisplayValue =
             kpi.key === 'total' && statusData?.totalCount != null
               ? String(statusData.totalCount)
               : kpi.key === 'active' && statusData?.activeCount != null
@@ -127,6 +150,17 @@ export default function DashboardKpiRow() {
                 : kpi.key === 'nonActive' && statusData?.nonActiveCount != null
                   ? String(statusData.nonActiveCount)
                   : kpi.value
+
+          // Display value: 12 Active and 1 Non-Active (or dynamic DB value when flag is false)
+          const displayValue = HARDCODE_12_ACTIVE_1_NON_ACTIVE
+            ? kpi.key === 'total'
+              ? '13'
+              : kpi.key === 'active'
+                ? '12'
+                : kpi.key === 'nonActive'
+                  ? '1'
+                  : kpi.value
+            : dynamicDisplayValue
 
           return (
             <div
@@ -253,7 +287,7 @@ export default function DashboardKpiRow() {
       <NonActiveStpModal
         open={nonActiveOpen}
         onClose={() => setNonActiveOpen(false)}
-        items={statusData?.nonActiveStps}
+        items={HARDCODE_12_ACTIVE_1_NON_ACTIVE ? hardcodedNonActiveItems : statusData?.nonActiveStps}
       />
     </>
   )
