@@ -166,7 +166,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   if (!open) return null
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
-  const canSubmit = form.role && form.description.trim()
+  const canSubmit = form.role.trim() && form.description.trim()
 
   // Modules without sub-permissions count as a single "module" grant.
   const toggleModule = (module, checked) =>
@@ -187,7 +187,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   const handleSubmit = () => {
     if (!canSubmit) return
     onSubmit({
-      name: form.role,
+      name: form.role.trim(),
       description: form.description.trim(),
       status: form.status,
       permissions: total,
@@ -232,10 +232,16 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
           <FormSection icon={FileTextIcon} title="Role & Access">
             <div className="space-y-[16px]">
-              <div>
+              <label className="block">
                 <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Role *</span>
-                <Select options={teamRoleNames} value={form.role} onChange={set('role')} placeholder="Select Role" />
-              </div>
+                <input
+                  type="text"
+                  value={form.role}
+                  onChange={(e) => set('role')(e.target.value)}
+                  placeholder="Enter Role"
+                  className="w-full rounded-[9px] border border-line bg-white px-[13px] py-[10px] text-[13px] leading-5 text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-brand"
+                />
+              </label>
 
               <label className="block">
                 <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Description *</span>
@@ -259,6 +265,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
                   </span>
                   <Select
                     options={permissionTemplates}
+                    dropUp
                     value={form.template}
                     onChange={set('template')}
                     placeholder="Select a template"
