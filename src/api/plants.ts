@@ -181,3 +181,48 @@ export async function loadPlantPickerOptions(): Promise<PlantOption[]> {
   const plants = await fetchDashboardPlants()
   return toPlantOptions(plants)
 }
+
+export type StpActiveStatusItem = {
+  plantCode: string
+  plantName: string
+  active: boolean
+  status: 'ACTIVE' | 'NON_ACTIVE'
+  reason: string
+  lastActive: string | null
+  inletFlow: number | null
+  outletFlow: number | null
+}
+
+export type StpActiveStatusData = {
+  thresholdHours: number
+  totalCount: number
+  activeCount: number
+  nonActiveCount: number
+  activeStps: StpActiveStatusItem[]
+  nonActiveStps: StpActiveStatusItem[]
+  plants: StpActiveStatusItem[]
+}
+
+export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusData | null> {
+  try {
+    const response = await fetch(`${DASHBOARD_API}/dashboard/active-status?hours=${hours}`)
+    if (!response.ok) throw new Error('Failed to load active status')
+    const payload = await response.json()
+    return payload?.data ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function fetchLatestViolations(): Promise<any[] | null> {
+  try {
+    const response = await fetch(`${DASHBOARD_API}/dashboard/latest-violations`)
+    if (!response.ok) throw new Error('Failed to load latest violations')
+    const payload = await response.json()
+    return Array.isArray(payload?.data) ? payload.data : null
+  } catch {
+    return null
+  }
+}
+
+
