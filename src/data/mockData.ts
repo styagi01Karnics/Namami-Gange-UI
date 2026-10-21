@@ -3025,8 +3025,8 @@ const cctvSiteCameras = [
   {
     stpId: 'kashipur-10',
     cameras: [
-      { key: 'influent', id: 'CAM-IN-10K', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
-      { key: 'effluent', id: 'CAM-EF-10K', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null },
+      { key: 'influent', id: 'CAM-IN-10K', location: 'Influent', status: 'Live', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null, channel: 2 },
+      { key: 'effluent', id: 'CAM-EF-10K', location: 'Effluent', status: 'Offline', lastActive: '15/04/2026 ,10:28 AM', timecode: '9:03:36:20', image: null, channel: 1 },
     ],
   },
 ]

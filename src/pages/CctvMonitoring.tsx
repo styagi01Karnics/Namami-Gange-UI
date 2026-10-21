@@ -56,7 +56,26 @@ function is68MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: stri
   return plantKey(item).some((key) => key === '68mldjag' || key === 'jagjeetpur-68')
 }
 
+function is18MldSarai(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some(
+    (key) => key === '18mldsarai_upg' || key === 'sarai-18-upg' || key === 'sarai-18',
+  )
+}
+
+function is27MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return plantKey(item).some(
+    (key) =>
+      key === '27mldjag_upg' ||
+      key === 'jagjeetpur-27-upg' ||
+      key === 'jagjeetpur-27' ||
+      key === '27mldjag' ||
+      key === '27mld' ||
+      key === 'map-jagjeetpur-upgrade-27',
+  )
+}
+
 function is18MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: string }) {
+  if (is18MldSarai(item)) return false
   return plantKey(item).some(
     (key) =>
       key === '18mldjag' ||
@@ -65,12 +84,6 @@ function is18MldJagjeetpur(item: { id?: string; plantCode?: string; stpId?: stri
       key === '18mld' ||
       key === 'stp18mldjag' ||
       key === '18mldjagjeetpur',
-  )
-}
-
-function is18MldSarai(item: { id?: string; plantCode?: string; stpId?: string }) {
-  return plantKey(item).some(
-    (key) => key === '18mldsarai_upg' || key === 'sarai-18-upg' || key === 'sarai-18',
   )
 }
 
@@ -103,41 +116,42 @@ const OFFICIAL_CCTV_ORDER_MAP: Record<string, number> = {
   '18mld_jagjeetpur': 0,
   'stp18mldjag': 0,
   '18mld': 0,
-  '18mldsarai_upg': 1,
-  'sarai-18-upg': 1,
-  'sarai-18': 1,
-  '14mldsarai': 2,
-  'sarai-14': 2,
-  '14mld': 2,
-  '68mldjag': 3,
-  'jagjeetpur-68': 3,
-  '68mld': 3,
-  '10mldbazpur': 4,
-  'bazpur-10': 4,
-  'bazpur': 4,
-  '10mld': 4,
-  '27mldjag_upg': 5,
-  'jagjeetpur-27-upg': 5,
-  '26mldlkgt2': 6,
-  'lakkar-ghat-26': 6,
-  '26mld': 6,
-  '26mldlakkar': 6,
-  '26mldrishikesh': 6,
-  'rishikesh': 6,
-  '20mldrishikesh': 6,
-  '28mldindira': 7,
-  'indira-nagar-28': 7,
-  '20mldmothorowala': 8,
-  'mothorowala-20': 8,
-  '68mldkargi': 9,
-  'kargi-68': 9,
-  '20mldmoth_2': 10,
-  'mothorowala-20-2': 10,
-  '33mldsali': 11,
-  'saliar-33': 11,
-  '33mld_sal': 11,
-  '10mldkashipur': 12,
-  'kashipur-10': 12,
+  '14mldsarai': 1,
+  'sarai-14': 1,
+  '14mld': 1,
+  '68mldjag': 2,
+  'jagjeetpur-68': 2,
+  '68mld': 2,
+  '10mldbazpur': 3,
+  'bazpur-10': 3,
+  'bazpur': 3,
+  '10mld': 3,
+  '26mldlkgt2': 4,
+  'lakkar-ghat-26': 4,
+  '26mld': 4,
+  '26mldlakkar': 4,
+  '26mldrishikesh': 4,
+  'rishikesh': 4,
+  '20mldrishikesh': 4,
+  '28mldindira': 5,
+  'indira-nagar-28': 5,
+  '20mldmothorowala': 6,
+  'mothorowala-20': 6,
+  '68mldkargi': 7,
+  'kargi-68': 7,
+  '20mldmoth_2': 8,
+  'mothorowala-20-2': 8,
+  '33mldsali': 9,
+  'saliar-33': 9,
+  '33mld_sal': 9,
+  '10mldkashipur': 10,
+  'kashipur-10': 10,
+  '18mldsarai_upg': 98,
+  'sarai-18-upg': 98,
+  'sarai-18': 98,
+  '27mldjag_upg': 99,
+  'jagjeetpur-27-upg': 99,
+  'jagjeetpur-27': 99,
 }
 
 function officialOrderIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
@@ -178,7 +192,6 @@ function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: stri
 /** STPs always shown first, in this exact order; the rest follow. */
 const TOP_PINNED_STP_MATCHERS = [
   is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
-  is18MldSarai, // 18 MLD STP, Sarai
   is14MldSarai, // 14 MLD STP, Sarai, Haridwar
   is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
   is26MldRishikesh, // 26 MLD STP, Lakkarghat, Rishikesh
@@ -187,15 +200,33 @@ const TOP_PINNED_STP_MATCHERS = [
   is10MldBazpur, // 10 MLD STP, Bazpur
 ]
 
+/** STPs always placed at the very end of the live camera feed list, in this exact order */
+const BOTTOM_PINNED_STP_MATCHERS = [
+  is18MldSarai, // 18 MLD STP, Sarai
+  is27MldJagjeetpur, // 27 MLD STP, Jagjeetpur
+]
+
 function topPinnedIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
   const index = TOP_PINNED_STP_MATCHERS.findIndex((matches) => matches(item))
   return index === -1 ? TOP_PINNED_STP_MATCHERS.length : index
+}
+
+function bottomPinnedIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
+  return BOTTOM_PINNED_STP_MATCHERS.findIndex((matches) => matches(item))
 }
 
 function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string; cameras?: LiveSiteCamera[] }>(
   items: T[],
 ) {
   return [...items].sort((a, b) => {
+    const aBottom = bottomPinnedIndex(a)
+    const bBottom = bottomPinnedIndex(b)
+    if (aBottom !== -1 || bBottom !== -1) {
+      if (aBottom === -1) return -1
+      if (bBottom === -1) return 1
+      return aBottom - bBottom
+    }
+
     const pinnedDiff = topPinnedIndex(a) - topPinnedIndex(b)
     if (pinnedDiff !== 0) return pinnedDiff
     const priorityDiff = cctvPriorityScore(a) - cctvPriorityScore(b)
@@ -213,13 +244,16 @@ function pinFilterPlantOptions(
   return [...(allOption ? [allOption] : []), ...pinCctvSiteOrder(plants)]
 }
 
+function isChannelFlippedPlant(siteStpId?: string) {
+  return /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(siteStpId ?? '')
+}
+
 function cameraChannel(camera: LiveSiteCamera, siteStpId?: string) {
-  if (camera.channel) return camera.channel
-  const isUnit2 = /mothorowala-20-2|20mldmoth_2|unit2/i.test(siteStpId ?? '')
-  const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
-  if (isUnit2) {
+  const isEffluent = String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent')
+  if (isChannelFlippedPlant(siteStpId)) {
     return isEffluent ? 1 : 2
   }
+  if (camera.channel) return camera.channel
   return isEffluent ? 2 : 1
 }
 
@@ -247,15 +281,16 @@ interface StpSite {
 
 function getSiteStreams(site: StpSite) {
   const cameras = site.cameras || []
+  const isFlipped = is20MldMothorowala2(site) || isChannelFlippedPlant(site.stpId || site.plantCode || site.id)
 
   let influent = cameras.find((c) => {
     const loc = String(c.location ?? c.id ?? '').toLowerCase()
     if (loc.includes('influent') || loc.includes('cam-in')) return true
     if (loc.includes('effluent') || loc.includes('cam-ef')) return false
-    return c.channel === 1
+    return isFlipped ? c.channel === 2 : c.channel === 1
   })
   if (!influent && cameras.length > 0) {
-    influent = cameras[0]
+    influent = isFlipped && cameras.length > 1 ? cameras[1] : cameras[0]
   }
 
   let effluent = cameras.find((c) => {
@@ -263,15 +298,14 @@ function getSiteStreams(site: StpSite) {
     const loc = String(c.location ?? c.id ?? '').toLowerCase()
     if (loc.includes('effluent') || loc.includes('cam-ef')) return true
     if (loc.includes('influent') || loc.includes('cam-in')) return false
-    return c.channel === 2
+    return isFlipped ? c.channel === 1 : c.channel === 2
   })
   if (!effluent && cameras.length > 1) {
-    effluent = cameras[1]
+    effluent = isFlipped ? cameras[0] : cameras[1]
   }
 
-  const isUnit2 = is20MldMothorowala2(site)
-  const defaultInfluentChannel = isUnit2 ? 2 : 1
-  const defaultEffluentChannel = isUnit2 ? 1 : 2
+  const defaultInfluentChannel = isFlipped ? 2 : 1
+  const defaultEffluentChannel = isFlipped ? 1 : 2
 
   const fallbackInfluent: LiveSiteCamera = influent ?? {
     key: `${site.stpId}-influent`,
@@ -291,7 +325,16 @@ function getSiteStreams(site: StpSite) {
     channel: defaultEffluentChannel,
   }
 
-  return { influent: fallbackInfluent, effluent: fallbackEffluent }
+  return {
+    influent: {
+      ...fallbackInfluent,
+      channel: isFlipped ? 2 : (fallbackInfluent.channel ?? 1),
+    },
+    effluent: {
+      ...fallbackEffluent,
+      channel: isFlipped ? 1 : (fallbackEffluent.channel ?? 2),
+    },
+  }
 }
 
 export default function CctvMonitoring() {

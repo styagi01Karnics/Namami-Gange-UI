@@ -50,13 +50,13 @@ export default function LiveCameraFeed({
                       plantCode,
                       stpId,
                       channel:
-                        camera.channel ||
-                        (/mothorowala-20-2|20mldmoth_2|unit2/i.test(stpId ?? plantCode ?? '')
+                        /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(stpId ?? plantCode ?? '')
                           ? String(camera.location ?? '').toLowerCase().includes('effluent') ||
                             String(camera.location ?? '').toLowerCase().includes('treated')
                             ? 1
                             : 2
-                          : String(camera.location ?? '').toLowerCase().includes('effluent') ||
+                          : camera.channel ||
+                            (String(camera.location ?? '').toLowerCase().includes('effluent') ||
                             String(camera.location ?? '').toLowerCase().includes('treated')
                             ? 2
                             : 1),

@@ -10,12 +10,12 @@ import {
 const PinIcon = ico('fluent:location-24-filled')
 
 function channelOf(camera: LiveSiteCamera, siteStpId?: string) {
-  if (camera.channel) return camera.channel
-  const isUnit2 = /mothorowala-20-2|20mldmoth_2|unit2/i.test(siteStpId ?? '')
-  const isEffluent = String(camera.location ?? '').toLowerCase().includes('effluent')
-  if (isUnit2) {
+  const isFlipped = /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(siteStpId ?? '')
+  const isEffluent = String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent')
+  if (isFlipped) {
     return isEffluent ? 1 : 2
   }
+  if (camera.channel) return camera.channel
   return isEffluent ? 2 : 1
 }
 

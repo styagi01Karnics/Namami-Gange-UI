@@ -158,6 +158,23 @@ const STP_10MLD_BAZPUR_CAMERAS: CctvCamera[] = [
   },
 ]
 
+const STP_10MLD_KASHIPUR_CAMERAS: CctvCamera[] = [
+  {
+    id: 'kashipur-10-cam-1',
+    name: 'Influent',
+    channel: 2,
+    status: 'LIVE',
+    siteCode: 'STP10MLDKAS',
+  },
+  {
+    id: 'kashipur-10-cam-2',
+    name: 'Effluent',
+    channel: 1,
+    status: 'LIVE',
+    siteCode: 'STP10MLDKAS',
+  },
+]
+
 const STP_68MLD_KARGI_CAMERAS: CctvCamera[] = [
   {
     id: 'kargi-68-cam-1',
@@ -330,8 +347,13 @@ export function getCamerasForStp(stpId?: string): CctvCamera[] | null {
   ) {
     return STP_10MLD_BAZPUR_CAMERAS
   }
-  if (key === 'kashipur-10' || key === '10mldkashipur') {
-    return defaultPlantCameras('10mldkashipur')
+  if (
+    key === 'kashipur-10' ||
+    key === '10mldkashipur' ||
+    key === 'kashipur' ||
+    key === '10mld_kashipur'
+  ) {
+    return STP_10MLD_KASHIPUR_CAMERAS
   }
   return null
 }
