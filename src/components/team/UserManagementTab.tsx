@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { AlertCircle, ChevronDown, RefreshCw } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
@@ -12,7 +12,16 @@ import AddUserModal from './AddUserModal'
 import ConfirmModal from '../ui/ConfirmModal'
 import { ROLE_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
-import { buildTeamUserStats, teamRoleNames, teamUserColumns, teamUsers } from '../../data/mockData'
+import { buildTeamUserStats, teamUserColumns } from '../../data/mockData'
+import {
+  fetchUsers,
+  createUser,
+  patchUser,
+  deleteUser,
+  type UserItem,
+  type UserRequest,
+} from '../../api/users'
+import { fetchRoles } from '../../api/roles'
 
 const PencilIcon = ico('fluent:edit-24-filled')
 const PlusIcon = ico('fluent:add-24-filled')
@@ -23,18 +32,17 @@ const CSV_COLUMNS = teamUserColumns
   .filter((c) => c.key !== 'actions')
   .map((c) => ({ key: c.key, label: c.label }))
 
-const ROLE_FILTER = ['All Roles', ...teamRoleNames]
 const STATUS_FILTER = ['All Status', 'Active', 'Inactive']
 const STATUS_OPTIONS = ['Active', 'Inactive']
 
-function ChipSelect({ value, options, onChange }) {
+function ChipSelect({ value, options, onChange }: any) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return undefined
-    const onDocClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
@@ -47,45 +55,99 @@ function ChipSelect({ value, options, onChange }) {
         onClick={() => setOpen((v) => !v)}
         className="inline-flex max-w-full items-center gap-[4px] rounded-full bg-brand-soft px-[11px] py-[3px] text-[11.5px] font-semibold leading-[16px] text-brand"
       >
-        <span className="truncate">{value}</span>
+        <span className="truncate">{value || 'Select'}</span>
         <ChevronDown size={13} strokeWidth={2.4} className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <ul className="absolute left-0 z-40 mt-[6px] min-w-full overflow-hidden rounded-[10px] border border-line bg-white py-[5px] shadow-pop">
-          {options.map((option) => (
-            <li key={option}>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange(option)
-                  setOpen(false)
-                }}
-                className={`flex w-full whitespace-nowrap px-[12px] py-[7px] text-left text-[12.5px] transition-colors ${
-                  option === value ? 'bg-brand-soft font-semibold text-brand' : 'text-ink hover:bg-[#F5F9FE]'
-                }`}
-              >
-                {option}
-              </button>
-            </li>
-          ))}
+          {options.length === 0 ? (
+            <li className="px-[14px] py-[7px] text-[12px] text-ink-muted">No roles available</li>
+          ) : (
+            options.map((option: string) => (
+              <li key={option}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(option)
+                    setOpen(false)
+                  }}
+                  className={`block w-full px-[14px] py-[7px] text-left text-[12px] transition-colors hover:bg-brand-soft hover:text-brand ${
+                    option === value ? 'font-semibold text-brand' : 'text-ink'
+                  }`}
+                >
+                  {option}
+                </button>
+              </li>
+            ))
+          )}
         </ul>
       )}
     </div>
   )
 }
 
-export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles', onRoleFilterChange }) {
-  const [users, setUsers] = useState(teamUsers)
+export default function UserManagementTab({
+  onExportPdf,
+  roleFilter = 'All Roles',
+  onRoleFilterChange,
+}: {
+  onExportPdf?: any
+  roleFilter?: string
+  onRoleFilterChange?: (role: string) => void
+}) {
+  const [users, setUsers] = useState<UserItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [apiError, setApiError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [availableRoles, setAvailableRoles] = useState<string[]>([])
   const [role, setRole] = useState(roleFilter)
   const [status, setStatus] = useState('All Status')
   const [modalOpen, setModalOpen] = useState(false)
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState({ role: '', status: '' })
-  const [pendingDelete, setPendingDelete] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<UserItem | null>(null)
 
   const selectedRole = onRoleFilterChange ? roleFilter : role
   const setSelectedRole = onRoleFilterChange ?? setRole
-  const roleOptions = ROLE_FILTER.includes(selectedRole) ? ROLE_FILTER : [...ROLE_FILTER, selectedRole]
+  const roleFilterList = ['All Roles', ...availableRoles]
+  const roleOptions = roleFilterList.includes(selectedRole) ? roleFilterList : [...roleFilterList, selectedRole]
+
+  // 1. GET /api/users from database
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      setApiError('')
+      const data = await fetchUsers()
+      setUsers(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      console.error('Failed to load users from database:', err)
+      setUsers([])
+      setApiError(err?.message || 'Failed to connect to database. Please verify user-service is running.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load available roles from database
+  const loadRoles = async () => {
+    try {
+      const roleCards = await fetchRoles()
+      if (roleCards?.length) {
+        const names = roleCards.map((r) => r.name).filter(Boolean)
+        setAvailableRoles(Array.from(new Set(names)))
+      } else {
+        setAvailableRoles([])
+      }
+    } catch {
+      setAvailableRoles([])
+    }
+  }
+
+  useEffect(() => {
+    loadUsers()
+    loadRoles()
+  }, [])
 
   const rows = useMemo(
     () =>
@@ -97,33 +159,50 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
     [users, selectedRole, status],
   )
 
-  // Cards count the whole directory, not just the rows left by the filters.
-  const stats = useMemo(() => buildTeamUserStats(users, teamRoleNames.length), [users])
+  // Dynamic statistics calculated exclusively from database records
+  const stats = useMemo(() => buildTeamUserStats(users as any, availableRoles.length), [users, availableRoles])
 
-  const addUser = (user) =>
-    setUsers((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        userId: `#${1231468 + prev.length}`,
-        lastLogin: '—',
-        ...user,
-      },
-      ...prev,
-    ])
+  // POST /api/users
+  const handleAddUser = async (userPayload: UserRequest) => {
+    await createUser(userPayload)
+    await loadUsers()
+  }
 
-  const removeUser = (id) => setUsers((prev) => prev.filter((u) => u.id !== id))
-
-  const startEdit = (row) => {
+  const startEdit = (row: UserItem) => {
     setEditingId(row.id)
     setDraft({ role: row.role, status: row.status })
   }
 
-  const saveEdit = () => {
-    setUsers((prev) => prev.map((u) => (u.id === editingId ? { ...u, role: draft.role, status: draft.status } : u)))
-    setEditingId(null)
+  // PATCH /api/users/{id}
+  const saveEdit = async () => {
+    if (!editingId) return
+    try {
+      setSavingEdit(true)
+      await patchUser(editingId, { role: draft.role, status: draft.status })
+      setEditingId(null)
+      await loadUsers()
+    } catch (err: any) {
+      alert(err?.message || 'Failed to update user.')
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
-  const renderCell = (row, col) => {
+  // DELETE /api/users/{id}
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    try {
+      setDeleteError('')
+      await deleteUser(pendingDelete.id)
+      if (pendingDelete.id === editingId) setEditingId(null)
+      setPendingDelete(null)
+      await loadUsers()
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Failed to delete user')
+    }
+  }
+
+  const renderCell = (row: UserItem, col: any) => {
     if (col.key === 'name') {
       return (
         <span className="flex items-center gap-[10px]">
@@ -138,14 +217,20 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
 
     if (col.key === 'role') {
       if (editingId === row.id) {
-        return <ChipSelect value={draft.role} options={teamRoleNames} onChange={(role) => setDraft((d) => ({ ...d, role }))} />
+        return (
+          <ChipSelect
+            value={draft.role}
+            options={availableRoles}
+            onChange={(selected: string) => setDraft((d) => ({ ...d, role: selected }))}
+          />
+        )
       }
       return (
         <StatusPill
           tone={ROLE_TONE[row.role] ?? 'slate'}
           className="h-[32px] min-w-[88px] justify-center px-[8px] text-[14px] leading-4"
         >
-          {row.role}
+          {row.role || '—'}
         </StatusPill>
       )
     }
@@ -153,7 +238,11 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
     if (col.key === 'status') {
       if (editingId === row.id) {
         return (
-          <ChipSelect value={draft.status} options={STATUS_OPTIONS} onChange={(status) => setDraft((d) => ({ ...d, status }))} />
+          <ChipSelect
+            value={draft.status}
+            options={STATUS_OPTIONS}
+            onChange={(selected: string) => setDraft((d) => ({ ...d, status: selected }))}
+          />
         )
       }
       return (
@@ -171,7 +260,10 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         <span className="flex items-center gap-[8px]">
           <button
             type="button"
-            onClick={() => setPendingDelete(row)}
+            onClick={() => {
+              setDeleteError('')
+              setPendingDelete(row)
+            }}
             aria-label={`Remove ${row.name}`}
             className="inline-flex items-center justify-center rounded-[4px] border border-[#F6C9CB] bg-[#FDECEC] p-[6px] text-[#DC2626] transition-opacity hover:opacity-90"
           >
@@ -179,6 +271,7 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
           </button>
           <button
             type="button"
+            disabled={savingEdit}
             onClick={() => (editingId === row.id ? saveEdit() : startEdit(row))}
             aria-label={editingId === row.id ? `Save ${row.name}` : `Edit ${row.name}`}
             className={`inline-flex items-center justify-center rounded-[4px] p-[6px] transition-opacity hover:opacity-90 ${
@@ -201,12 +294,54 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
       <TeamSectionHeader
         tab="User Management"
         right={
-          <Button onClick={() => setModalOpen(true)}>
-            Add User
-            <PlusIcon size={16} />
-          </Button>
+          <div className="flex items-center gap-[10px]">
+            <Button
+              variant="outline"
+              onClick={loadUsers}
+              className="flex items-center gap-[6px] text-[13px]"
+              title="Refresh users from database"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </Button>
+            <Button onClick={() => setModalOpen(true)}>
+              Add User
+              <PlusIcon size={16} />
+            </Button>
+          </div>
         }
       />
+
+      {apiError && (
+        <div className="flex items-center justify-between rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-800">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={18} className="shrink-0 text-red-600" />
+            <span>
+              <strong>Database Error:</strong> {apiError}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={loadUsers}
+            className="ml-4 font-semibold text-red-700 underline hover:no-underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {deleteError && (
+        <div className="flex items-center justify-between rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+          <span>{deleteError}</span>
+          <button
+            type="button"
+            onClick={() => setDeleteError('')}
+            className="font-semibold underline hover:no-underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <SoftStatCardsRow items={stats} columns={4} gap={14} />
 
@@ -237,20 +372,28 @@ export default function UserManagementTab({ onExportPdf, roleFilter = 'All Roles
         }
         onExportCsv={(visible) => downloadCsv('team-users', CSV_COLUMNS, visible)}
         onExportPdf={(visible) => onExportPdf?.('Team — Users', CSV_COLUMNS, visible)}
-        emptyMessage="No users match your filters."
+        emptyMessage={
+          loading
+            ? 'Loading users from database...'
+            : apiError
+              ? `Unable to load users: ${apiError}`
+              : 'No users found in database.'
+        }
       />
 
-      <AddUserModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={addUser} />
+      <AddUserModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleAddUser}
+        roleOptions={availableRoles}
+      />
+
       <ConfirmModal
         open={Boolean(pendingDelete)}
         title="Delete User"
-        message={`Are you sure you want to delete ${pendingDelete?.name}? This cannot be undone.`}
+        message={`Are you sure you want to delete "${pendingDelete?.name}"? This cannot be undone.`}
         onClose={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete.id === editingId) setEditingId(null)
-          removeUser(pendingDelete.id)
-          setPendingDelete(null)
-        }}
+        onConfirm={confirmDelete}
       />
     </div>
   )

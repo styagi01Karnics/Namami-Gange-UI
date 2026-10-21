@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown, RefreshCw, X } from 'lucide-react'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
 import BuildingIcon from '../ui/BuildingIcon'
@@ -11,16 +11,28 @@ import SupportIcon from '../ui/SupportIcon'
 import TeamIcon from '../ui/TeamIcon'
 import { ico } from '../ui/Ico'
 import { tint } from './teamTheme'
-import { permissionTemplates, rolePermissionModules, roleStatusOptions, teamRoleNames, grantsForRole } from '../../data/mockData'
+import { fetchRole, fetchRoleCatalog, type Catalog } from '../../api/roles'
 
-const MODULE_ICONS = {
+const MODULE_ICONS: Record<string, any> = {
   dashboard: DashboardIcon,
+  stp: BuildingIcon,
   building: BuildingIcon,
+  cctv: CctvIcon,
   camera: CctvIcon,
   support: SupportIcon,
   reports: ReportsIcon,
   team: TeamIcon,
   settings: SettingsIcon,
+}
+
+const MODULE_COLORS: Record<string, string> = {
+  dashboard: '#2563EB',
+  stp: '#15803D',
+  cctv: '#B45309',
+  support: '#7C3AED',
+  reports: '#DC2626',
+  team: '#EA580C',
+  settings: '#15803D',
 }
 
 const FileTextIcon = ico('famicons:document-sharp')
@@ -29,7 +41,7 @@ const RoleIcon = ico('fluent:person-board-32-filled')
 
 const EMPTY = { role: '', description: '', status: 'Active', template: '' }
 
-function Checkbox({ checked, onChange, label, className = '' }) {
+function Checkbox({ checked, onChange, label, className = '' }: any) {
   return (
     <label className={`flex cursor-pointer items-center gap-[9px] text-[12.5px] leading-4 text-ink ${className}`}>
       <input
@@ -44,7 +56,7 @@ function Checkbox({ checked, onChange, label, className = '' }) {
 }
 
 /** Light blue strip that separates the two halves of the form. */
-function FormSection({ icon: Icon, title, children }) {
+function FormSection({ icon: Icon, title, children }: any) {
   return (
     <section className="overflow-hidden rounded-[10px] border border-line">
       <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[16px] py-[11px]">
@@ -58,18 +70,20 @@ function FormSection({ icon: Icon, title, children }) {
   )
 }
 
-function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
+function ModuleRow({ module, selected, onToggleModule, onTogglePermission }: any) {
   const [open, setOpen] = useState(false)
-  const Icon = MODULE_ICONS[module.icon] ?? DashboardIcon
-  const count = module.permissions.length || 1
-  const all = module.permissions.length > 0 && module.permissions.every((p) => selected.includes(p))
+  const Icon = MODULE_ICONS[module.icon] ?? MODULE_ICONS[module.id] ?? DashboardIcon
+  const color = module.color ?? MODULE_COLORS[module.id] ?? '#2563EB'
+  const permissions = module.permissions || []
+  const count = permissions.length || 1
+  const all = permissions.length > 0 && permissions.every((p: string) => selected.includes(p))
 
   return (
     <div className="rounded-[10px] border border-line">
       <div className="flex items-center gap-[11px] px-[13px] py-[11px]">
         <input
           type="checkbox"
-          checked={module.permissions.length === 0 ? selected.length > 0 : all}
+          checked={permissions.length === 0 ? selected.length > 0 : all}
           onChange={(e) => onToggleModule(e.target.checked)}
           aria-label={module.label}
           className="h-[15px] w-[15px] shrink-0 accent-brand"
@@ -77,13 +91,13 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
 
         <span
           className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px]"
-          style={{ backgroundColor: tint(module.color, 0.12), color: module.color }}
+          style={{ backgroundColor: tint(color, 0.12), color }}
         >
           <Icon size={16} strokeWidth={2} />
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-semibold leading-[18px]" style={{ color: module.color }}>
+          <span className="block truncate text-[13px] font-semibold leading-[18px]" style={{ color }}>
             {module.label}
           </span>
           <span className="block truncate text-[11.5px] leading-4 text-ink-muted">{module.blurb}</span>
@@ -93,7 +107,7 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
           <span className="inline-flex min-w-[118px] justify-center rounded-full bg-brand-soft px-[10px] py-[3px] text-center text-[11.5px] font-medium leading-4 text-brand">
             {count} {count === 1 ? 'permission' : 'permissions'}
           </span>
-          {module.permissions.length > 0 ? (
+          {permissions.length > 0 ? (
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
@@ -109,14 +123,14 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
         </span>
       </div>
 
-      {open && module.permissions.length > 0 && (
+      {open && permissions.length > 0 && (
         <div className="grid grid-cols-3 gap-x-[14px] gap-y-[11px] border-t border-line bg-[#F8FAFD] px-[13px] py-[12px]">
-          {module.permissions.map((permission) => (
+          {permissions.map((permission: string) => (
             <Checkbox
               key={permission}
               label={permission}
               checked={selected.includes(permission)}
-              onChange={(next) => onTogglePermission(permission, next)}
+              onChange={(next: boolean) => onTogglePermission(permission, next)}
             />
           ))}
         </div>
@@ -125,57 +139,115 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }) {
   )
 }
 
-export default function CreateRoleModal({ open, onClose, onSubmit, role = null }) {
+export default function CreateRoleModal({ open, onClose, onSubmit, role = null }: any) {
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
+  const [catalog, setCatalog] = useState<Catalog | null>(null)
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [catalogError, setCatalogError] = useState('')
+  const [loadingRole, setLoadingRole] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const editing = Boolean(role)
 
   useEffect(() => {
     if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
     }
   }, [open, onClose])
 
+  // Endpoint 2: GET /api/roles/catalog exclusively from database
+  useEffect(() => {
+    if (!open) return
+    setCatalogLoading(true)
+    setCatalogError('')
+    fetchRoleCatalog()
+      .then((cat) => {
+        if (cat) setCatalog(cat)
+      })
+      .catch((err) => {
+        console.error('Failed to load role catalog from database:', err)
+        setCatalogError(err?.message || 'Failed to load permission catalog from database.')
+      })
+      .finally(() => {
+        setCatalogLoading(false)
+      })
+  }, [open])
+
   useEffect(() => {
     if (!open) {
       setForm(EMPTY)
       setGranted({})
+      setSubmitError('')
       return
     }
 
     if (role) {
       setForm({
-        role: role.name,
+        role: role.name || '',
         description: role.description ?? '',
-        status: role.status ?? 'Active',
-        template: role.template ?? '',
+        status: role.statusLabel ?? role.status ?? 'Active',
+        template: role.permissionLabel ?? role.permissionPreset ?? role.template ?? '',
       })
-      setGranted(grantsForRole(role))
+      setGranted(role.granted || {})
+
+      // Endpoint 3: GET /api/roles/{id} from database
+      if (role.id) {
+        setLoadingRole(true)
+        fetchRole(role.id)
+          .then((detail) => {
+            if (detail) {
+              setForm({
+                role: detail.name || role.name,
+                description: detail.description ?? role.description ?? '',
+                status: detail.statusLabel || detail.status || role.status || 'Active',
+                template: detail.permissionLabel || detail.permissionPreset || role.template || '',
+              })
+              if (detail.granted) {
+                setGranted(detail.granted)
+              }
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to fetch role details from database:', err)
+            setSubmitError(err?.message || 'Could not fetch role details from database.')
+          })
+          .finally(() => {
+            setLoadingRole(false)
+          })
+      }
       return
     }
 
     setForm(EMPTY)
     setGranted({})
+    setSubmitError('')
   }, [open, role])
 
-  const total = useMemo(() => Object.values(granted).reduce((n, list) => n + list.length, 0), [granted])
+  const total = useMemo(() => Object.values(granted).reduce((n, list) => n + (list?.length || 0), 0), [granted])
 
   if (!open) return null
 
-  const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
+  const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const canSubmit = form.role.trim() && form.description.trim()
 
+  const modulesList = catalog?.modules || []
+  const statusesList = catalog?.statuses?.length ? catalog.statuses.map((s) => s.label) : ['Active', 'Inactive']
+  const templatesList = catalog?.permissionPresets?.length ? catalog.permissionPresets.map((p) => p.label) : []
+
   // Modules without sub-permissions count as a single "module" grant.
-  const toggleModule = (module, checked) =>
+  const toggleModule = (module: any, checked: boolean) =>
     setGranted((prev) => ({
       ...prev,
-      [module.id]: checked ? (module.permissions.length > 0 ? module.permissions : [module.label]) : [],
+      [module.id]: checked
+        ? (module.permissions && module.permissions.length > 0 ? module.permissions : [module.label])
+        : [],
     }))
 
-  const togglePermission = (module, permission, checked) =>
+  const togglePermission = (module: any, permission: string, checked: boolean) =>
     setGranted((prev) => {
       const current = prev[module.id] ?? []
       return {
@@ -184,17 +256,43 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       }
     })
 
-  const handleSubmit = () => {
+  const handleTemplateChange = (templateName: string) => {
+    set('template')(templateName)
+    if (!templateName) return
+
+    // Find preset in database catalog presetGrants
+    if (catalog?.presetGrants) {
+      const presetItem = catalog.permissionPresets?.find(
+        (p) =>
+          p.label.toLowerCase() === templateName.toLowerCase() ||
+          p.id.toLowerCase() === templateName.toLowerCase(),
+      )
+      const key = presetItem?.id || templateName.toUpperCase().replace(/\s+/g, '_')
+      const grants = catalog.presetGrants[key] || catalog.presetGrants[templateName]
+      if (grants) {
+        setGranted(grants)
+      }
+    }
+  }
+
+  const handleSubmit = async () => {
     if (!canSubmit) return
-    onSubmit({
-      name: form.role.trim(),
-      description: form.description.trim(),
-      status: form.status,
-      permissions: total,
-      granted,
-      template: form.template,
-    })
-    onClose()
+    try {
+      setSubmitting(true)
+      setSubmitError('')
+      await onSubmit({
+        name: form.role.trim(),
+        description: form.description.trim(),
+        status: form.status,
+        permissionPreset: form.template || undefined,
+        granted,
+      })
+      onClose()
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -215,9 +313,14 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
             <span className="flex h-[32px] w-[32px] items-center justify-center rounded-[9px] bg-[#F0EBFD] text-[#7C3AED]">
               <RoleIcon size={17} className="text-[#7C3AED]" />
             </span>
-            <h2 id="role-modal-title" className="text-[16px] font-extrabold leading-6 text-ink">
-              {editing ? 'Edit Role' : 'Create Role'}
-            </h2>
+            <div>
+              <h2 id="role-modal-title" className="text-[16px] font-extrabold leading-6 text-ink">
+                {editing ? 'Edit Role' : 'Create Role'}
+              </h2>
+              {loadingRole && (
+                <p className="text-[12px] text-ink-muted">Loading role details from database...</p>
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -230,6 +333,18 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         </div>
 
         <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
+          {submitError && (
+            <div className="rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
+              {submitError}
+            </div>
+          )}
+
+          {catalogError && (
+            <div className="rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
+              Database Error: {catalogError}
+            </div>
+          )}
+
           <FormSection icon={FileTextIcon} title="Role & Access">
             <div className="space-y-[16px]">
               <label className="block">
@@ -257,18 +372,18 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">Status *</span>
-                  <Select options={roleStatusOptions} value={form.status} onChange={set('status')} />
+                  <Select options={statusesList} value={form.status} onChange={set('status')} />
                 </div>
                 <div>
                   <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">
                     Permission Template
                   </span>
                   <Select
-                    options={permissionTemplates}
+                    options={templatesList}
                     dropUp
                     value={form.template}
-                    onChange={set('template')}
-                    placeholder="Select a template"
+                    onChange={handleTemplateChange}
+                    placeholder={catalogLoading ? 'Loading templates...' : 'Select a template'}
                   />
                 </div>
               </div>
@@ -276,17 +391,30 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </FormSection>
 
           <FormSection icon={KeyIcon} title="Module Permissions">
-            <div className="space-y-[12px]">
-              {rolePermissionModules.map((module) => (
-                <ModuleRow
-                  key={module.id}
-                  module={module}
-                  selected={granted[module.id] ?? []}
-                  onToggleModule={(checked) => toggleModule(module, checked)}
-                  onTogglePermission={(permission, checked) => togglePermission(module, permission, checked)}
-                />
-              ))}
-            </div>
+            {catalogLoading ? (
+              <div className="flex items-center justify-center py-6 text-[13px] text-ink-soft">
+                <RefreshCw size={16} className="mr-2 animate-spin text-brand" />
+                Loading permissions catalog from database...
+              </div>
+            ) : modulesList.length === 0 ? (
+              <div className="py-4 text-center text-[13px] text-ink-muted">
+                {catalogError ? 'Unable to load permissions.' : 'No modules defined in catalog.'}
+              </div>
+            ) : (
+              <div className="space-y-[12px]">
+                {modulesList.map((module) => (
+                  <ModuleRow
+                    key={module.id}
+                    module={module}
+                    selected={granted[module.id] ?? []}
+                    onToggleModule={(checked: boolean) => toggleModule(module, checked)}
+                    onTogglePermission={(permission: string, checked: boolean) =>
+                      togglePermission(module, permission, checked)
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </FormSection>
         </div>
 
@@ -295,11 +423,11 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
             {total} permission{total === 1 ? '' : 's'} selected
           </p>
           <div className="flex items-center gap-[10px]">
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="ghost" onClick={onClose} disabled={submitting}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={!canSubmit}>
-              {editing ? 'Save Changes' : 'Create Role'}
+            <Button onClick={handleSubmit} disabled={!canSubmit || submitting || catalogLoading}>
+              {submitting ? 'Saving to database...' : editing ? 'Save Changes' : 'Create Role'}
             </Button>
           </div>
         </div>

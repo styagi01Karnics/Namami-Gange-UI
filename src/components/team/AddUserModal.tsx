@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { ico } from '../ui/Ico'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
-import { roleStatusOptions, teamRoleNames } from '../../data/mockData'
+
+const STATUS_OPTIONS = ['Active', 'Inactive']
 
 const TitleIcon = ico('fluent:person-add-24-filled')
 const PersonalIcon = ico('fluent:person-24-filled')
@@ -95,23 +96,38 @@ function IconSelect({ icon: Icon, options, value, onChange, placeholder, dropUp 
   )
 }
 
-export default function AddUserModal({ open, onClose, onSubmit }) {
+export default function AddUserModal({
+  open,
+  onClose,
+  onSubmit,
+  roleOptions = [],
+}: {
+  open: boolean
+  onClose: () => void
+  onSubmit: (user: any) => Promise<any> | void
+  roleOptions?: string[]
+}) {
   const [form, setForm] = useState(EMPTY)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
   useEffect(() => {
-    if (!open) setForm(EMPTY)
+    if (!open) {
+      setForm(EMPTY)
+      setSubmitError('')
+    }
   }, [open])
 
   if (!open) return null
 
-  const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
+  const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const rulesMet = PASSWORD_RULES.every((rule) => rule.test(form.password))
   const phoneDigits = form.phone.replace(/\D/g, '')
   const canSubmit =
@@ -123,16 +139,27 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
     form.confirm === form.password &&
     form.role
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return
-    onSubmit({
-      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
-      phone: `+91 ${phoneDigits}`,
-      email: form.email.trim(),
-      role: form.role,
-      status: form.status,
-    })
-    onClose()
+    try {
+      setSubmitting(true)
+      setSubmitError('')
+      await onSubmit({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        phone: `+91 ${phoneDigits}`,
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+        status: form.status,
+      })
+      onClose()
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Failed to create user. Please check server.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -155,6 +182,12 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
           </h2>
         </div>
 
+        {submitError && (
+          <div className="mt-[14px] rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
+            {submitError}
+          </div>
+        )}
+
         <div className="mt-[18px] space-y-[14px]">
           <FormSection icon={PersonalIcon} title="Personal Information">
             <div className="grid grid-cols-2 gap-x-[16px]">
@@ -163,7 +196,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                 <IconInput
                   icon={FieldPersonIcon}
                   value={form.firstName}
-                  onChange={(e) => set('firstName')(e.target.value)}
+                  onChange={(e: any) => set('firstName')(e.target.value)}
                   placeholder="First Name"
                 />
               </label>
@@ -172,7 +205,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                 <IconInput
                   icon={FieldPersonIcon}
                   value={form.lastName}
-                  onChange={(e) => set('lastName')(e.target.value)}
+                  onChange={(e: any) => set('lastName')(e.target.value)}
                   placeholder="Last Name"
                 />
               </label>
@@ -205,7 +238,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                   icon={MailIcon}
                   type="email"
                   value={form.email}
-                  onChange={(e) => set('email')(e.target.value)}
+                  onChange={(e: any) => set('email')(e.target.value)}
                   placeholder="Enter Email Address"
                 />
               </label>
@@ -220,7 +253,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                   icon={LockIcon}
                   type="password"
                   value={form.password}
-                  onChange={(e) => set('password')(e.target.value)}
+                  onChange={(e: any) => set('password')(e.target.value)}
                   placeholder="Enter Password"
                   autoComplete="new-password"
                 />
@@ -231,7 +264,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                   icon={LockIcon}
                   type="password"
                   value={form.confirm}
-                  onChange={(e) => set('confirm')(e.target.value)}
+                  onChange={(e: any) => set('confirm')(e.target.value)}
                   placeholder="Confirm Password"
                   autoComplete="new-password"
                 />
@@ -264,7 +297,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
                 <FieldLabel required>Role</FieldLabel>
                 <IconSelect
                   icon={FieldPersonIcon}
-                  options={teamRoleNames}
+                  options={roleOptions}
                   value={form.role}
                   onChange={set('role')}
                   placeholder="Select Role"
@@ -274,7 +307,7 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
               <div>
                 <FieldLabel required>Status</FieldLabel>
                 <Select
-                  options={roleStatusOptions}
+                  options={STATUS_OPTIONS}
                   value={form.status}
                   onChange={set('status')}
                   chevronSize={11}
@@ -286,11 +319,11 @@ export default function AddUserModal({ open, onClose, onSubmit }) {
         </div>
 
         <div className="mt-[18px] flex items-center justify-end gap-[10px]">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Create User
+          <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
+            {submitting ? 'Creating...' : 'Create User'}
           </Button>
         </div>
       </div>
