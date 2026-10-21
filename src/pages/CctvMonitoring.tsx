@@ -152,10 +152,27 @@ function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: stri
   return 3
 }
 
+/** STPs always shown first, in this exact order; the rest follow. */
+const TOP_PINNED_STP_MATCHERS = [
+  is14MldSarai, // 14 MLD STP, Sarai, Haridwar
+  is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
+  is26MldRishikesh, // 26 MLD STP, Lakkarghat, Rishikesh
+  (item: { id?: string; plantCode?: string; stpId?: string }) =>
+    plantKey(item).some((key) => key === '68mldkargi' || key === 'kargi-68'), // 68 MLD STP, Kargi Chowk, Dehradun
+  is10MldBazpur, // 10 MLD STP, Bazpur
+]
+
+function topPinnedIndex(item: { id?: string; plantCode?: string; stpId?: string }) {
+  const index = TOP_PINNED_STP_MATCHERS.findIndex((matches) => matches(item))
+  return index === -1 ? TOP_PINNED_STP_MATCHERS.length : index
+}
+
 function pinCctvSiteOrder<T extends { id?: string; plantCode?: string; stpId?: string; cameras?: LiveSiteCamera[] }>(
   items: T[],
 ) {
   return [...items].sort((a, b) => {
+    const pinnedDiff = topPinnedIndex(a) - topPinnedIndex(b)
+    if (pinnedDiff !== 0) return pinnedDiff
     const priorityDiff = cctvPriorityScore(a) - cctvPriorityScore(b)
     if (priorityDiff !== 0) return priorityDiff
     return officialOrderIndex(a) - officialOrderIndex(b)
