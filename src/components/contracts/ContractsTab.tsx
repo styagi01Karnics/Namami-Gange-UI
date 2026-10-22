@@ -5,6 +5,9 @@ const CONTRACTS = [
   { mld: '27', file: '27-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF', '7 pages', '3.45 MB'] },
   { mld: '18', file: '18-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF'] },
   { mld: '10', file: '10-MLD-KASHIPUR-BAZPUR.pdf', meta: ['PDF'] },
+  { mld: '26', file: '26-MLD-LAKKARGHAT-RISHIKESH.pdf', meta: ['PDF'] },
+  { mld: '68', file: '68-MLD-JAGJEETPUR-HARIDWAR.pdf', meta: ['PDF'] },
+  { mld: '14', file: '14-MLD-SARAI-HARIDWAR.pdf', meta: ['PDF'] },
 ]
 
 /** Picks the contract by the plant's MLD capacity; defaults to the 27 MLD contract. */
