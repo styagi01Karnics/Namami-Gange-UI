@@ -47,6 +47,7 @@ export default function SupportTickets() {
         id: nextTicketId(prev),
         category: ticket.category,
         issue: ticket.issue,
+        stpName: '68 MLD STP, Jagjeetpur, Haridwar',
         date: today,
         priority: ticket.priority,
         status: 'Open',
@@ -76,7 +77,7 @@ export default function SupportTickets() {
       <SupportTicketTable
         columns={supportTicketColumns}
         rows={rows}
-        searchKeys={['id', 'issue', 'category', 'status', 'priority']}
+        searchKeys={['id', 'issue', 'category', 'status']}
         onOpen={(row) => navigate(`/support-tickets/${row.id}`)}
         emptyMessage="No tickets match your search."
       />

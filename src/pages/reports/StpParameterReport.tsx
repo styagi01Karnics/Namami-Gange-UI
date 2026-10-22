@@ -24,6 +24,7 @@ export default function StpParameterReport() {
         }}
         exportTitle="STP Parameter Compliance Report"
         exportFileName="stp-parameter-report"
+        withTimeRange
       />
     </ReportShell>
   )

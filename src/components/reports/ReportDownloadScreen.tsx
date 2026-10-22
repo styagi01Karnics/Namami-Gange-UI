@@ -16,6 +16,7 @@ type ReportDownloadScreenProps = {
   exportTitle?: string
   exportFileName?: string
   topContent?: React.ReactNode
+  withTimeRange?: boolean
   categoryFilter?: {
     label: string
     value: string
@@ -35,6 +36,7 @@ export default function ReportDownloadScreen({
   exportFileName,
   topContent,
   categoryFilter,
+  withTimeRange = false,
 }: ReportDownloadScreenProps) {
   const { stpId, setStpId, stpOptions, plantLabel, range, setRange } = useReportFilters()
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf')
@@ -208,6 +210,7 @@ export default function ReportDownloadScreen({
               <DateRangeField
                 value={range}
                 onChange={setRange}
+                withTime={withTimeRange}
                 className="w-full bg-white"
               />
             </div>

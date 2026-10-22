@@ -5,11 +5,16 @@ const CalendarIcon = ico('fluent:calendar-32-filled')
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const
 
+// Application data starts on 1 Sep 2026; earlier dates cannot be selected.
+const APP_START_DATE = new Date(2026, 8, 1)
+const APP_START_INPUT = '2026-09-01'
+
 type DateRangeFieldProps = {
   value: string
   onChange?: (value: string) => void
   className?: string
   compact?: boolean
+  withTime?: boolean
 }
 
 function pad2(value: number) {
@@ -24,13 +29,35 @@ function formatDisplayDate(date: Date) {
   return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
 }
 
-function formatRangeLabel(from: Date, to: Date) {
-  return `${formatDisplayDate(from)} - ${formatDisplayDate(to)}`
+function formatTime(date: Date) {
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
 }
+
+function formatRangeLabel(from: Date, to: Date, withTime = false) {
+  const fmt = (date: Date) => (withTime ? `${formatDisplayDate(date)} ${formatTime(date)}` : formatDisplayDate(date))
+  return `${fmt(from)} - ${fmt(to)}`
+}
+
+function withClock(date: Date, time: string) {
+  const [hours, minutes] = time.split(':').map(Number)
+  const next = new Date(date)
+  next.setHours(hours, minutes, 0, 0)
+  return next
+}
+
+const HOURS = Array.from({ length: 24 }, (_, i) => pad2(i))
+const MINUTES = Array.from({ length: 60 }, (_, i) => pad2(i))
 
 function parseLooseDate(raw: string): Date | null {
   const trimmed = raw.trim()
   if (!trimmed) return null
+
+  // Optional trailing time: "6 May 2026 14:30"
+  const withTimeMatch = trimmed.match(/^(.*\S)\s+(\d{1,2}):(\d{2})$/)
+  if (withTimeMatch) {
+    const date = parseLooseDate(withTimeMatch[1])
+    return date ? withClock(date, `${pad2(Number(withTimeMatch[2]))}:${withTimeMatch[3]}`) : null
+  }
 
   // ISO: 2026-05-06
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
@@ -77,12 +104,15 @@ export function currentMonthDateRange(): string {
   return formatRangeLabel(start, now)
 }
 
-export default function DateRangeField({ value, onChange, className = '', compact = false }: DateRangeFieldProps) {
+export default function DateRangeField({ value, onChange, className = '', compact = false, withTime = false }: DateRangeFieldProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
   const parsed = useMemo(() => parseDateRangeLabel(value), [value])
   const [fromValue, setFromValue] = useState(() => (parsed ? toInputDate(parsed.from) : ''))
   const [toValue, setToValue] = useState(() => (parsed ? toInputDate(parsed.to) : ''))
+  const [fromTime, setFromTime] = useState(() => (parsed ? formatTime(parsed.from) : '00:00'))
+  const [toTime, setToTime] = useState(() => (parsed ? formatTime(parsed.to) : '00:00'))
+  const displayValue = withTime && parsed ? formatRangeLabel(parsed.from, parsed.to, true) : value
 
   const todayInputDate = toInputDate(new Date())
 
@@ -94,7 +124,9 @@ export default function DateRangeField({ value, onChange, className = '', compac
       const clampedFrom = next.from.getTime() > now.getTime() ? now : next.from
       const clampedTo = next.to.getTime() > now.getTime() ? now : next.to
       setFromValue(toInputDate(clampedFrom))
+      setFromTime(formatTime(clampedFrom))
       setToValue(toInputDate(clampedTo))
+      setToTime(formatTime(clampedTo))
     }
   }, [open, value])
 
@@ -130,8 +162,11 @@ export default function DateRangeField({ value, onChange, className = '', compac
       start = new Date(now)
       start.setDate(now.getDate() - 29)
     }
+    if (start.getTime() < APP_START_DATE.getTime()) start = APP_START_DATE
     setFromValue(toInputDate(start))
+    setFromTime('00:00')
     setToValue(todayInputDate)
+    setToTime(formatTime(now))
   }
 
   const applyRange = () => {
@@ -139,15 +174,45 @@ export default function DateRangeField({ value, onChange, className = '', compac
     const to = parseLooseDate(toValue)
     if (!from || !to) return
 
+    const fromAt = withTime ? withClock(from, fromTime) : from
+    const toAt = withTime ? withClock(to, toTime) : to
+
     const now = new Date()
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-    const clampedFrom = from.getTime() > todayEnd.getTime() ? now : from
-    const clampedTo = to.getTime() > todayEnd.getTime() ? now : to
+    const limit = withTime ? now : todayEnd
+    const clampedFrom = fromAt.getTime() > limit.getTime() ? now : fromAt < APP_START_DATE ? APP_START_DATE : fromAt
+    const clampedTo = toAt.getTime() > limit.getTime() ? now : toAt < APP_START_DATE ? APP_START_DATE : toAt
 
     const start = clampedFrom.getTime() <= clampedTo.getTime() ? clampedFrom : clampedTo
     const end = clampedFrom.getTime() <= clampedTo.getTime() ? clampedTo : clampedFrom
-    onChange?.(formatRangeLabel(start, end))
+    onChange?.(formatRangeLabel(start, end, withTime))
     setOpen(false)
+  }
+
+  const renderTimeSelect = (time: string, onTimeChange: (value: string) => void, label: string) => {
+    const [hour, minute] = time.split(':')
+    const selectClass =
+      'h-[36px] flex-1 rounded-[8px] border border-line bg-white px-[8px] text-[13px] text-ink outline-none focus:border-brand'
+    return (
+      <div className="mt-[8px] flex items-center gap-[6px]" aria-label={label}>
+        <span className="mr-[2px] text-[12px] font-medium text-ink-soft">Time</span>
+        <select value={hour} onChange={(e) => onTimeChange(`${e.target.value}:${minute}`)} className={selectClass}>
+          {HOURS.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <span className="text-ink-soft">:</span>
+        <select value={minute} onChange={(e) => onTimeChange(`${hour}:${e.target.value}`)} className={selectClass}>
+          {MINUTES.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
+    )
   }
 
   return (
@@ -157,7 +222,7 @@ export default function DateRangeField({ value, onChange, className = '', compac
           }`}
       >
         <input
-          value={value}
+          value={displayValue}
           readOnly
           onClick={() => setOpen(true)}
           className="w-full cursor-pointer bg-transparent text-[13px] font-medium text-ink outline-none"
@@ -217,11 +282,12 @@ export default function DateRangeField({ value, onChange, className = '', compac
             <span className="mb-[6px] block text-[12px] font-medium text-ink-soft">From</span>
             <input
               type="date"
+              min={APP_START_INPUT}
               max={todayInputDate}
               value={fromValue}
               onChange={(e) => {
                 const next = e.target.value
-                if (next && next > todayInputDate) return
+                if (next && (next > todayInputDate || next < APP_START_INPUT)) return
                 setFromValue(next)
                 if (toValue && next > toValue) {
                   setToValue(next)
@@ -231,21 +297,25 @@ export default function DateRangeField({ value, onChange, className = '', compac
             />
           </label>
 
+          {withTime && renderTimeSelect(fromTime, setFromTime, 'From time')}
+
           <label className="mt-[10px] block">
             <span className="mb-[6px] block text-[12px] font-medium text-ink-soft">To (Max today)</span>
             <input
               type="date"
-              min={fromValue || undefined}
+              min={fromValue || APP_START_INPUT}
               max={todayInputDate}
               value={toValue}
               onChange={(e) => {
                 const next = e.target.value
-                if (next && next > todayInputDate) return
+                if (next && (next > todayInputDate || next < APP_START_INPUT)) return
                 setToValue(next)
               }}
               className="h-[36px] w-full rounded-[8px] border border-line bg-white px-[10px] text-[13px] text-ink outline-none focus:border-brand"
             />
           </label>
+
+          {withTime && renderTimeSelect(toTime, setToTime, 'To time')}
 
           <div className="mt-[14px] flex justify-end gap-[8px]">
             <button
