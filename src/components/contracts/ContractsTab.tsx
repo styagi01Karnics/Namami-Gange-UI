@@ -4,16 +4,31 @@ import { Download, Eye, FileText, X } from 'lucide-react'
 const CONTRACTS = [
   { mld: '27', file: '27-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF', '7 pages', '3.45 MB'] },
   { mld: '18', file: '18-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF'] },
+  { mld: '18', location: 'Sarai', file: '18-MLD-STP-SARAI.pdf', meta: ['PDF'] },
   { mld: '10', file: '10-MLD-KASHIPUR-BAZPUR.pdf', meta: ['PDF'] },
   { mld: '26', file: '26-MLD-LAKKARGHAT-RISHIKESH.pdf', meta: ['PDF'] },
+  { mld: '68', location: 'Kargi', file: '68-MLD-STP-KARGI-CHOWK.pdf', meta: ['PDF'] },
   { mld: '68', file: '68-MLD-JAGJEETPUR-HARIDWAR.pdf', meta: ['PDF'] },
   { mld: '14', file: '14-MLD-SARAI-HARIDWAR.pdf', meta: ['PDF'] },
+  { mld: '33', location: 'Saliyar', file: '33-MLD-STP-SALIYAR.pdf', meta: ['PDF'] },
+  { mld: '28', location: 'Haldwani', file: '28-MLD-STP-HALDWANI.pdf', meta: ['PDF'] },
+  { mld: '20', location: 'Mothorowala-1', file: '20-MLD-STP-MOTHOROWALA.pdf', meta: ['PDF'] },
+  { mld: '20', location: 'Mothorowala-2', file: '20-MLD-STP-MOTHOROWALA.pdf', meta: ['PDF'] },
 ]
 
-/** Picks the contract by the plant's MLD capacity; defaults to the 27 MLD contract. */
+/**
+ * Picks the contract by the plant's MLD capacity, preferring an entry whose
+ * `location` appears in the plant name (plants can share a capacity).
+ * Defaults to the 27 MLD contract.
+ */
 function resolveContract(stpName: string) {
   const mld = stpName.match(/(\d+)\s*MLD/i)?.[1]
-  return CONTRACTS.find((c) => c.mld === mld) ?? CONTRACTS[0]
+  const lowerName = stpName.toLowerCase()
+  return (
+    CONTRACTS.find((c) => c.mld === mld && c.location && lowerName.includes(c.location.toLowerCase())) ??
+    CONTRACTS.find((c) => c.mld === mld && !c.location) ??
+    CONTRACTS[0]
+  )
 }
 
 const actionBase =
