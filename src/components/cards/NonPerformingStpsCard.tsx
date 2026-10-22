@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import Card from '../ui/Card'
 import PrintDocument from '../export/PrintDocument'
 import { criticalStps } from '../../data/mockData'
@@ -105,7 +105,6 @@ export default function NonPerformingStpsCard() {
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <label className="inline-flex h-[26px] cursor-pointer items-center gap-1.5 rounded-[8px] bg-[#F2F7FC] px-2.5 text-[11px] font-semibold text-[#0768D2]">
-              <Calendar size={13} strokeWidth={2} />
               <input
                 type="date"
                 aria-label="Select date"
