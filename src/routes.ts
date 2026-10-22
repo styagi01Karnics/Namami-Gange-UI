@@ -61,7 +61,6 @@ export const REPORT_TABS: ReportTab[] = [
   { label: 'CCTV', path: '/reports/cctv-monitoring' },
   { label: 'Manpower', path: '/reports/manpower' },
   { label: 'Inventory', path: '/reports/inventory' },
-  { label: 'Contracts', path: '/reports/contracts' },
   { label: 'Violation', path: '/reports/compliance' },
 ]
 

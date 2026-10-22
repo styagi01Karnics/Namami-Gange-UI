@@ -3,8 +3,7 @@ import { capacityUtilization } from '../../data/mockData'
 import Card from '../ui/Card'
 
 export default function CapacityUtilizationCard() {
-  const { used, total } = capacityUtilization
-  const percent = 76.75
+  const { used, total, percent } = capacityUtilization
 
   return (
     <Card className="flex flex-col rounded-[18px] border border-[#DDECFB] bg-gradient-to-br from-white via-white to-[#F7FBFF] p-4 shadow-[0_5px_20px_rgba(7,104,210,0.10)] sm:p-5">

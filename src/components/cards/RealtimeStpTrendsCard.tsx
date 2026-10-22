@@ -242,9 +242,8 @@ export default function RealtimeStpTrendsCard() {
             <div className="scroll-thin mt-2 grid grid-cols-2 gap-1.5 overflow-x-auto pb-1 sm:grid-cols-4 xl:grid-cols-7 2xl:grid-cols-[repeat(13,minmax(0,1fr))]">
           {currentValues.map(({ stp, value }, index) => (
             <div key={stp.id} className={`min-w-0 rounded-[7px] border p-2 ${selected.has(stp.id) ? 'border-[#E5EEF8] bg-[#FBFDFF]' : 'border-[#EDF1F6] bg-[#F7F8FA] opacity-55'}`}>
-              <div className="flex min-w-0 items-center gap-1">
-                <span className="grid size-[18px] shrink-0 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: COLORS[index] }}>{index + 1}</span>
-                <span className="truncate text-[10px] font-semibold leading-[13px] text-[#536981]" title={stp.name}>{stp.name}</span>
+              <div className="flex min-w-0 items-center">
+                <span className="truncate text-[10px] font-semibold leading-[13px]" style={{ color: COLORS[index] }} title={stp.name}>{stp.name}</span>
               </div>
               <p className="mt-2 text-center text-[15px] font-bold leading-5 text-[#192F56]">{value.toFixed(1)}<span className="ml-0.5 text-[10px] font-medium text-[#7A90AB]">{config.unit}</span></p>
             </div>

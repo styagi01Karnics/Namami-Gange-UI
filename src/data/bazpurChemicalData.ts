@@ -6,6 +6,90 @@ export type ChemicalInventoryItem = {
   consumption: string
   daysLeft: string | number
   status: 'Adequate' | 'Low Stock' | 'Out of Stock'
+  receivedOn?: string
+}
+
+/** Default date the current stock was received (YYYY-MM-DD). */
+export const STOCK_RECEIVED_ON = '2026-09-01'
+
+const LOW_STOCK_RATIO = 0.2
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Base-unit factors; kg and L both map to 1 so Chlorine (kg stock, L usage) compares 1:1. */
+const UNIT_FACTORS: Record<string, number> = {
+  g: 0.001,
+  kg: 1,
+  ml: 0.001,
+  l: 1,
+  lit: 1,
+  pcs: 1,
+  no: 1,
+}
+
+export type ChemicalStockPosition = {
+  receivedOn: Date
+  unit: string
+  consumedQty: number
+  remainingQty: number
+  availableTill: Date | null
+  status: ChemicalInventoryItem['status']
+}
+
+function parseAmount(text: string) {
+  const match = text.match(/^([\d,.]+)\s*([a-zA-Z]+)/)
+  if (!match) return null
+  const factor = UNIT_FACTORS[match[2].toLowerCase()]
+  const amount = Number(match[1].replace(/,/g, ''))
+  if (factor === undefined || Number.isNaN(amount)) return null
+  return { amount, unit: match[2], factor }
+}
+
+/** Reads the period in parentheses, e.g. "(15 Days)", "(1 Month)", "(24 Hours)". */
+function periodInDays(text: string) {
+  const match = text.match(/\(\s*([\d.]+)\s*(hours?|days?|months?)\s*\)/i)
+  if (!match) return null
+  const count = Number(match[1])
+  const unit = match[2].toLowerCase()
+  if (unit.startsWith('hour')) return count / 24
+  if (unit.startsWith('month')) return count * 30
+  return count
+}
+
+/**
+ * Derives consumed-to-date, remaining quantity, stock end date and status
+ * from the received stock and its consumption rate.
+ */
+export function getChemicalStockPosition(item: ChemicalInventoryItem, now = new Date()): ChemicalStockPosition {
+  const receivedOn = new Date(`${item.receivedOn ?? STOCK_RECEIVED_ON}T00:00:00`)
+  const stock = parseAmount(item.currentQty)
+  const usage = parseAmount(item.consumption)
+  const periodDays = periodInDays(item.consumption)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const elapsedDays = Math.max(0, Math.round((today.getTime() - receivedOn.getTime()) / DAY_MS))
+
+  const stockFactor = stock?.factor ?? 1
+  const stockBase = (stock?.amount ?? 0) * stockFactor
+  const dailyUseBase = usage && periodDays ? (usage.amount * usage.factor) / periodDays : 0
+  const consumedBase = Math.min(stockBase, dailyUseBase * elapsedDays)
+  const remainingBase = stockBase - consumedBase
+
+  let availableTill: Date | null = null
+  if (dailyUseBase > 0) {
+    availableTill = new Date(receivedOn)
+    availableTill.setDate(receivedOn.getDate() + Math.floor(stockBase / dailyUseBase))
+  }
+
+  const status =
+    remainingBase <= 0 ? 'Out of Stock' : remainingBase / stockBase <= LOW_STOCK_RATIO ? 'Low Stock' : 'Adequate'
+
+  return {
+    receivedOn,
+    unit: stock?.unit ?? '',
+    consumedQty: consumedBase / stockFactor,
+    remainingQty: remainingBase / stockFactor,
+    availableTill,
+    status,
+  }
 }
 
 /**
@@ -242,16 +326,16 @@ export function getChemicalInventoryForPlant(plantNameOrCode?: string): Chemical
   const scale = capacity > 0 ? capacity / 10 : 1
 
   return BAZPUR_CHEMICAL_INVENTORY.map((item) => {
-    if (item.name.toLowerCase() === 'chlorine') {
-      const qtyKg = Math.round(900 * scale)
-      const consLit = Math.round(21 * scale)
-      return {
-        ...item,
-        currentQty: `${qtyKg.toLocaleString('en-IN')} Kg`,
-        requiredQty: `${consLit} Lit (24 Hours)`,
-        consumption: `${consLit} Lit (24 Hours)`,
-      }
-    }
-    return { ...item }
+    const scaled: ChemicalInventoryItem =
+      item.name.toLowerCase() === 'chlorine'
+        ? {
+            ...item,
+            currentQty: `${Math.round(900 * scale).toLocaleString('en-IN')} Kg`,
+            requiredQty: `${Math.round(21 * scale)} Lit (24 Hours)`,
+            consumption: `${Math.round(21 * scale)} Lit (24 Hours)`,
+          }
+        : { ...item }
+    // Status is derived from remaining stock, not the static roster value.
+    return { ...scaled, status: getChemicalStockPosition(scaled).status }
   })
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Calendar } from 'lucide-react'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
@@ -29,14 +30,23 @@ function ParamBreachCell({ label, value }: { label: string; value?: string }) {
 
 export default function NonPerformingStpsCard() {
   const rows = criticalStps['Parameter Breach']
+  const today = new Date().toLocaleDateString('en-GB')
 
   return (
     <Card className="flex h-[400px] flex-col overflow-hidden rounded-[14px] pt-[12px] pb-[8px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
       <div className="shrink-0 px-[12px]">
-        <h3 className="text-[15px] font-bold leading-5 text-[#DC2626]">Non Performing STPs</h3>
-        <p className="mt-[2px] text-[11px] font-medium leading-4 text-[#64748B]">
-          STP&rsquo;s with Parameter Breach
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-bold leading-5 text-[#DC2626]">Non Performing STPs</h3>
+            <p className="mt-[2px] text-[11px] font-medium leading-4 text-[#64748B]">
+              STP&rsquo;s with Parameter Breach
+            </p>
+          </div>
+          <span className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-[8px] bg-[#F2F7FC] px-2.5 text-[11px] font-semibold text-[#0768D2]">
+            <Calendar size={13} strokeWidth={2} />
+            {today}
+          </span>
+        </div>
 
         <div className="mt-[8px] inline-flex h-[28px] items-center gap-1 rounded-[8px] bg-[#F2F7FC] p-[3px]">
           <span className="h-[24px] whitespace-nowrap rounded-[6px] bg-[#0768D2] px-[10px] text-[11px] font-semibold text-white shadow-sm inline-flex items-center">
