@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Download, Eye, FileText, X } from 'lucide-react'
 
-const CONTRACT_FILE = '27-MLD-STP-JAGJEEPUR.pdf'
-const CONTRACT_URL = `${import.meta.env.BASE_URL}contracts/${CONTRACT_FILE}`
+const CONTRACTS = [
+  { mld: '27', file: '27-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF', '7 pages', '3.45 MB'] },
+  { mld: '18', file: '18-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF'] },
+  { mld: '10', file: '10-MLD-KASHIPUR-BAZPUR.pdf', meta: ['PDF'] },
+]
 
-const fileMeta = ['PDF', '7 pages', '3.45 MB']
+/** Picks the contract by the plant's MLD capacity; defaults to the 27 MLD contract. */
+function resolveContract(stpName: string) {
+  const mld = stpName.match(/(\d+)\s*MLD/i)?.[1]
+  return CONTRACTS.find((c) => c.mld === mld) ?? CONTRACTS[0]
+}
 
 const actionBase =
   'inline-flex h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] px-[14px] text-[14px] font-semibold leading-[20px] transition-opacity hover:opacity-90'
@@ -12,6 +19,8 @@ const actionBase =
 /** Shared by the Contracts page and the Contracts tab in STP Management. */
 export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stpName?: string }) {
   const [viewing, setViewing] = useState(false)
+  const contract = resolveContract(stpName)
+  const CONTRACT_URL = `${import.meta.env.BASE_URL}contracts/${contract.file}`
   const downloadName = `${stpName}.pdf`
 
   useEffect(() => {
@@ -36,7 +45,7 @@ export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stp
                 {stpName}
               </h3>
               <p className="text-[13px] leading-[18px] text-[#646464]">
-                Contract document &middot; {fileMeta.join(' \u00B7 ')}
+                Contract document &middot; {contract.meta.join(' \u00B7 ')}
               </p>
             </div>
           </div>
