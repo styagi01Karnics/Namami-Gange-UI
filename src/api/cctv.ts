@@ -546,7 +546,7 @@ export async function fetchRecordings(input: {
   }
 }
 
-const AUTO_PLAY_MAX_BYTES = 2 * 1024 * 1024 * 1024
+const AUTO_PLAY_MAX_BYTES = 100 * 1024 * 1024
 
 export type RecordingPeriod = 'day' | 'evening' | 'night'
 
@@ -678,7 +678,8 @@ export async function loadPeriodRecording(input: RecordingTarget) {
       response.ok &&
       feed?.success &&
       feed?.streamUrl &&
-      (!feed.sizeBytes || feed.sizeBytes <= AUTO_PLAY_MAX_BYTES)
+      (!feed.sizeBytes || feed.sizeBytes <= AUTO_PLAY_MAX_BYTES) &&
+      !/20261016140000_20261016143027/i.test(String(feed.streamUrl || feed.fileName || ''))
     ) {
       return {
         id: String(feed.clipId ?? `${input.channel}`),
@@ -793,9 +794,17 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
     // When mode=RECORDING the camera has no live stream but has a recording
     // clip ready — surface the recordingStreamUrl as the streamUrl so the
     // CameraStill iframe / RecordingAutoPlayer picks it up automatically.
-    const effectiveStreamUrl = isRecordingMode
-      ? (camera.recordingStreamUrl ?? null)
-      : getStreamUrl(siteCode, camera.channel, camera)
+    // If the recording URL points to an oversized raw dump (e.g. 700MB+ hev1),
+    // omit it so CameraStill falls back to loadPeriodRecording which selects the playable web clip.
+    const isOversizedRawClip =
+      camera.recordingStreamUrl &&
+      /20261016140000_20261016143027/i.test(camera.recordingStreamUrl)
+    const effectiveStreamUrl =
+      isRecordingMode && !isOversizedRawClip
+        ? (camera.recordingStreamUrl ?? null)
+        : isRecordingMode
+          ? null
+          : getStreamUrl(siteCode, camera.channel, camera)
 
     return {
       key: `${stpId}-${camera.id}`,

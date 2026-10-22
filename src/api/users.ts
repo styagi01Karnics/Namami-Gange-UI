@@ -3,7 +3,7 @@
  * Microservice endpoint: /api/users
  */
 
-const USER_API_URL = import.meta.env.VITE_USER_API_URL ?? 'http://localhost:8904/api'
+const USER_API_URL = import.meta.env.VITE_USER_API_URL ?? 'http://45.195.229.15:18090/api'
 
 export type UserItem = {
   id: string

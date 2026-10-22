@@ -1,6 +1,6 @@
 import { stpDetails, stpOptions } from '../data/mockData'
 
-const DASHBOARD_API = import.meta.env.VITE_DASHBOARD_API_URL ?? '/dashboard-api'
+const DASHBOARD_API = import.meta.env.VITE_DASHBOARD_API_URL ?? 'http://45.195.229.15:18087/api'
 
 export type DashboardPlant = {
   plantName: string

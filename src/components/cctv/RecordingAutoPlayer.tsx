@@ -76,7 +76,10 @@ export default function RecordingAutoPlayer({
       onCanPlay={(event) => {
         event.currentTarget.play().catch(() => { })
       }}
-      onError={() => setLabel('Unable to play this feed')}
+      onError={() => {
+        setSrc('')
+        setLabel('Unable to play this feed')
+      }}
     />
   )
 }

@@ -57,7 +57,7 @@ export default function AuditLogsTab({ onExportPdf }: { onExportPdf?: any }) {
     const loadAuditLogs = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`${import.meta.env.VITE_USER_API_URL ?? 'http://localhost:8904/api'}/audit-logs`)
+        const res = await fetch(`${import.meta.env.VITE_USER_API_URL ?? 'http://45.195.229.15:18090/api'}/audit-logs`)
         if (res.ok) {
           const json = await res.json()
           setLogs(Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [])

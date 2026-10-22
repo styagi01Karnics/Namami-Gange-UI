@@ -1,4 +1,4 @@
-const PENALTY_API = import.meta.env.VITE_PENALTY_API_URL ?? '/penalty-api'
+const PENALTY_API = import.meta.env.VITE_PENALTY_API_URL ?? 'http://45.195.229.15:18088/api'
 
 export type PenaltySummary = {
   stpCode: string
