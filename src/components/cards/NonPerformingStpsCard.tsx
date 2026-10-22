@@ -1,9 +1,26 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar } from 'lucide-react'
+import { Calendar, Download } from 'lucide-react'
 import Card from '../ui/Card'
+import PrintDocument from '../export/PrintDocument'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
+
+/** Earliest date that can be selected; earlier dates are disabled in the picker. */
+const PICKER_MIN = '2026-09-01'
+
+const PDF_COLUMNS = [
+  { key: 'number', label: '#' },
+  { key: 'name', label: 'STP' },
+  { key: 'capacity', label: 'Capacity (MLD)' },
+  { key: 'district', label: 'District' },
+  { key: 'omDept', label: 'O&M Dept' },
+  { key: 'param', label: 'Non-Complying Parameter (Outlet)' },
+  { key: 'value', label: 'Exceeded Value' },
+  { key: 'range', label: 'Limit' },
+  { key: 'time', label: 'Time' },
+]
 
 const COLUMNS = [
   { key: 'number', label: '#' },
@@ -28,9 +45,53 @@ function ParamBreachCell({ label, value }: { label: string; value?: string }) {
   )
 }
 
+function toIsoDate(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function formatIsoDate(iso: string) {
+  const [year, month, day] = iso.split('-')
+  return `${day}/${month}/${year}`
+}
+
+function getParams(row) {
+  return 'parameters' in row && Array.isArray(row.parameters) && row.parameters.length > 0
+    ? row.parameters
+    : [
+        {
+          label: row.param.label,
+          value: 'value' in row.param && row.param.value ? row.param.value : '—',
+          range: row.range,
+          time: row.time,
+        },
+      ]
+}
+
 export default function NonPerformingStpsCard() {
   const rows = criticalStps['Parameter Breach']
-  const today = new Date().toLocaleDateString('en-GB')
+  const todayIso = toIsoDate(new Date())
+  const [selectedDate, setSelectedDate] = useState(() => (todayIso < PICKER_MIN ? PICKER_MIN : todayIso))
+  const [printId, setPrintId] = useState<number | null>(null)
+
+  const pdfRows = useMemo(
+    () =>
+      rows.map((row, index) => {
+        const params = getParams(row)
+        return {
+          id: row.id,
+          number: index + 1,
+          name: row.name,
+          capacity: row.capacityMld,
+          district: row.district,
+          omDept: row.omDept,
+          param: params.map((p) => formatParameterName(p.label)).join(', '),
+          value: params.map((p) => p.value).join(', '),
+          range: params.map((p) => p.range).join(', '),
+          time: params.map((p) => p.time || row.time).join(', '),
+        }
+      }),
+    [rows],
+  )
 
   return (
     <Card className="flex h-[400px] flex-col overflow-hidden rounded-[14px] pt-[12px] pb-[8px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
@@ -42,10 +103,28 @@ export default function NonPerformingStpsCard() {
               STP&rsquo;s with Parameter Breach
             </p>
           </div>
-          <span className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-[8px] bg-[#F2F7FC] px-2.5 text-[11px] font-semibold text-[#0768D2]">
-            <Calendar size={13} strokeWidth={2} />
-            {today}
-          </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <label className="inline-flex h-[26px] cursor-pointer items-center gap-1.5 rounded-[8px] bg-[#F2F7FC] px-2.5 text-[11px] font-semibold text-[#0768D2]">
+              <Calendar size={13} strokeWidth={2} />
+              <input
+                type="date"
+                aria-label="Select date"
+                value={selectedDate}
+                min={PICKER_MIN}
+                max={todayIso}
+                onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                className="w-[104px] bg-transparent text-[11px] font-semibold text-[#0768D2] outline-none"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => setPrintId(Date.now())}
+              className="inline-flex h-[26px] items-center gap-1.5 rounded-[8px] bg-[#0768D2] px-2.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              <Download size={13} strokeWidth={2} />
+              PDF
+            </button>
+          </div>
         </div>
 
         <div className="mt-[8px] inline-flex h-[28px] items-center gap-1 rounded-[8px] bg-[#F2F7FC] p-[3px]">
@@ -71,17 +150,7 @@ export default function NonPerformingStpsCard() {
           </thead>
           <tbody>
             {rows.map((row, index) => {
-              const params =
-                'parameters' in row && Array.isArray(row.parameters) && row.parameters.length > 0
-                  ? row.parameters
-                  : [
-                      {
-                        label: row.param.label,
-                        value: 'value' in row.param && row.param.value ? row.param.value : '—',
-                        range: row.range,
-                        time: row.time,
-                      },
-                    ]
+              const params = getParams(row)
 
               return (
                 <tr key={row.id} className="border-b border-[#E2EBF5] bg-white transition-colors hover:bg-[#F8FAFC] last:border-0">
@@ -154,6 +223,19 @@ export default function NonPerformingStpsCard() {
           </tbody>
         </table>
       </div>
+
+      {printId !== null && (
+        <PrintDocument
+          key={printId}
+          title="Non Performing STPs"
+          fileName={`non-performing-stps-${selectedDate}.pdf`}
+          rangeLabel={formatIsoDate(selectedDate)}
+          rangeTitle="Date"
+          columns={PDF_COLUMNS}
+          rows={pdfRows}
+          onDone={() => setPrintId(null)}
+        />
+      )}
     </Card>
   )
 }
