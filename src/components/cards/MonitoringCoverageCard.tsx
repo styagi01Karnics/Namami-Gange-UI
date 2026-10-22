@@ -1,4 +1,4 @@
-import { Building2, Droplets, Gauge, MapPinOff, type LucideIcon } from 'lucide-react'
+import { Building2, Droplets, type LucideIcon } from 'lucide-react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import Card from '../ui/Card'
 import { capacityUtilization } from '../../data/mockData'
@@ -35,9 +35,7 @@ function StatTile({ icon: Icon, label, value, unit, chipClass, tileClass }: Stat
 export default function MonitoringCoverageCard({ className = '' }: { className?: string }) {
   const { used, total } = capacityUtilization
   const remainingMld = total.mld - used.mld
-  const remainingStps = total.stps - used.stps
   const { percent } = capacityUtilization
-  const stpSegments = Array.from({ length: total.stps }, (_, i) => i < used.stps)
 
   const capacityData = [
     { name: 'Monitored', value: used.mld },
@@ -92,7 +90,7 @@ export default function MonitoringCoverageCard({ className = '' }: { className?:
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5">
           <StatTile
             icon={Droplets}
             label="Monitored capacity"
@@ -102,46 +100,12 @@ export default function MonitoringCoverageCard({ className = '' }: { className?:
             tileClass="border-[#DCEBFF] bg-[#F3F8FF]"
           />
           <StatTile
-            icon={Gauge}
-            label="Unmonitored capacity"
-            value={remainingMld}
-            unit="MLD"
-            chipClass="bg-[#FDECC8] text-[#B45309]"
-            tileClass="border-[#FDECC8] bg-[#FFFBF2]"
-          />
-          <StatTile
             icon={Building2}
             label="STPs monitored"
             value={used.stps}
             chipClass="bg-[#D9F5F7] text-[#0E7490]"
             tileClass="border-[#D9F5F7] bg-[#F2FCFD]"
           />
-          <StatTile
-            icon={MapPinOff}
-            label="STPs not monitored"
-            value={remainingStps}
-            chipClass="bg-[#FDECC8] text-[#B45309]"
-            tileClass="border-[#FDECC8] bg-[#FFFBF2]"
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-[12px] bg-gradient-to-r from-[#F0F7FF] to-[#F1FBF8] p-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[12px] font-semibold text-[#102653]">STP coverage</p>
-          <p className="text-[12px] font-medium text-[#7085A2]">
-            <span className="font-bold text-[#1268E8]">{used.stps}</span> of {total.stps} STPs
-          </p>
-        </div>
-        <div className="mt-2.5 flex gap-[3px]" role="img" aria-label={`${used.stps} of ${total.stps} STPs monitored`}>
-          {stpSegments.map((monitored, i) => (
-            <span
-              key={i}
-              className={`h-3 flex-1 rounded-[3px] ${
-                monitored ? 'bg-gradient-to-b from-[#20A9E8] to-[#1268E8]' : 'bg-[#E3EDF8]'
-              }`}
-            />
-          ))}
         </div>
       </div>
     </Card>
