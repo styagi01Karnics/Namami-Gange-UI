@@ -9,12 +9,12 @@ import { stpDetails } from '../../data/mockData'
 
 const PinIcon = ico('fluent:location-24-filled')
 
-function DetailRow({ label, value }: { label: string; value?: string | null }) {
+function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-[120px_12px_1fr] items-baseline gap-x-[4px] text-[13px] leading-[20px]">
       <span className="text-ink-soft">{label}</span>
       <span className="text-ink-soft">:</span>
-      <span className="min-w-0 break-words font-medium text-ink">{value || '—'}</span>
+      <span className="min-w-0 break-words font-medium text-ink">{value}</span>
     </div>
   )
 }
@@ -24,7 +24,9 @@ function DetailColumn({ title, rows, bordered }: { title: string; rows: [string,
     <div className={`min-w-0 ${bordered ? 'lg:border-l lg:border-[#E3ECF7] lg:pl-[28px]' : ''}`}>
       <h3 className="text-[15px] font-semibold leading-5 text-[#003C7A]">{title}</h3>
       <div className="mt-[10px] space-y-[4px]">
-        {rows.map(([label, value]) => <DetailRow key={label} label={label} value={value} />)}
+        {rows
+          .filter((row): row is [string, string] => Boolean(row[1]?.trim()))
+          .map(([label, value]) => <DetailRow key={label} label={label} value={value} />)}
       </div>
     </div>
   )

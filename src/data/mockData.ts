@@ -16,7 +16,7 @@
    1. SHARED
    ========================================================================== */
 
-import { BAZPUR_CHEMICAL_INVENTORY } from './bazpurChemicalData'
+import { getChemicalInventoryForPlant } from './bazpurChemicalData'
 
 export const currentUser = {
   name: 'Rajesh Nair',
@@ -256,6 +256,7 @@ export const dashboardKpis = [
 export const capacityUtilization = {
   used: { stps: 13, mld: 360, status: 'Under Monitoring' as const },
   total: { stps: 77, mld: 469 },
+  percent: 76.75,
 }
 
 
@@ -3105,7 +3106,7 @@ export const chemicalInventory = {
     { key: 'consumption', label: 'Consumption', width: '20%' },
     { key: 'status', label: 'Status', width: '12%', sortable: true },
   ],
-  rows: BAZPUR_CHEMICAL_INVENTORY,
+  rows: getChemicalInventoryForPlant(),
 }
 
 /** "All" maps to no filter; the rest match the row `status` values. */

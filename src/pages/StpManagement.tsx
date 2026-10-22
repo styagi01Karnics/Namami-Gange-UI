@@ -227,7 +227,7 @@ export default function StpManagement() {
       <span className="flex h-[32px] shrink-0 items-center whitespace-nowrap rounded-[9px] border border-line bg-white px-[14px] text-[13px] font-medium text-ink">
         {previousMonth.label}
       </span>
-    ) : tab === 'CCTV' ? null : (
+    ) : tab === 'CCTV' || tab === 'Contracts' ? null : (
       <DateRangeField compact value={range} onChange={setRange} className="w-[236px] shrink-0" />
     )
 
@@ -287,6 +287,8 @@ export default function StpManagement() {
                   dateRangeLabel={previousMonth.range}
                   stpManagementPdf
                 />
+              ) : tab === 'Contracts' ? (
+                <ContractsTab stpName={selectedPlant?.label ?? stp.name} />
               ) : (
                 <TabBody
                   stpId={selectedPlant?.stpId}
