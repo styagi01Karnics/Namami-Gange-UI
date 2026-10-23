@@ -3171,24 +3171,75 @@ export const contractsReportRows = [
 
 export const complianceReportParameters = ['All', 'pH', 'BOD', 'COD', 'TSS', 'Flow', 'Temperature']
 
-export const complianceReportColumns = [
-  { key: 'stp', label: 'STP', width: '20%', sortable: true },
-  { key: 'id', label: 'Violation ID', width: '11%' },
-  { key: 'type', label: 'Type', width: '13%' },
-  { key: 'parameter', label: 'Parameter', width: '10%' },
-  { key: 'location', label: 'Location', width: '10%' },
-  { key: 'downtime', label: 'Downtime Duration', width: '15%' },
-  { key: 'detectedOn', label: 'Detected On', width: '12%' },
-  { key: 'status', label: 'Status', width: '11%', sortable: true },
-]
+export const complianceReportColumns = monthlyViolationColumns
 
-export const complianceReportRows = [
-  { id: 'VL123456', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL1233520', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL123458', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL123461', stp: '68 MLD STP, Jagjeetpur, Haridwar', type: 'Parameter Breach', parameter: 'BOD', exceedance: '23.3%', location: 'Outlet', downtime: '3h 20min', penalty: '₹12,000', date: '22/02/2026', time: '02:05 PM', status: 'Pending' },
-  { id: 'VL123465', stp: '68 MLD STP, Kargi Chowk, Dehradun', type: 'Equipment Failure', parameter: 'Flow', exceedance: '8.4%', location: 'Inlet', downtime: '0h 55min', penalty: '₹3,000', date: '26/02/2026', time: '09:40 AM', status: 'Recovered' },
-  { id: 'VL123470', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'TSS', exceedance: '15.2%', location: 'Effluent', downtime: '2h 05min', penalty: '₹6,500', date: '28/02/2026', time: '11:15 AM', status: 'Pending' },
+export const complianceReportRows: StpMonthlyViolation[] = [
+  {
+    id: 'VL123456',
+    sn: 1,
+    date: '15/02/2026',
+    stpName: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL1233520',
+    sn: 2,
+    date: '15/02/2026',
+    stpName: '26 MLD STP, Lakkarghat, Rishikesh',
+    capacity: 26,
+    district: 'Rishikesh',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL123458',
+    sn: 3,
+    date: '15/02/2026',
+    stpName: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL123461',
+    sn: 4,
+    date: '22/02/2026',
+    stpName: '68 MLD STP, Jagjeetpur, Haridwar',
+    capacity: 68,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'BOD', observedValue: '36.99', range: '0 – 30' }],
+    nonComplianceTime: '02:05 PM to 05:25 PM',
+  },
+  {
+    id: 'VL123465',
+    sn: 5,
+    date: '26/02/2026',
+    stpName: '68 MLD STP, Kargi Chowk, Dehradun',
+    capacity: 68,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'COD', observedValue: '54.20', range: '0 – 50' }],
+    nonComplianceTime: '09:40 AM to 10:35 AM',
+  },
+  {
+    id: 'VL123470',
+    sn: 6,
+    date: '28/02/2026',
+    stpName: '26 MLD STP, Lakkarghat, Rishikesh',
+    capacity: 26,
+    district: 'Rishikesh',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'TSS', observedValue: '23.04', range: '0 – 20' }],
+    nonComplianceTime: '11:15 AM to 01:20 PM',
+  },
 ]
 
 /* ---- Manpower report ---------------------------------------------------- */
