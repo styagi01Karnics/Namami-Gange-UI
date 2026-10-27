@@ -1,7 +1,7 @@
 const CCTV_API = import.meta.env.VITE_CCTV_API_URL ?? '/cctv-api'
 const STREAM_BASE = import.meta.env.VITE_STREAM_BASE ?? 'https://stream.karnics.com'
 
-export type CameraPlayer = 'whep' | 'iframe' | 'mp4'
+export type CameraPlayer = 'whep' | 'hls' | 'iframe' | 'mp4'
 
 export type CctvCamera = {
   id: string | number
@@ -90,56 +90,58 @@ const STP_33MLD_CAMERAS: CctvCamera[] = [
   },
 ]
 
-const STP_20MLD_UNIT1_CAMERAS: CctvCamera[] = [
-  {
-    id: 'mothorowala-20-cam-1',
-    name: 'Influent',
-    channel: 1,
-    status: 'LIVE',
-    siteCode: 'STP20MLD1',
-  },
-  {
-    id: 'mothorowala-20-cam-2',
-    name: 'Effluent',
-    channel: 2,
-    status: 'LIVE',
-    siteCode: 'STP20MLD1',
-  },
-]
+/** HLS live cameras served from the Tailnet STP camera hosts (MediaMTX `<camera>/index.m3u8`). */
+function hlsPlantCameras(
+  idPrefix: string,
+  siteCode: string,
+  influentUrl: string,
+  effluentUrl: string,
+  channels: [influent: number, effluent: number] = [1, 2],
+): CctvCamera[] {
+  return [
+    {
+      id: `${idPrefix}-cam-1`,
+      name: 'Influent',
+      channel: channels[0],
+      status: 'LIVE',
+      siteCode,
+      streamUrl: influentUrl,
+      player: 'hls',
+    },
+    {
+      id: `${idPrefix}-cam-2`,
+      name: 'Effluent',
+      channel: channels[1],
+      status: 'LIVE',
+      siteCode,
+      streamUrl: effluentUrl,
+      player: 'hls',
+    },
+  ]
+}
 
-const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = [
-  {
-    id: 'mothorowala-20-2-cam-1',
-    name: 'Influent',
-    channel: 2,
-    status: 'LIVE',
-    siteCode: 'STP20MLD2',
-  },
-  {
-    id: 'mothorowala-20-2-cam-2',
-    name: 'Effluent',
-    channel: 1,
-    status: 'LIVE',
-    siteCode: 'STP20MLD2',
-  },
-]
+const STP_20MLD_UNIT1_CAMERAS: CctvCamera[] = hlsPlantCameras(
+  'mothorowala-20',
+  'STP20MLD1',
+  'https://stp20mldmothor1.tail72c450.ts.net/camera2/',
+  'https://stp20mldmothor1.tail72c450.ts.net/camera1/',
+)
 
-const STP_26MLD_CAMERAS: CctvCamera[] = [
-  {
-    id: 'lakkar-ghat-26-cam-1',
-    name: 'Influent',
-    channel: 1,
-    status: 'LIVE',
-    siteCode: 'STP26MLD',
-  },
-  {
-    id: 'lakkar-ghat-26-cam-2',
-    name: 'Effluent',
-    channel: 2,
-    status: 'LIVE',
-    siteCode: 'STP26MLD',
-  },
-]
+const STP_20MLD_UNIT2_CAMERAS: CctvCamera[] = hlsPlantCameras(
+  'mothorowala-20-2',
+  'STP20MLD2',
+  'https://stp20mldmothor2.tail72c450.ts.net/camera1/',
+  'https://stp20mldmothor2.tail72c450.ts.net/camera2/',
+  // NVR channels for Unit 2 are swapped (Influent = ch 2, Effluent = ch 1) per the CCTV API.
+  [2, 1],
+)
+
+const STP_26MLD_CAMERAS: CctvCamera[] = hlsPlantCameras(
+  'lakkar-ghat-26',
+  'STP26MLD',
+  'https://stp26mldrishi.tail72c450.ts.net/camera2/',
+  'https://stp26mldrishi.tail72c450.ts.net/camera1/',
+)
 
 const STP_10MLD_BAZPUR_CAMERAS: CctvCamera[] = [
   {
@@ -175,22 +177,12 @@ const STP_10MLD_KASHIPUR_CAMERAS: CctvCamera[] = [
   },
 ]
 
-const STP_68MLD_KARGI_CAMERAS: CctvCamera[] = [
-  {
-    id: 'kargi-68-cam-1',
-    name: 'Influent',
-    channel: 1,
-    status: 'LIVE',
-    siteCode: 'STP68MLDKAR',
-  },
-  {
-    id: 'kargi-68-cam-2',
-    name: 'Effluent',
-    channel: 2,
-    status: 'LIVE',
-    siteCode: 'STP68MLDKAR',
-  },
-]
+const STP_68MLD_KARGI_CAMERAS: CctvCamera[] = hlsPlantCameras(
+  'kargi-68',
+  'STP68MLDKAR',
+  'https://stp68mldkhargi.tail72c450.ts.net/camera2/',
+  'https://stp68mldkhargi.tail72c450.ts.net/camera1/',
+)
 
 const STP_18MLD_JAG_CAMERAS: CctvCamera[] = [
   {
@@ -978,8 +970,8 @@ type PlantCameraOption = { id: string; label: string; plantCode?: string; stpId?
 
 /**
  * Same camera resolution as Live Camera Feed:
- * 1. 14 MLD Sarai WHEP live stream (custom Tailnet client stream)
- * 2. CCTV API (all 13 STPs, returns recordingStreamUrl + mode for recorded feeds)
+ * 1. STPs with WHEP/HLS live streams configured in this file (Sarai 14 MLD, 26 MLD, 20 MLD Unit 1 & 2)
+ * 2. CCTV API (all other STPs, returns recordingStreamUrl + mode for recorded feeds)
  * 3. Configured STP cameras
  * 4. Mock site cameras -> empty placeholders.
  */
@@ -993,13 +985,11 @@ export async function loadLiveCamerasByStp(
   for (const option of plantOptions) {
     const siteStpId = option.stpId || option.id
 
-    // 1. Sarai 14 MLD has custom Tailnet WHEP live player configured
-    if (siteStpId === 'sarai-14' || siteStpId === '14mldsarai') {
-      const configured = getCamerasForStp(siteStpId)
-      if (configured) {
-        next[siteStpId] = toSiteCameras(siteStpId, configured)
-        continue
-      }
+    // 1. STPs with WHEP live streams configured in this file (Sarai 14 MLD, 26 MLD, 20 MLD Unit 1 & 2)
+    const whepConfigured = getCamerasForStp(siteStpId) ?? getCamerasForStp(option.plantCode)
+    if (whepConfigured?.some((camera) => camera.player === 'whep' || camera.player === 'hls')) {
+      next[siteStpId] = toSiteCameras(siteStpId, whepConfigured)
+      continue
     }
 
     // 2. All STPs: fetch from CCTV API which returns recordingStreamUrl + mode

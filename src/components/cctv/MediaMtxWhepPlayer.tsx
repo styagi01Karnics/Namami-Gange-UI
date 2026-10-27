@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
+import Hls from 'hls.js'
 import {
   Camera,
   ExternalLink,
@@ -67,10 +68,12 @@ export default function MediaMtxWhepPlayer({
   src,
   title,
   onError,
+  protocol = 'whep',
 }: {
   src: string
   title?: string
   onError?: (message: string) => void
+  protocol?: 'whep' | 'hls'
 }) {
   const videoRef = useRef(null)
   const frameRef = useRef(null)
@@ -88,6 +91,7 @@ export default function MediaMtxWhepPlayer({
   onErrorRef.current = onError
 
   useEffect(() => {
+    if (protocol !== 'whep') return undefined
     let reader
     let cancelled = false
     const whepUrl = new URL('whep', page).toString()
@@ -133,7 +137,56 @@ export default function MediaMtxWhepPlayer({
       cancelled = true
       reader?.close()
     }
-  }, [page])
+  }, [page, protocol])
+
+  useEffect(() => {
+    if (protocol !== 'hls') return undefined
+    const video = videoRef.current
+    if (!video) return undefined
+
+    let cancelled = false
+    const playlistUrl = new URL('index.m3u8', page).toString()
+    const reportError = (message: string) => {
+      if (cancelled) return
+      setError(message)
+      onErrorRef.current?.(message)
+    }
+
+    setError('')
+
+    if (!Hls.isSupported()) {
+      // Safari plays HLS natively; other browsers without MSE cannot.
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = playlistUrl
+        video.muted = true
+        video.play().catch(() => {})
+      } else {
+        reportError('This browser cannot play live video')
+      }
+      return () => {
+        cancelled = true
+        video.removeAttribute('src')
+      }
+    }
+
+    const hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 3 })
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      if (data.fatal) reportError('Live stream is not running')
+    })
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      if (cancelled) return
+      setError('')
+      video.muted = true
+      video.play().then(() => setPaused(false)).catch(() => {})
+    })
+    hls.loadSource(playlistUrl)
+    hls.attachMedia(video)
+
+    return () => {
+      cancelled = true
+      hls.destroy()
+    }
+  }, [page, protocol])
 
   useEffect(() => {
     const video = videoRef.current

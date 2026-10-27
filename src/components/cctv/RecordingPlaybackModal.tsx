@@ -137,8 +137,12 @@ export default function RecordingPlaybackModal({
           ref={playerRef}
           className={`relative w-full overflow-hidden bg-[#07121e] ${fullscreen ? 'min-h-0 flex-1 rounded-none' : 'mt-[14px] aspect-[16/10] rounded-[22px]'}`}
         >
-          {showStream && feed.player === 'whep' ? (
-            <MediaMtxWhepPlayer src={feed.streamUrl!} title={feed.location} />
+          {showStream && (feed.player === 'whep' || feed.player === 'hls') ? (
+            <MediaMtxWhepPlayer
+              src={feed.streamUrl!}
+              protocol={feed.player === 'hls' ? 'hls' : 'whep'}
+              title={feed.location}
+            />
           ) : showStream && (feed.player === 'mp4' || mp4Url) ? (
             <RecordingVideo
               key={mp4Url}

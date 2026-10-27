@@ -191,12 +191,16 @@ function cctvPriorityScore(item: { id?: string; plantCode?: string; stpId?: stri
 
 /** STPs always shown first, in this exact order; the rest follow. */
 const TOP_PINNED_STP_MATCHERS = [
-  is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
   is14MldSarai, // 14 MLD STP, Sarai, Haridwar
-  is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
   is26MldRishikesh, // 26 MLD STP, Lakkarghat, Rishikesh
   (item: { id?: string; plantCode?: string; stpId?: string }) =>
     plantKey(item).some((key) => key === '68mldkargi' || key === 'kargi-68'), // 68 MLD STP, Kargi Chowk, Dehradun
+  (item: { id?: string; plantCode?: string; stpId?: string }) =>
+    plantKey(item).some((key) => key === '20mldmothorowala' || key === 'mothorowala-20'), // 20 MLD STP, Mothorowala-1, Dehradun
+  (item: { id?: string; plantCode?: string; stpId?: string }) =>
+    plantKey(item).some((key) => key === '20mldmoth_2' || key === 'mothorowala-20-2'), // 20 MLD STP, Mothorowala-2, Dehradun
+  is18MldJagjeetpur, // 18 MLD STP, Jagjeetpur, Haridwar
+  is68MldJagjeetpur, // 68 MLD STP, Jagjeetpur, Haridwar
   is10MldBazpur, // 10 MLD STP, Bazpur
 ]
 

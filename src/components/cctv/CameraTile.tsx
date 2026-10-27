@@ -30,8 +30,8 @@ export function CameraStill({
   onLiveFailed?: () => void
 }) {
   const hasLiveUrl = Boolean(camera.streamUrl) && !liveFailed
-  // WHEP and MP4 players report their own errors — do not block them on the CCTV health API.
-  const needsProbe = hasLiveUrl && camera.player !== 'whep' && camera.player !== 'mp4'
+  // WHEP, HLS and MP4 players report their own errors — do not block them on the CCTV health API.
+  const needsProbe = hasLiveUrl && camera.player !== 'whep' && camera.player !== 'hls' && camera.player !== 'mp4'
   const [liveOk, setLiveOk] = useState(!needsProbe && hasLiveUrl)
   const [whepFailed, setWhepFailed] = useState(false)
   const [mp4Failed, setMp4Failed] = useState(false)
@@ -67,10 +67,11 @@ export function CameraStill({
 
   // Priority 1: Live streaming or direct recording MP4 stream
   if (hasLiveUrl && liveOk && !whepFailed && !mp4Failed && !iframeFailed) {
-    if (camera.player === 'whep') {
+    if (camera.player === 'whep' || camera.player === 'hls') {
       return (
         <MediaMtxWhepPlayer
           src={camera.streamUrl}
+          protocol={camera.player === 'hls' ? 'hls' : 'whep'}
           title={camera.location}
           onError={() => {
             setWhepFailed(true)

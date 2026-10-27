@@ -34,8 +34,9 @@ export default function CameraFeedTile({
 }) {
   const isOffline = feed.status === 'Offline'
   const hasLiveUrl = Boolean(feed.streamUrl)
-  // WHEP (14 MLD) connects in the browser; only iframe/MediaMTX pages need a backend probe.
-  const [liveOk, setLiveOk] = useState(feed.player === 'whep' && hasLiveUrl)
+  // WHEP and HLS connect in the browser; only iframe/MediaMTX pages need a backend probe.
+  const browserPlayer = feed.player === 'whep' || feed.player === 'hls'
+  const [liveOk, setLiveOk] = useState(browserPlayer && hasLiveUrl)
   const [liveFailed, setLiveFailed] = useState(false)
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState('')
@@ -47,7 +48,7 @@ export default function CameraFeedTile({
       return undefined
     }
 
-    if (feed.player === 'whep') {
+    if (browserPlayer) {
       setLiveOk(true)
       return undefined
     }
@@ -60,7 +61,7 @@ export default function CameraFeedTile({
     return () => {
       cancelled = true
     }
-  }, [hasLiveUrl, feed.streamUrl, feed.player])
+  }, [hasLiveUrl, feed.streamUrl, feed.player, browserPlayer])
 
   async function handleStart() {
     if (!feed.cameraId) {
@@ -107,9 +108,10 @@ export default function CameraFeedTile({
   return (
     <div className="flex min-w-0 flex-col">
       <div className="group relative aspect-[5/3] w-full overflow-hidden rounded-[10px] bg-[#07121e]">
-        {showStream && feed.player === 'whep' ? (
+        {showStream && browserPlayer ? (
           <MediaMtxWhepPlayer
             src={feed.streamUrl!}
+            protocol={feed.player === 'hls' ? 'hls' : 'whep'}
             title={feed.location}
             onError={() => setLiveFailed(true)}
           />
