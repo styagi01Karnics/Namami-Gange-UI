@@ -19,6 +19,7 @@ export default function PrintDocument({
   badgeTone = 'brand',
   address = null,
   rangeLabel = null,
+  rangeTitle = 'Date Range',
   columns,
   rows,
   renderCell = (row, col) => row[col.key] ?? '—',
@@ -101,7 +102,7 @@ export default function PrintDocument({
               <CalendarIcon size={16} className="text-brand" />
             </span>
             <span>
-              <span className="block text-[11.5px] leading-4 text-ink-soft">Date Range</span>
+              <span className="block text-[11.5px] leading-4 text-ink-soft">{rangeTitle}</span>
               <span className="block text-[13px] font-bold leading-[18px] text-brand">{rangeLabel}</span>
             </span>
           </div>

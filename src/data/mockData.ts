@@ -3171,24 +3171,75 @@ export const contractsReportRows = [
 
 export const complianceReportParameters = ['All', 'pH', 'BOD', 'COD', 'TSS', 'Flow', 'Temperature']
 
-export const complianceReportColumns = [
-  { key: 'stp', label: 'STP', width: '20%', sortable: true },
-  { key: 'id', label: 'Violation ID', width: '11%' },
-  { key: 'type', label: 'Type', width: '13%' },
-  { key: 'parameter', label: 'Parameter', width: '10%' },
-  { key: 'location', label: 'Location', width: '10%' },
-  { key: 'downtime', label: 'Downtime Duration', width: '15%' },
-  { key: 'detectedOn', label: 'Detected On', width: '12%' },
-  { key: 'status', label: 'Status', width: '11%', sortable: true },
-]
+export const complianceReportColumns = monthlyViolationColumns
 
-export const complianceReportRows = [
-  { id: 'VL123456', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL1233520', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL123458', stp: '14 MLD STP, Sarai, Haridwar', type: 'Parameter Breach', parameter: 'pH', exceedance: '13.3%', location: 'Effluent', downtime: '1h 45min', penalty: '₹7,500', date: '15/02/2026', time: '10:30 AM', status: 'Recovered' },
-  { id: 'VL123461', stp: '68 MLD STP, Jagjeetpur, Haridwar', type: 'Parameter Breach', parameter: 'BOD', exceedance: '23.3%', location: 'Outlet', downtime: '3h 20min', penalty: '₹12,000', date: '22/02/2026', time: '02:05 PM', status: 'Pending' },
-  { id: 'VL123465', stp: '68 MLD STP, Kargi Chowk, Dehradun', type: 'Equipment Failure', parameter: 'Flow', exceedance: '8.4%', location: 'Inlet', downtime: '0h 55min', penalty: '₹3,000', date: '26/02/2026', time: '09:40 AM', status: 'Recovered' },
-  { id: 'VL123470', stp: '26 MLD STP, Lakkarghat, Rishikesh', type: 'Parameter Breach', parameter: 'TSS', exceedance: '15.2%', location: 'Effluent', downtime: '2h 05min', penalty: '₹6,500', date: '28/02/2026', time: '11:15 AM', status: 'Pending' },
+export const complianceReportRows: StpMonthlyViolation[] = [
+  {
+    id: 'VL123456',
+    sn: 1,
+    date: '15/02/2026',
+    stpName: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL1233520',
+    sn: 2,
+    date: '15/02/2026',
+    stpName: '26 MLD STP, Lakkarghat, Rishikesh',
+    capacity: 26,
+    district: 'Rishikesh',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL123458',
+    sn: 3,
+    date: '15/02/2026',
+    stpName: '14 MLD STP, Sarai, Haridwar',
+    capacity: 14,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'pH', observedValue: '10.20', range: '5.5 – 9' }],
+    nonComplianceTime: '10:30 AM to 12:15 PM',
+  },
+  {
+    id: 'VL123461',
+    sn: 4,
+    date: '22/02/2026',
+    stpName: '68 MLD STP, Jagjeetpur, Haridwar',
+    capacity: 68,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'BOD', observedValue: '36.99', range: '0 – 30' }],
+    nonComplianceTime: '02:05 PM to 05:25 PM',
+  },
+  {
+    id: 'VL123465',
+    sn: 5,
+    date: '26/02/2026',
+    stpName: '68 MLD STP, Kargi Chowk, Dehradun',
+    capacity: 68,
+    district: 'Dehradun',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'COD', observedValue: '54.20', range: '0 – 50' }],
+    nonComplianceTime: '09:40 AM to 10:35 AM',
+  },
+  {
+    id: 'VL123470',
+    sn: 6,
+    date: '28/02/2026',
+    stpName: '26 MLD STP, Lakkarghat, Rishikesh',
+    capacity: 26,
+    district: 'Rishikesh',
+    omDepartment: 'Uttarakhand Peyjal Nigam',
+    parameters: [{ name: 'TSS', observedValue: '23.04', range: '0 – 20' }],
+    nonComplianceTime: '11:15 AM to 01:20 PM',
+  },
 ]
 
 /* ---- Manpower report ---------------------------------------------------- */
@@ -3688,12 +3739,12 @@ export const teamMembers = [
    ========================================================================== */
 
 export const supportTicketColumns = [
-  { key: 'id', label: 'Ticket ID', width: '13%', sortable: true },
-  { key: 'issue', label: 'Issue Raised', width: '28%' },
-  { key: 'date', label: 'Date', width: '14%', sortable: true },
-  { key: 'priority', label: 'Priority', width: '12%' },
-  { key: 'status', label: 'Status', width: '15%' },
-  { key: 'updatedOn', label: 'Last Updated On', width: '18%' },
+  { key: 'id', label: 'Ticket ID', width: '12%', sortable: true },
+  { key: 'issue', label: 'Issue Raised', width: '24%' },
+  { key: 'stpName', label: 'STP Name', width: '22%' },
+  { key: 'date', label: 'Date', width: '13%', sortable: true },
+  { key: 'status', label: 'Status', width: '14%' },
+  { key: 'updatedOn', label: 'Last Updated On', width: '15%' },
 ]
 
 /** Category and priority choices offered by the "Raise a Ticket" form. */
@@ -3724,22 +3775,22 @@ export const supportTicketPriorities = [
 ]
 
 export const supportTicketRows = [
-  { id: 'TKT-10245', category: 'Penalty', issue: 'Penalty clarification for STP', date: '19 May 2026', priority: 'Low', status: 'Action Required', updatedOn: '20 May 2026' },
-  { id: 'TKT-10241', category: 'Penalty', issue: 'Incorrect penalty amount', date: '19 May 2026', priority: 'Mid', status: 'In Progress', updatedOn: '19 May 2026' },
-  { id: 'TKT-10236', category: 'Payment', issue: 'Payment-related query', date: '19 May 2026', priority: 'High', status: 'Closed', updatedOn: '19 May 2026' },
-  { id: 'TKT-10218', category: 'Plant Maintenance', issue: 'Plant maintenance issue', date: '19 May 2026', priority: 'High', status: 'Open', updatedOn: '19 May 2026' },
-  { id: 'TKT-10204', category: 'CCTV / Devices', issue: 'Influent camera offline since morning', date: '18 May 2026', priority: 'High', status: 'In Progress', updatedOn: '19 May 2026' },
-  { id: 'TKT-10199', category: 'Compliance', issue: 'BOD readings not matching lab report', date: '18 May 2026', priority: 'Mid', status: 'Action Required', updatedOn: '18 May 2026' },
-  { id: 'TKT-10187', category: 'Manpower', issue: 'Night shift attendance not recorded', date: '17 May 2026', priority: 'Low', status: 'Closed', updatedOn: '18 May 2026' },
-  { id: 'TKT-10175', category: 'Payment', issue: 'Invoice against contract CN-014 pending', date: '17 May 2026', priority: 'Mid', status: 'Open', updatedOn: '17 May 2026' },
-  { id: 'TKT-10166', category: 'Plant Maintenance', issue: 'Blower tripping repeatedly at Jagjeetpur', date: '16 May 2026', priority: 'High', status: 'In Progress', updatedOn: '17 May 2026' },
-  { id: 'TKT-10154', category: 'Compliance', issue: 'Request to reopen closed violation', date: '16 May 2026', priority: 'Low', status: 'Closed', updatedOn: '16 May 2026' },
-  { id: 'TKT-10142', category: 'CCTV / Devices', issue: 'Recording storage almost full', date: '15 May 2026', priority: 'Mid', status: 'Action Required', updatedOn: '16 May 2026' },
-  { id: 'TKT-10133', category: 'Other', issue: 'Add new site engineer to the portal', date: '15 May 2026', priority: 'Low', status: 'Open', updatedOn: '15 May 2026' },
-  { id: 'TKT-10121', category: 'Penalty', issue: 'Penalty waiver request for March', date: '14 May 2026', priority: 'High', status: 'Action Required', updatedOn: '15 May 2026' },
-  { id: 'TKT-10118', category: 'Manpower', issue: 'Shortage against contracted headcount', date: '14 May 2026', priority: 'Mid', status: 'Closed', updatedOn: '14 May 2026' },
-  { id: 'TKT-10106', category: 'Payment', issue: 'Duplicate deduction in April billing', date: '13 May 2026', priority: 'High', status: 'In Progress', updatedOn: '14 May 2026' },
-  { id: 'TKT-10094', category: 'Other', issue: 'Unable to export compliance report', date: '13 May 2026', priority: 'Low', status: 'Closed', updatedOn: '13 May 2026' },
+  { id: 'TKT-10245', category: 'Penalty', issue: 'Penalty clarification for STP', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '19 May 2026', priority: 'Low', status: 'Action Required', updatedOn: '20 May 2026' },
+  { id: 'TKT-10241', category: 'Penalty', issue: 'Incorrect penalty amount', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '19 May 2026', priority: 'Mid', status: 'In Progress', updatedOn: '19 May 2026' },
+  { id: 'TKT-10236', category: 'Payment', issue: 'Payment-related query', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '19 May 2026', priority: 'High', status: 'Closed', updatedOn: '19 May 2026' },
+  { id: 'TKT-10218', category: 'Plant Maintenance', issue: 'Plant maintenance issue', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '19 May 2026', priority: 'High', status: 'Open', updatedOn: '19 May 2026' },
+  { id: 'TKT-10204', category: 'CCTV / Devices', issue: 'Influent camera offline since morning', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '18 May 2026', priority: 'High', status: 'In Progress', updatedOn: '19 May 2026' },
+  { id: 'TKT-10199', category: 'Compliance', issue: 'BOD readings not matching lab report', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '18 May 2026', priority: 'Mid', status: 'Action Required', updatedOn: '18 May 2026' },
+  { id: 'TKT-10187', category: 'Manpower', issue: 'Night shift attendance not recorded', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '17 May 2026', priority: 'Low', status: 'Closed', updatedOn: '18 May 2026' },
+  { id: 'TKT-10175', category: 'Payment', issue: 'Invoice against contract CN-014 pending', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '17 May 2026', priority: 'Mid', status: 'Open', updatedOn: '17 May 2026' },
+  { id: 'TKT-10166', category: 'Plant Maintenance', issue: 'Blower tripping repeatedly at Jagjeetpur', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '16 May 2026', priority: 'High', status: 'In Progress', updatedOn: '17 May 2026' },
+  { id: 'TKT-10154', category: 'Compliance', issue: 'Request to reopen closed violation', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '16 May 2026', priority: 'Low', status: 'Closed', updatedOn: '16 May 2026' },
+  { id: 'TKT-10142', category: 'CCTV / Devices', issue: 'Recording storage almost full', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '15 May 2026', priority: 'Mid', status: 'Action Required', updatedOn: '16 May 2026' },
+  { id: 'TKT-10133', category: 'Other', issue: 'Add new site engineer to the portal', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '15 May 2026', priority: 'Low', status: 'Open', updatedOn: '15 May 2026' },
+  { id: 'TKT-10121', category: 'Penalty', issue: 'Penalty waiver request for March', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '14 May 2026', priority: 'High', status: 'Action Required', updatedOn: '15 May 2026' },
+  { id: 'TKT-10118', category: 'Manpower', issue: 'Shortage against contracted headcount', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '14 May 2026', priority: 'Mid', status: 'Closed', updatedOn: '14 May 2026' },
+  { id: 'TKT-10106', category: 'Payment', issue: 'Duplicate deduction in April billing', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '13 May 2026', priority: 'High', status: 'In Progress', updatedOn: '14 May 2026' },
+  { id: 'TKT-10094', category: 'Other', issue: 'Unable to export compliance report', stpName: '68 MLD STP, Jagjeetpur, Haridwar', date: '13 May 2026', priority: 'Low', status: 'Closed', updatedOn: '13 May 2026' },
 ]
 
 /** Summary cards above the table — counted off the rows so they stay in step. */
@@ -3760,15 +3811,14 @@ export const buildSupportTicketStats = (rows) => {
    ========================================================================== */
 
 export const adminTicketColumns = [
-  { key: 'id', label: 'Ticket ID', width: '11%', sortable: true },
-  { key: 'createdOn', label: 'Created / Due Date', width: '17%' },
-  { key: 'contractor', label: 'Contractor', width: '15%' },
+  { key: 'id', label: 'Ticket ID', width: '10%', sortable: true },
+  { key: 'createdOn', label: 'Created / Due Date', width: '16%' },
+  { key: 'contractor', label: 'Contractor', width: '14%' },
+  { key: 'stpName', label: 'STP Name', width: '18%' },
   { key: 'category', label: 'Category', width: '11%' },
-  { key: 'priority', label: 'Priority', width: '10%' },
-  { key: 'status', label: 'Status', width: '12%' },
-  { key: 'sla', label: 'SLA Status', width: '13%' },
+  { key: 'status', label: 'Status', width: '13%' },
   { key: 'assignee', label: 'Assigned To', width: '13%' },
-  { key: 'details', label: 'Details', width: '8%' },
+  { key: 'details', label: 'Details', width: '5%' },
 ]
 
 /**
@@ -3776,22 +3826,22 @@ export const adminTicketColumns = [
  * has stopped (a ticket nobody has picked up yet, or one already closed).
  */
 export const adminTicketRows = [
-  { id: 'TKT-10245', createdOn: '15/02/2026 ,10:30 AM', dueOn: '16/02/2026 ,10:30 AM', contractor: 'ABC Infra Pvt. Ltd', category: 'Penalty', priority: 'Low', status: 'Pending', sla: '1hr 22m left', assignee: 'Arjun Verma' },
-  { id: 'TKT-10241', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'XYZ Water Works', category: 'Penalty', priority: 'Mid', status: 'In Progress', sla: '1hr 00m left', assignee: 'Vishal Gupta' },
-  { id: 'TKT-10236', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'GreenFlow Ltd.', category: 'Payment', priority: 'High', status: 'Closed', sla: '52m left', assignee: 'Neha Singh' },
-  { id: 'TKT-10218', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'High', status: 'Open', sla: null, assignee: 'Neha Gupta' },
-  { id: 'TKT-10204', createdOn: '14 May 2026 ,09:10 AM', dueOn: '15 May 2026 ,09:10 AM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'High', status: 'In Progress', sla: '3hr 40m left', assignee: 'Imran Qureshi' },
-  { id: 'TKT-10199', createdOn: '14 May 2026 ,08:05 AM', dueOn: '15 May 2026 ,08:05 AM', contractor: 'GreenFlow Ltd.', category: 'Compliance', priority: 'Mid', status: 'Pending', sla: '26m left', assignee: 'Priya Menon' },
-  { id: 'TKT-10187', createdOn: '13 May 2026 ,06:45 PM', dueOn: '14 May 2026 ,06:45 PM', contractor: 'ABC Infra Pvt. Ltd', category: 'Manpower', priority: 'Low', status: 'Closed', sla: null, assignee: 'Arjun Verma' },
-  { id: 'TKT-10175', createdOn: '13 May 2026 ,04:20 PM', dueOn: '14 May 2026 ,04:20 PM', contractor: 'XYZ Water Works', category: 'Payment', priority: 'Mid', status: 'Open', sla: null, assignee: 'Vishal Gupta' },
-  { id: 'TKT-10166', createdOn: '12 May 2026 ,11:55 AM', dueOn: '13 May 2026 ,11:55 AM', contractor: 'Ganga Enviro Services', category: 'Technical', priority: 'High', status: 'In Progress', sla: '48m left', assignee: 'Imran Qureshi' },
-  { id: 'TKT-10154', createdOn: '12 May 2026 ,10:15 AM', dueOn: '13 May 2026 ,10:15 AM', contractor: 'GreenFlow Ltd.', category: 'Compliance', priority: 'Low', status: 'Closed', sla: null, assignee: 'Priya Menon' },
-  { id: 'TKT-10142', createdOn: '11 May 2026 ,05:30 PM', dueOn: '12 May 2026 ,05:30 PM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'Mid', status: 'Pending', sla: '2hr 05m left', assignee: 'Neha Singh' },
-  { id: 'TKT-10133', createdOn: '11 May 2026 ,02:40 PM', dueOn: '12 May 2026 ,02:40 PM', contractor: 'Ganga Enviro Services', category: 'Other', priority: 'Low', status: 'Open', sla: null, assignee: 'Neha Gupta' },
-  { id: 'TKT-10121', createdOn: '10 May 2026 ,12:10 PM', dueOn: '11 May 2026 ,12:10 PM', contractor: 'ABC Infra Pvt. Ltd', category: 'Penalty', priority: 'High', status: 'Pending', sla: '15m left', assignee: 'Arjun Verma' },
-  { id: 'TKT-10118', createdOn: '10 May 2026 ,09:25 AM', dueOn: '11 May 2026 ,09:25 AM', contractor: 'XYZ Water Works', category: 'Manpower', priority: 'Mid', status: 'Closed', sla: null, assignee: 'Vishal Gupta' },
-  { id: 'TKT-10106', createdOn: '09 May 2026 ,07:50 PM', dueOn: '10 May 2026 ,07:50 PM', contractor: 'GreenFlow Ltd.', category: 'Payment', priority: 'High', status: 'In Progress', sla: '1hr 35m left', assignee: 'Priya Menon' },
-  { id: 'TKT-10094', createdOn: '09 May 2026 ,03:05 PM', dueOn: '10 May 2026 ,03:05 PM', contractor: 'Ganga Enviro Services', category: 'Other', priority: 'Low', status: 'Closed', sla: null, assignee: 'Neha Gupta' },
+  { id: 'TKT-10245', stpName: '68 MLD STP, Jagjeetpur, Haridwar', createdOn: '15/02/2026 ,10:30 AM', dueOn: '16/02/2026 ,10:30 AM', contractor: 'ABC Infra Pvt. Ltd', category: 'Penalty', priority: 'Low', status: 'Pending', sla: '1hr 22m left', assignee: 'Arjun Verma' },
+  { id: 'TKT-10241', stpName: '18 MLD STP, Jagjeetpur, Haridwar', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'XYZ Water Works', category: 'Penalty', priority: 'Mid', status: 'In Progress', sla: '1hr 00m left', assignee: 'Vishal Gupta' },
+  { id: 'TKT-10236', stpName: '27 MLD STP, Jagjeetpur', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'GreenFlow Ltd.', category: 'Payment', priority: 'High', status: 'Closed', sla: '52m left', assignee: 'Neha Singh' },
+  { id: 'TKT-10218', stpName: '68 MLD STP, Kargi Chowk, Dehradun', createdOn: '15 May 2026 ,10:30 AM', dueOn: '16 May 2026 ,10:30 AM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'High', status: 'Open', sla: null, assignee: 'Neha Gupta' },
+  { id: 'TKT-10204', stpName: '68 MLD STP, Kargi Chowk, Dehradun', createdOn: '14 May 2026 ,09:10 AM', dueOn: '15 May 2026 ,09:10 AM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'High', status: 'In Progress', sla: '3hr 40m left', assignee: 'Imran Qureshi' },
+  { id: 'TKT-10199', stpName: '27 MLD STP, Jagjeetpur', createdOn: '14 May 2026 ,08:05 AM', dueOn: '15 May 2026 ,08:05 AM', contractor: 'GreenFlow Ltd.', category: 'Compliance', priority: 'Mid', status: 'Pending', sla: '26m left', assignee: 'Priya Menon' },
+  { id: 'TKT-10187', stpName: '68 MLD STP, Jagjeetpur, Haridwar', createdOn: '13 May 2026 ,06:45 PM', dueOn: '14 May 2026 ,06:45 PM', contractor: 'ABC Infra Pvt. Ltd', category: 'Manpower', priority: 'Low', status: 'Closed', sla: null, assignee: 'Arjun Verma' },
+  { id: 'TKT-10175', stpName: '18 MLD STP, Jagjeetpur, Haridwar', createdOn: '13 May 2026 ,04:20 PM', dueOn: '14 May 2026 ,04:20 PM', contractor: 'XYZ Water Works', category: 'Payment', priority: 'Mid', status: 'Open', sla: null, assignee: 'Vishal Gupta' },
+  { id: 'TKT-10166', stpName: '10 MLD STP, Bazpur', createdOn: '12 May 2026 ,11:55 AM', dueOn: '13 May 2026 ,11:55 AM', contractor: 'Ganga Enviro Services', category: 'Technical', priority: 'High', status: 'In Progress', sla: '48m left', assignee: 'Imran Qureshi' },
+  { id: 'TKT-10154', stpName: '27 MLD STP, Jagjeetpur', createdOn: '12 May 2026 ,10:15 AM', dueOn: '13 May 2026 ,10:15 AM', contractor: 'GreenFlow Ltd.', category: 'Compliance', priority: 'Low', status: 'Closed', sla: null, assignee: 'Priya Menon' },
+  { id: 'TKT-10142', stpName: '68 MLD STP, Kargi Chowk, Dehradun', createdOn: '11 May 2026 ,05:30 PM', dueOn: '12 May 2026 ,05:30 PM', contractor: 'AquaTech Ltd.', category: 'Technical', priority: 'Mid', status: 'Pending', sla: '2hr 05m left', assignee: 'Neha Singh' },
+  { id: 'TKT-10133', stpName: '10 MLD STP, Bazpur', createdOn: '11 May 2026 ,02:40 PM', dueOn: '12 May 2026 ,02:40 PM', contractor: 'Ganga Enviro Services', category: 'Other', priority: 'Low', status: 'Open', sla: null, assignee: 'Neha Gupta' },
+  { id: 'TKT-10121', stpName: '68 MLD STP, Jagjeetpur, Haridwar', createdOn: '10 May 2026 ,12:10 PM', dueOn: '11 May 2026 ,12:10 PM', contractor: 'ABC Infra Pvt. Ltd', category: 'Penalty', priority: 'High', status: 'Pending', sla: '15m left', assignee: 'Arjun Verma' },
+  { id: 'TKT-10118', stpName: '18 MLD STP, Jagjeetpur, Haridwar', createdOn: '10 May 2026 ,09:25 AM', dueOn: '11 May 2026 ,09:25 AM', contractor: 'XYZ Water Works', category: 'Manpower', priority: 'Mid', status: 'Closed', sla: null, assignee: 'Vishal Gupta' },
+  { id: 'TKT-10106', stpName: '27 MLD STP, Jagjeetpur', createdOn: '09 May 2026 ,07:50 PM', dueOn: '10 May 2026 ,07:50 PM', contractor: 'GreenFlow Ltd.', category: 'Payment', priority: 'High', status: 'In Progress', sla: '1hr 35m left', assignee: 'Priya Menon' },
+  { id: 'TKT-10094', stpName: '10 MLD STP, Bazpur', createdOn: '09 May 2026 ,03:05 PM', dueOn: '10 May 2026 ,03:05 PM', contractor: 'Ganga Enviro Services', category: 'Other', priority: 'Low', status: 'Closed', sla: null, assignee: 'Neha Gupta' },
 ]
 
 /** Summary cards above the admin table — the notes carry each share of the total. */

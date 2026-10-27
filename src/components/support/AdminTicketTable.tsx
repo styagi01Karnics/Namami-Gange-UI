@@ -3,7 +3,6 @@ import DataTable from '../ui/DataTable'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { TicketIdLink } from './SupportTicketTable'
 
-const TimerIcon = ico('fluent:timer-24-filled')
 const EyeIcon = ico('fluent:eye-24-filled')
 
 export default function AdminTicketTable({ onOpen, ...props }: any) {
@@ -19,7 +18,7 @@ export default function AdminTicketTable({ onOpen, ...props }: any) {
       )
     }
 
-    if (col.key === 'priority' || col.key === 'status') {
+    if (col.key === 'status') {
       return (
         <StatusPill
           tone={statusTone(row[col.key])}
@@ -27,16 +26,6 @@ export default function AdminTicketTable({ onOpen, ...props }: any) {
         >
           {row[col.key]}
         </StatusPill>
-      )
-    }
-
-    if (col.key === 'sla') {
-      if (!row.sla) return <span className="text-[#646464]">—</span>
-      return (
-        <span className="flex items-center gap-[6px] text-[14px] font-medium leading-[22px] text-[#DC2626]">
-          <TimerIcon size={15} />
-          {row.sla}
-        </span>
       )
     }
 

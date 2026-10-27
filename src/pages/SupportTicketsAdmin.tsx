@@ -50,7 +50,7 @@ export default function SupportTicketsAdmin() {
       <AdminTicketTable
         columns={adminTicketColumns}
         rows={rows}
-        searchKeys={['id', 'contractor', 'category', 'status', 'priority', 'assignee']}
+        searchKeys={['id', 'contractor', 'stpName', 'category', 'status', 'assignee']}
         onOpen={(row) => navigate(`/support-tickets-admin/${row.id}`)}
         emptyMessage="No tickets match your search."
       />
