@@ -9,8 +9,10 @@ import {
   type StpMonthlyViolation,
   type StpViolationParameter,
 } from '../../data/mockData'
-import type { ViolationListItem } from '../../api/penalty'
+import { defaultOccurrencesRange, type ViolationListItem } from '../../api/penalty'
+import { toPenaltyRangeFromLabel } from '../ui/DateRangeField'
 import { formatParameterName } from '../../lib/parameters'
+import ViolationTableQr from './ViolationTableQr'
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
@@ -74,7 +76,7 @@ function resolvePlantMeta(nameOrCode: string) {
  * If raw individual parameter breach items are passed, groups them by STP + Date
  * into a single row containing all exceeded parameters for that day.
  */
-function normalizeViolations(
+export function normalizeViolations(
   incoming: Array<StpMonthlyViolation | ViolationListItem> | undefined,
   plantCode?: string,
 ): StpMonthlyViolation[] {
@@ -186,12 +188,32 @@ function normalizeViolations(
   return result
 }
 
+/** Search across the visible columns; empty query returns all rows. */
+export function filterViolationRows(rows: StpMonthlyViolation[], query: string): StpMonthlyViolation[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return rows
+
+  return rows.filter((v) => {
+    const inStp = String(v.stpName ?? '').toLowerCase().includes(q)
+    const inDistrict = String(v.district ?? '').toLowerCase().includes(q)
+    const inDept = String(v.omDepartment ?? '').toLowerCase().includes(q)
+    const inCapacity = String(v.capacity ?? '').toLowerCase().includes(q)
+    const inDate = String(v.date ?? '').toLowerCase().includes(q)
+    const inTime = String(v.nonComplianceTime ?? '').toLowerCase().includes(q)
+    const inParams = v.parameters?.some((p) =>
+      `${p.name} ${p.observedValue} ${p.range}`.toLowerCase().includes(q),
+    )
+    return inStp || inDistrict || inDept || inCapacity || inDate || inTime || inParams
+  })
+}
+
 export default function ViolationsTable({
   rows: incomingRows,
   loading = false,
   exportLabel = 'Non_Complying_STPs',
   stpManagementPdf = false,
   plantCode,
+  dateRangeLabel,
 }: {
   rows?: Array<StpMonthlyViolation | ViolationListItem>
   loading?: boolean
@@ -202,28 +224,30 @@ export default function ViolationsTable({
   exportLabel?: string
   stpManagementPdf?: boolean
   plantCode?: string
+  /** Date-range field label (From – To); drives the API window the QR report reloads. */
+  dateRangeLabel?: string
 } = {}) {
   const [query, setQuery] = useState('')
 
   const baseRows = useMemo(() => normalizeViolations(incomingRows, plantCode), [incomingRows, plantCode])
 
-  const filteredRows = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return baseRows
+  const filteredRows = useMemo(() => filterViolationRows(baseRows, query), [query, baseRows])
 
-    return baseRows.filter((v) => {
-      const inStp = String(v.stpName ?? '').toLowerCase().includes(q)
-      const inDistrict = String(v.district ?? '').toLowerCase().includes(q)
-      const inDept = String(v.omDepartment ?? '').toLowerCase().includes(q)
-      const inCapacity = String(v.capacity ?? '').toLowerCase().includes(q)
-      const inDate = String(v.date ?? '').toLowerCase().includes(q)
-      const inTime = String(v.nonComplianceTime ?? '').toLowerCase().includes(q)
-      const inParams = v.parameters?.some((p) =>
-        `${p.name} ${p.observedValue} ${p.range}`.toLowerCase().includes(q),
-      )
-      return inStp || inDistrict || inDept || inCapacity || inDate || inTime || inParams
-    })
-  }, [query, baseRows])
+  const [qrOpen, setQrOpen] = useState(false)
+  const reportRange = useMemo(
+    () => (dateRangeLabel ? toPenaltyRangeFromLabel(dateRangeLabel) : null) ?? defaultOccurrencesRange(),
+    [dateRangeLabel],
+  )
+  const reportLink = useMemo(
+    () => ({
+      plantCode: plantCode ?? '',
+      from: reportRange.from,
+      to: reportRange.to,
+      query,
+      title: exportLabel,
+    }),
+    [plantCode, reportRange, query, exportLabel],
+  )
 
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Ganga Pulse Portal - Non-Complying STPs Report',
@@ -286,9 +310,29 @@ export default function ViolationsTable({
           />
           <ExportButton label="PDF" onClick={() => exportPdf(filteredRows)} />
           <ExportButton label="CSV" onClick={() => exportCsv(filteredRows)} />
+          {plantCode && (
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              aria-label="Show QR code for this table"
+              title="Show QR code for this table"
+              className="flex h-[34px] shrink-0 items-center rounded-[8px] border border-[#BFD8F8] bg-white px-[11px] text-[13px] font-semibold text-brand transition-colors hover:bg-brand-soft"
+            >
+              QR code
+            </button>
+          )}
         </div>
       </div>
       {printNode}
+      {qrOpen && (
+        <ViolationTableQr
+          rows={filteredRows}
+          reportLink={reportLink}
+          title={exportLabel}
+          fileName={complianceExportFileName(`QR_${exportLabel}`)}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
 
       <div className="scroll-thin table-scroll">
         <table className="w-full min-w-[1060px] table-fixed border-collapse">
