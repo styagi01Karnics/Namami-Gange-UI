@@ -141,8 +141,8 @@ export function PrintDocumentBody({
         )}
       </div>
 
-      <div className="mt-[20px] overflow-x-auto">
-      <table className="w-full min-w-[560px] border-collapse border border-[#B8C9DC]">
+      <div className="mt-[20px] overflow-x-auto print:overflow-visible">
+      <table className="w-full min-w-[560px] border-collapse border border-[#B8C9DC] print:min-w-0">
         <thead>
           <tr>
             {columns.map((c) => (
