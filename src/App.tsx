@@ -26,6 +26,7 @@ import Settings from './pages/Settings'
 import Login from './pages/Login'
 import ViolationReport from './pages/ViolationReport'
 import ContractReport from './pages/ContractReport'
+import ManpowerStaffReport from './pages/ManpowerStaffReport'
 import ComingSoon from './pages/ComingSoon'
 import FloatingCctvButton from './components/cctv/FloatingCctvButton'
 import { PAGE_TITLES, STP_TAB_PATHS, pageTitle, stpTabPath } from './routes'
@@ -154,6 +155,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/violation-report" element={<ViolationReport />} />
       <Route path="/contract-report" element={<ContractReport />} />
+      <Route path="/manpower-report" element={<ManpowerStaffReport />} />
       <Route
         path="/*"
         element={

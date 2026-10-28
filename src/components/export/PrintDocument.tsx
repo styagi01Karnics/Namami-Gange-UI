@@ -67,6 +67,40 @@ export default function PrintDocument({
   if (!target || !columns?.length) return null
 
   return createPortal(
+    <PrintDocumentBody
+      title={title}
+      badge={badge}
+      badgeTone={badgeTone}
+      address={address}
+      rangeLabel={rangeLabel}
+      rangeTitle={rangeTitle}
+      columns={columns}
+      rows={rows}
+      renderCell={renderCell}
+    >
+      {children}
+    </PrintDocumentBody>,
+    target,
+  )
+}
+
+/**
+ * The letterhead + table itself. Used inside the print portal and on the public
+ * QR report page, so what the PDF shows is exactly what the scanned page shows.
+ */
+export function PrintDocumentBody({
+  title,
+  badge = null,
+  badgeTone = 'brand',
+  address = null,
+  rangeLabel = null,
+  rangeTitle = 'Date Range',
+  columns,
+  rows,
+  renderCell = (row, col) => row[col.key] ?? '—',
+  children = null,
+}) {
+  return (
     <article className="px-[4px] py-[2px] font-sans text-ink">
       <header className="flex items-start justify-between gap-[24px]">
         <Logo />
@@ -142,7 +176,6 @@ export default function PrintDocument({
       </table>
 
       {children}
-    </article>,
-    target,
+    </article>
   )
 }

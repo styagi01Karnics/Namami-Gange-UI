@@ -1,13 +1,16 @@
 import { useRef } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 
-export default function ContractQr({
+/** QR modal shared by report sections (Contracts, Manpower). */
+export default function ReportQrModal({
   url,
+  heading,
   title,
   fileName,
   onClose,
 }: {
   url: string
+  heading: string
   title: string
   fileName: string
   onClose: () => void
@@ -29,13 +32,13 @@ export default function ContractQr({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Contract QR code"
+      aria-label={heading}
     >
       <div
         className="flex w-full max-w-[360px] flex-col items-center gap-[14px] rounded-[12px] bg-white p-[20px] shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-[15px] font-semibold text-[#07121E]">Scan to view Contract</h3>
+        <h3 className="text-[15px] font-semibold text-[#07121E]">{heading}</h3>
 
         <div ref={wrapRef} className="rounded-[8px] border border-[#D8EDFF] bg-white p-[8px]">
           <QRCodeCanvas value={url} size={240} level="M" marginSize={0} />

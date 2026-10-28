@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Download, Eye, FileText, X } from 'lucide-react'
 import Ico from '../ui/Ico'
-import ContractQr from './ContractQr'
+import ReportQrModal from '../export/ReportQrModal'
 
 export const CONTRACT_REPORT_PATH = '/contract-report'
 
@@ -116,7 +116,13 @@ export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stp
       </div>
 
       {qrOpen && (
-        <ContractQr url={qrUrl} title={stpName} fileName={stpName} onClose={() => setQrOpen(false)} />
+        <ReportQrModal
+          url={qrUrl}
+          heading="Scan to view Contract"
+          title={stpName}
+          fileName={stpName}
+          onClose={() => setQrOpen(false)}
+        />
       )}
 
       {viewing && (

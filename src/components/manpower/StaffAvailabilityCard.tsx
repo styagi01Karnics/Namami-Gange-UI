@@ -6,11 +6,15 @@ import SearchInput from '../ui/SearchInput'
 import PillTabs from '../ui/PillTabs'
 import IconToggle from '../ui/IconToggle'
 import StatusPill, { statusTone } from '../ui/StatusPill'
+import Ico from '../ui/Ico'
 import { useTableExport } from '../export/useTableExport'
+import { useExportMeta } from '../export/exportMeta'
+import ReportQrModal from '../export/ReportQrModal'
 import { staffAvailability, staffStatusFilterMap } from '../../data/mockData'
+import { buildManpowerReportUrl } from '../../lib/manpowerReportQr'
 import type { TodayStaffRow } from './todayManpower'
 
-const STAFF_COLUMNS = [
+export const STAFF_COLUMNS = [
   { key: 'id', label: 'SN' },
   { key: 'name', label: 'Employee Name' },
   { key: 'role', label: 'Designation' },
@@ -22,23 +26,44 @@ const STAFF_COLUMNS = [
 export default function StaffAvailabilityCard({
   rows: staffRows,
   dateLabel,
+  seed,
+  stpName,
   open = true,
   onToggle,
 }: {
   rows: TodayStaffRow[]
   dateLabel: string
+  /** With stpName, enables the QR button; the link rebuilds these rows. */
+  seed?: string
+  stpName?: string
   open?: boolean
   onToggle?: () => void
 }) {
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   const [sortDir, setSortDir] = useState(null)
+  const [qrOpen, setQrOpen] = useState(false)
+
+  const exportMeta = useExportMeta()
+  // Header date follows the table's own date, not the context fallback.
+  const meta = useMemo(() => ({ ...exportMeta, rangeLabel: `Today, ${dateLabel}` }), [exportMeta, dateLabel])
 
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: `Staff Availability — ${dateLabel}`,
     fileName: `staff-availability-${new Date().toISOString().slice(0, 10)}`,
     columns: STAFF_COLUMNS,
+    metaOverride: meta,
   })
+
+  const qrUrl =
+    seed && stpName
+      ? buildManpowerReportUrl({
+          seed,
+          stpName,
+          dateLabel,
+          meta: { address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
+        })
+      : ''
 
   const rows = useMemo(() => {
     const wanted = staffStatusFilterMap[filter]
@@ -82,11 +107,32 @@ export default function StaffAvailabilityCard({
 
             <div className="flex items-center justify-end gap-[12px]">
               <SearchInput value={query} onChange={setQuery} className="w-[350px]" />
+              {qrUrl && (
+                <button
+                  type="button"
+                  onClick={() => setQrOpen(true)}
+                  aria-label="Show QR code for staff availability"
+                  title="Show QR code for staff availability"
+                  className="inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[8px] border border-[rgba(7,104,210,0.4)] bg-white text-[#0768D2] hover:bg-[#EFF7FF]"
+                >
+                  <Ico icon="mdi:qrcode-scan" size={18} />
+                </button>
+              )}
               <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
               <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
             </div>
           </div>
           {printNode}
+
+          {qrOpen && (
+            <ReportQrModal
+              url={qrUrl}
+              heading="Scan to view Staff Availability"
+              title={stpName ?? ''}
+              fileName={`${stpName ?? 'staff-availability'}-staff-availability`}
+              onClose={() => setQrOpen(false)}
+            />
+          )}
 
           <div className="scroll-thin table-scroll">
             <table className="w-full table-fixed border-collapse" style={{ minWidth: 720 }}>
