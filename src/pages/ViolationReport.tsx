@@ -74,7 +74,7 @@ export default function ViolationReport() {
   }, [paramString])
 
   return (
-    <div className="flex h-screen w-full items-start justify-center overflow-y-auto bg-[#EEF8FC] p-[16px] sm:p-[32px]">
+    <div className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-[#EEF8FC] p-[16px] sm:p-[32px]">
       <div className="w-full max-w-[1100px] overflow-hidden rounded-[12px] border border-[#C7DDFB] bg-white shadow-sm">
         <div className="bg-[#0B3B6F] px-[20px] py-[14px] text-white">
           <p className="text-[12px] font-semibold uppercase tracking-wide opacity-80">Namami Gange</p>

@@ -114,7 +114,7 @@ export function PrintDocumentBody({
 
       <div className="dashed-divider my-[18px]" />
 
-      <div className="flex items-start justify-between gap-[24px]">
+      <div className="flex flex-wrap items-start justify-between gap-[16px]">
         <div className="min-w-0">
           <p className="flex items-center gap-[8px]">
             <span className="text-[14px] font-bold leading-5 text-brand">{title}</span>
@@ -141,7 +141,8 @@ export function PrintDocumentBody({
         )}
       </div>
 
-      <table className="mt-[20px] w-full border-collapse border border-[#B8C9DC]">
+      <div className="mt-[20px] overflow-x-auto">
+      <table className="w-full min-w-[560px] border-collapse border border-[#B8C9DC]">
         <thead>
           <tr>
             {columns.map((c) => (
@@ -174,6 +175,7 @@ export function PrintDocumentBody({
           ))}
         </tbody>
       </table>
+      </div>
 
       {children}
     </article>
