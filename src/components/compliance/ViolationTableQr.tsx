@@ -56,7 +56,7 @@ export default function ViolationTableQr({
         className="flex w-full max-w-[360px] flex-col items-center gap-[14px] rounded-[12px] bg-white p-[20px] shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-[15px] font-semibold text-[#07121E]">Scan to view non complying parameter</h3>
+        <h3 className="text-[15px] font-semibold text-[#07121E]">Scan to view Non-complying Parameters</h3>
 
         {!url && <p className="py-[60px] text-[13px] text-[#646464]">Generating QR code…</p>}
 
