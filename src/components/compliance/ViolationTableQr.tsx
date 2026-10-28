@@ -25,7 +25,7 @@ export default function ViolationTableQr({
 
   useEffect(() => {
     let cancelled = false
-    buildViolationTableUrl(rows, title).then((embedded) => {
+    buildViolationTableUrl(rows, title, reportLink.meta).then((embedded) => {
       if (cancelled) return
       // Small tables are embedded (exact snapshot); large ones link to the report page, which reloads the rows.
       setUrl(embedded ?? buildViolationReportLinkUrl(reportLink))

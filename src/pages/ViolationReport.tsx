@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useTableExport } from '../components/export/useTableExport'
 import ExportButton from '../components/ui/ExportButton'
@@ -11,12 +11,12 @@ import { fetchPenaltyOccurrences } from '../api/penalty'
 import { fetchDashboardPlants, toPlantNameByCode } from '../api/plants'
 import { monthlyViolationColumns, monthlyViolations, type StpMonthlyViolation } from '../data/mockData'
 import { formatParameterName } from '../lib/parameters'
-import { parseViolationReportLink, parseViolationTablePayload, type ViolationReportLink } from '../lib/violationTableQr'
+import { parseViolationReportLink, parseViolationTablePayload, type ViolationReportLink, type ViolationReportMeta } from '../lib/violationTableQr'
 
 type ReportState =
   | { status: 'loading' }
   | { status: 'invalid' }
-  | { status: 'ready'; title: string; rows: StpMonthlyViolation[] }
+  | { status: 'ready'; title: string; meta: ViolationReportMeta; rows: StpMonthlyViolation[] }
 
 /** Re-loads the same rows the Violation tab shows (API first, then mock for this plant). */
 async function loadReportRows(link: ViolationReportLink): Promise<StpMonthlyViolation[]> {
@@ -61,7 +61,7 @@ export default function ViolationReport() {
       if (link) {
         setState({ status: 'loading' })
         const rows = await loadReportRows(link)
-        if (!cancelled) setState({ status: 'ready', title: link.title, rows })
+        if (!cancelled) setState({ status: 'ready', title: link.title, meta: link.meta, rows })
         return
       }
       if (!cancelled) setState({ status: 'invalid' })
@@ -91,18 +91,33 @@ export default function ViolationReport() {
           </div>
         )}
 
-        {state.status === 'ready' && <ViolationReportView title={state.title} rows={state.rows} />}
+        {state.status === 'ready' && (
+          <ViolationReportView title={state.title} meta={state.meta} rows={state.rows} />
+        )}
       </div>
     </div>
   )
 }
 
-function ViolationReportView({ title, rows }: { title: string; rows: StpMonthlyViolation[] }) {
+function ViolationReportView({
+  title,
+  meta,
+  rows,
+}: {
+  title: string
+  meta: ViolationReportMeta
+  rows: StpMonthlyViolation[]
+}) {
   const stpName = rows[0]?.stpName || title
+  const metaOverride = useMemo(
+    () => ({ rangeLabel: meta.rangeLabel || undefined, address: meta.address, badge: meta.badge, badgeTone: meta.badgeTone }),
+    [meta],
+  )
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Ganga Pulse Portal - Non-Complying STPs Report',
     fileName: () => complianceExportFileName(title),
     columns: monthlyViolationColumns,
+    metaOverride,
     getValue: (row: StpMonthlyViolation, col) => {
       if (col.key === 'parameters') {
         return row.parameters.map((p) => `${formatParameterName(p.name)}: ${p.observedValue}`).join(', ') || '—'

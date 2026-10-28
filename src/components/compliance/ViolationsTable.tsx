@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import ExportButton from '../ui/ExportButton'
+import Ico from '../ui/Ico'
 import SearchInput from '../ui/SearchInput'
 import { useTableExport } from '../export/useTableExport'
+import { useExportMeta } from '../export/exportMeta'
 import {
   monthlyViolationColumns,
   monthlyViolations,
@@ -234,6 +236,7 @@ export default function ViolationsTable({
   const filteredRows = useMemo(() => filterViolationRows(baseRows, query), [query, baseRows])
 
   const [qrOpen, setQrOpen] = useState(false)
+  const exportMeta = useExportMeta()
   const reportRange = useMemo(
     () => (dateRangeLabel ? toPenaltyRangeFromLabel(dateRangeLabel) : null) ?? defaultOccurrencesRange(),
     [dateRangeLabel],
@@ -245,13 +248,20 @@ export default function ViolationsTable({
       to: reportRange.to,
       query,
       title: exportLabel,
+      meta: {
+        rangeLabel: dateRangeLabel ?? exportMeta.rangeLabel,
+        address: exportMeta.address,
+        badge: exportMeta.badge,
+        badgeTone: exportMeta.badgeTone,
+      },
     }),
-    [plantCode, reportRange, query, exportLabel],
+    [plantCode, reportRange, dateRangeLabel, query, exportLabel, exportMeta],
   )
 
   const { exportPdf, exportCsv, printNode } = useTableExport({
     title: 'Ganga Pulse Portal - Non-Complying STPs Report',
     fileName: () => complianceExportFileName(exportLabel),
+    rangeLabel: dateRangeLabel,
     columns: monthlyViolationColumns,
     getValue: (row, col) => {
       const v = row as StpMonthlyViolation
@@ -316,9 +326,9 @@ export default function ViolationsTable({
               onClick={() => setQrOpen(true)}
               aria-label="Show QR code for this table"
               title="Show QR code for this table"
-              className="flex h-[34px] shrink-0 items-center rounded-[8px] border border-[#BFD8F8] bg-white px-[11px] text-[13px] font-semibold text-brand transition-colors hover:bg-brand-soft"
+              className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[8px] border border-[#BFD8F8] bg-white text-brand transition-colors hover:bg-brand-soft"
             >
-              QR code
+              <Ico icon="mdi:qrcode-scan" size={18} />
             </button>
           )}
         </div>

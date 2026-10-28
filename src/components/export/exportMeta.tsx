@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react'
 import { defaultDateRange } from '../../data/mockData'
 import { statusTone } from '../ui/StatusPill'
 
-type ExportMeta = {
+export type ExportMeta = {
   address: string | null
   badge: string | null
   badgeTone: string

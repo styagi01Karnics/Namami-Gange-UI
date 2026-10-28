@@ -5,6 +5,15 @@ export const VIOLATION_REPORT_PATH = '/violation-report'
 /** Keep the embedded URL within what a medium-level QR code can hold. */
 export const MAX_QR_URL_LENGTH = 2300
 
+/** Header details the on-screen PDF gets from the STP export context. */
+export type ViolationReportMeta = {
+  /** Date-range label shown in the PDF header (e.g. "1 Sep 2026 - 30 Sep 2026"). */
+  rangeLabel: string
+  address: string | null
+  badge: string | null
+  badgeTone: string
+}
+
 /** Query needed to re-load a large table on the report page instead of embedding it. */
 export type ViolationReportLink = {
   plantCode: string
@@ -12,6 +21,7 @@ export type ViolationReportLink = {
   to: string
   query: string
   title: string
+  meta: ViolationReportMeta
 }
 
 export type QrViolationRow = Pick<
@@ -22,6 +32,7 @@ export type QrViolationRow = Pick<
 type ViolationTablePayload = {
   v: 1
   title: string
+  meta?: ViolationReportMeta
   rows: QrViolationRow[]
 }
 
@@ -51,11 +62,13 @@ async function runStream(input: Uint8Array, transform: TransformStream<BufferSou
 export async function buildViolationTableUrl(
   rows: StpMonthlyViolation[],
   title: string,
+  meta: ViolationReportMeta,
   origin = window.location.origin,
 ): Promise<string | null> {
   const payload: ViolationTablePayload = {
     v: 1,
     title,
+    meta,
     rows: rows.map(({ sn, stpName, capacity, district, omDepartment, date, nonComplianceTime, parameters }) => ({
       sn,
       stpName,
@@ -81,6 +94,10 @@ export function buildViolationReportLinkUrl(link: ViolationReportLink, origin = 
     to: link.to,
     title: link.title,
   })
+  if (link.meta.rangeLabel) params.set('range', link.meta.rangeLabel)
+  if (link.meta.address) params.set('address', link.meta.address)
+  if (link.meta.badge) params.set('badge', link.meta.badge)
+  params.set('tone', link.meta.badgeTone)
   if (link.query.trim()) params.set('q', link.query.trim())
   return `${origin}${VIOLATION_REPORT_PATH}?${params.toString()}`
 }
@@ -97,13 +114,19 @@ export function parseViolationReportLink(params: URLSearchParams): ViolationRepo
     to,
     query: params.get('q') ?? '',
     title: params.get('title') ?? plantCode,
+    meta: {
+      rangeLabel: params.get('range') ?? '',
+      address: params.get('address') || null,
+      badge: params.get('badge') || null,
+      badgeTone: params.get('tone') || 'brand',
+    },
   }
 }
 
 /** Reads the `d` query value produced by {@link buildViolationTableUrl}. */
 export async function parseViolationTablePayload(
   encoded: string | null,
-): Promise<{ title: string; rows: StpMonthlyViolation[] } | null> {
+): Promise<{ title: string; meta: ViolationReportMeta; rows: StpMonthlyViolation[] } | null> {
   if (!encoded) return null
   try {
     const bytes = await runStream(base64UrlToBytes(encoded), new DecompressionStream('deflate-raw'))
@@ -111,6 +134,7 @@ export async function parseViolationTablePayload(
     if (parsed?.v !== 1 || !Array.isArray(parsed.rows)) return null
     return {
       title: parsed.title,
+      meta: parsed.meta ?? { rangeLabel: '', address: null, badge: null, badgeTone: 'brand' },
       rows: parsed.rows.map((row, i) => ({
         ...row,
         id: `qr-${i + 1}`,

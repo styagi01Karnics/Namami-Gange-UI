@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { downloadCsv } from '../../lib/csv'
 import { defaultDateRange } from '../../data/mockData'
 import PrintDocument from './PrintDocument'
-import { useExportMeta } from './exportMeta'
+import { useExportMeta, type ExportMeta } from './exportMeta'
 
 const SKIP_KEYS = new Set(['details', 'action', 'actions'])
 
@@ -35,6 +35,7 @@ export function useTableExport({
   renderPdfCell,
   rangeLabel,
   resolveBadge,
+  metaOverride,
 }: {
   title: string
   fileName: string | (() => string)
@@ -45,8 +46,11 @@ export function useTableExport({
   rangeLabel?: string
   /** Override letterhead badge from the rows being exported. */
   resolveBadge?: (rows: any[]) => { badge: string | null; badgeTone?: string } | null | undefined
+  /** Letterhead details supplied directly (used when the export runs outside the STP export context). */
+  metaOverride?: Partial<ExportMeta>
 }) {
-  const meta = useExportMeta()
+  const contextMeta = useExportMeta()
+  const meta = useMemo(() => ({ ...contextMeta, ...metaOverride }), [contextMeta, metaOverride])
   const [doc, setDoc] = useState<{
     id: number
     rows: any[]
