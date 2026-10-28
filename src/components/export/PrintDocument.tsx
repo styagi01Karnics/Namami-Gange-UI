@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import BuildingIcon from '../ui/BuildingIcon'
 import { ico } from '../ui/Ico'
 import Logo from '../ui/Logo'
 import StatusPill from '../ui/StatusPill'
@@ -84,7 +83,6 @@ export default function PrintDocument({
       <div className="flex items-start justify-between gap-[24px]">
         <div className="min-w-0">
           <p className="flex items-center gap-[8px]">
-            <BuildingIcon size={16} className="shrink-0 text-brand" />
             <span className="text-[14px] font-bold leading-5 text-brand">{title}</span>
             {badge && <StatusPill tone={badgeTone}>{badge}</StatusPill>}
           </p>
