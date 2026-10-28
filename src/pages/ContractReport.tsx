@@ -1,16 +1,42 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { findContractByFile } from '../components/contracts/ContractsTab'
+import PdfPagesViewer from '../components/export/PdfPagesViewer'
+
+/** Downloads the PDF as a file. Fetching as a blob makes mobile browsers save it instead of opening it. */
+async function saveContractPdf(url: string, fileName: string) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Download failed: ${response.status}`)
+  const blob = new Blob([await response.blob()], { type: 'application/pdf' })
+  const objectUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+}
 
 /** Public page a contract QR opens: shows the STP's contract PDF with a download option. */
 export default function ContractReport() {
   const [searchParams] = useSearchParams()
   const stpName = searchParams.get('stp') ?? ''
   const contract = useMemo(() => findContractByFile(searchParams.get('file') ?? ''), [searchParams])
+  const [downloadError, setDownloadError] = useState(false)
 
   const contractUrl = contract ? `${import.meta.env.BASE_URL}contracts/${contract.file}` : ''
   const downloadName = `${stpName}.pdf`
+
+  const handleDownload = async () => {
+    setDownloadError(false)
+    try {
+      await saveContractPdf(contractUrl, downloadName)
+    } catch {
+      setDownloadError(true)
+    }
+  }
 
   return (
     <div className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-[#EEF8FC] p-[16px] sm:p-[32px]">
@@ -31,20 +57,19 @@ export default function ContractReport() {
                 <h2 className="truncate text-[15px] font-semibold text-[#07121E]">{stpName}</h2>
                 <p className="text-[13px] text-[#646464]">Contract document · PDF</p>
               </div>
-              <a
-                href={contractUrl}
-                download={downloadName}
-                className="inline-flex h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] bg-[#0768D2] px-[14px] text-[14px] font-semibold text-white hover:opacity-90"
-              >
-                <Download size={16} />
-                Download
-              </a>
+              <div className="flex shrink-0 flex-col items-end gap-[6px]">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  className="inline-flex h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] bg-[#0768D2] px-[14px] text-[14px] font-semibold text-white hover:opacity-90"
+                >
+                  <Download size={16} />
+                  Download
+                </button>
+                {downloadError && <p className="text-[12px] text-[#DC2626]">Download failed. Please try again.</p>}
+              </div>
             </div>
-            <iframe
-              src={`${contractUrl}#view=FitH`}
-              title={`${stpName} contract`}
-              className="h-[80vh] w-full rounded-[10px] border border-[#D8EDFF] bg-white"
-            />
+            <PdfPagesViewer url={contractUrl} />
           </div>
         )}
 
