@@ -815,6 +815,10 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
 }
 
 const CPV_RECORDING_PLANTS = new Set([
+  // 18 MLD Sarai
+  'sarai-18-upg',
+  '18mldsarai_upg',
+  '18mldsarai',
   // 14 MLD Sarai, Haridwar
   'sarai-14',
   '14mldsarai',
