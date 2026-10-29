@@ -9,6 +9,7 @@ import { defaultDateRange } from '../../data/mockData'
 import {
   FALLBACK_PLANT_OPTIONS,
   fetchDashboardPlants,
+  resolveStpDetail,
   toPlantOptions,
 } from '../../api/plants'
 
@@ -95,6 +96,9 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
     [stpId, setStpId, selected, stpOptions, range],
   )
 
+  const stpDetail = selected
+    ? resolveStpDetail({ ...selected, plantCode: selected.plantCode ?? selected.id, stpId: selected.stpId ?? '' })
+    : undefined
   const active = REPORT_TABS.find((t) => t.path === pathname)?.label ?? TAB_LABELS[0]
   const openTab = (label: string) => {
     const target = REPORT_TABS.find((t) => t.label === label)
@@ -103,7 +107,7 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
 
   return (
     <ReportFiltersContext.Provider value={filters}>
-      <ExportMetaProvider value={{ rangeLabel: range, badge: null, address: null }}>
+      <ExportMetaProvider value={{ stpName: stpDetail?.name ?? selected?.label ?? null, rangeLabel: range, badge: null, address: stpDetail?.address ?? null }}>
         <div className="flex flex-col gap-[16px] pb-[22px]">
           <SectionTabs tabs={TAB_LABELS} active={active} onChange={openTab} />
 

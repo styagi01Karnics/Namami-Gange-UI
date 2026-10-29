@@ -121,7 +121,7 @@ function InventoryReportBody() {
         }
         return r[col.key]
       }}
-      exportTitle={`${title} - ${fullPlantName}`}
+      exportTitle={title}
       exportFileName={`${subTab.toLowerCase()}-inventory-report-${(plantLabel || 'stp').toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
       qrEnabled
       cellTone={(r, col) => {

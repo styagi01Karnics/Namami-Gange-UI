@@ -123,7 +123,7 @@ export default function ReportDownloadScreen({
     })
     const url = await buildTableReportUrl({
       title: effectiveTitle,
-      meta: { rangeLabel: exportMeta.rangeLabel, address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
+      meta: { stpName: exportMeta.stpName, rangeLabel: exportMeta.rangeLabel, address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
       columns: payloadColumns,
       rows: payloadRows,
     })

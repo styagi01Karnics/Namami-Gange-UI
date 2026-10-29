@@ -88,6 +88,7 @@ export function useTableExport({
       key={doc.id}
       title={title}
       fileName={doc.fileName}
+      stpName={meta.stpName}
       badge={doc.badge}
       badgeTone={doc.badgeTone}
       address={meta.address}

@@ -11,6 +11,7 @@ export type TableReportTone = 'red' | 'green' | 'amber'
 export type TableReportRow = { id?: string; cells: Record<string, string>; tones: Record<string, TableReportTone> }
 
 export type TableReportMeta = {
+  stpName: string | null
   rangeLabel: string
   address: string | null
   badge: string | null

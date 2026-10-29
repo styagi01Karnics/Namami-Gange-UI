@@ -116,7 +116,7 @@ function ManpowerReportBody() {
         }
         return r[col.key]
       }}
-      exportTitle={`Manpower Attendance & Deployment Report - ${fullPlantName}`}
+      exportTitle="Manpower Attendance & Deployment Report"
       exportFileName={`manpower-report-${(plantLabel || 'stp').toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
       qrEnabled
       cellTone={(r, col) => {

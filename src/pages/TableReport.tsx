@@ -14,7 +14,7 @@ const TONE_CLASS: Record<TableReportTone, string> = {
 type ReportState =
   | { status: 'loading' }
   | { status: 'invalid' }
-  | { status: 'ready'; title: string; meta: { rangeLabel: string; address: string | null; badge: string | null; badgeTone: string }; columns: TableReportColumn[]; rows: TableReportRow[] }
+  | { status: 'ready'; title: string; meta: { stpName: string | null; rangeLabel: string; address: string | null; badge: string | null; badgeTone: string }; columns: TableReportColumn[]; rows: TableReportRow[] }
 
 /** Public page a table QR opens: the same table as the PDF, with PDF/CSV download. */
 export default function TableReport() {
@@ -89,6 +89,7 @@ function TableReportView({ state }: { state: Extract<ReportState, { status: 'rea
       <div className="rounded-[10px] border border-[#D8EDFF] p-[16px]">
         <PrintDocumentBody
           title={title}
+          stpName={meta.stpName}
           badge={meta.badge}
           badgeTone={meta.badgeTone}
           address={meta.address}

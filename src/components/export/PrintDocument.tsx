@@ -14,6 +14,7 @@ const CalendarIcon = ico('fluent:calendar-32-filled')
 export default function PrintDocument({
   title,
   fileName = null,
+  stpName = null,
   badge = null,
   badgeTone = 'brand',
   address = null,
@@ -69,6 +70,7 @@ export default function PrintDocument({
   return createPortal(
     <PrintDocumentBody
       title={title}
+      stpName={stpName}
       badge={badge}
       badgeTone={badgeTone}
       address={address}
@@ -90,6 +92,7 @@ export default function PrintDocument({
  */
 export function PrintDocumentBody({
   title,
+  stpName = null,
   badge = null,
   badgeTone = 'brand',
   address = null,
@@ -116,7 +119,8 @@ export function PrintDocumentBody({
 
       <div className="flex flex-wrap items-start justify-between gap-[16px]">
         <div className="min-w-0">
-          <p className="flex items-center gap-[8px]">
+          {stpName && <p className="text-[16px] font-bold leading-6 text-[#0F766E]">{stpName}</p>}
+          <p className={`flex items-center gap-[8px] ${stpName ? 'mt-[4px]' : ''}`}>
             <span className="text-[14px] font-bold leading-5 text-brand">{title}</span>
             {badge && <StatusPill tone={badgeTone}>{badge}</StatusPill>}
           </p>

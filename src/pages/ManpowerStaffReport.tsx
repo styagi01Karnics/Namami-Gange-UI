@@ -19,7 +19,7 @@ export default function ManpowerStaffReport() {
     title,
     fileName: `${link?.stpName ?? 'staff-availability'}-staff-availability`,
     columns: STAFF_COLUMNS,
-    metaOverride: link ? { ...link.meta, rangeLabel } : undefined,
+    metaOverride: link ? { stpName: link.stpName, ...link.meta, rangeLabel } : undefined,
   })
 
   return (
@@ -49,6 +49,7 @@ export default function ManpowerStaffReport() {
             <div className="rounded-[10px] border border-[#D8EDFF] p-[16px]">
               <PrintDocumentBody
                 title={title}
+                stpName={link.stpName}
                 badge={link.meta.badge}
                 badgeTone={link.meta.badgeTone}
                 address={link.meta.address}
