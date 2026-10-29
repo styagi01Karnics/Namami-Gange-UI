@@ -1,3 +1,10 @@
+export type ChemicalReceipt = {
+  /** Date the stock arrived (YYYY-MM-DD). */
+  date: string
+  /** Quantity received, e.g. "500 g". */
+  qty: string
+}
+
 export type ChemicalInventoryItem = {
   name: string
   category: string
@@ -7,6 +14,8 @@ export type ChemicalInventoryItem = {
   daysLeft: string | number
   status: 'Adequate' | 'Low Stock' | 'Out of Stock'
   receivedOn?: string
+  /** Every delivery of this chemical. When omitted, currentQty + receivedOn form one receipt. */
+  receipts?: ChemicalReceipt[]
 }
 
 /** Default date the current stock was received (YYYY-MM-DD). */
@@ -27,8 +36,11 @@ const UNIT_FACTORS: Record<string, number> = {
 }
 
 export type ChemicalStockPosition = {
+  /** Date of the first receipt. */
   receivedOn: Date
+  receipts: { date: Date; qty: string }[]
   unit: string
+  totalQty: number
   consumedQty: number
   remainingQty: number
   availableTill: Date | null
@@ -55,36 +67,68 @@ function periodInDays(text: string) {
   return count
 }
 
+function resolveReceipts(item: ChemicalInventoryItem): ChemicalReceipt[] {
+  if (item.receipts?.length) return item.receipts
+  return [{ date: item.receivedOn ?? STOCK_RECEIVED_ON, qty: item.currentQty }]
+}
+
 /**
- * Derives consumed-to-date, remaining quantity, stock end date and status
- * from the received stock and its consumption rate.
+ * Derives received total, consumed-to-date, remaining quantity, stock end date and status.
+ * Each receipt adds stock on its date and usage is drawn from the pooled stock day by day,
+ * so a delivery that arrives after the stock ran out restarts consumption from its date.
  */
 export function getChemicalStockPosition(item: ChemicalInventoryItem, now = new Date()): ChemicalStockPosition {
-  const receivedOn = new Date(`${item.receivedOn ?? STOCK_RECEIVED_ON}T00:00:00`)
-  const stock = parseAmount(item.currentQty)
+  const receipts = resolveReceipts(item)
+    .map((receipt) => ({
+      date: new Date(`${receipt.date}T00:00:00`),
+      qty: receipt.qty,
+      amount: parseAmount(receipt.qty),
+    }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+
+  const unitSource = parseAmount(item.currentQty) ?? receipts.find((receipt) => receipt.amount)?.amount ?? null
+  const stockFactor = unitSource?.factor ?? 1
   const usage = parseAmount(item.consumption)
   const periodDays = periodInDays(item.consumption)
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const elapsedDays = Math.max(0, Math.round((today.getTime() - receivedOn.getTime()) / DAY_MS))
-
-  const stockFactor = stock?.factor ?? 1
-  const stockBase = (stock?.amount ?? 0) * stockFactor
   const dailyUseBase = usage && periodDays ? (usage.amount * usage.factor) / periodDays : 0
-  const consumedBase = Math.min(stockBase, dailyUseBase * elapsedDays)
-  const remainingBase = stockBase - consumedBase
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const firstReceivedOn = receipts[0].date
+  const elapsedDays = Math.max(0, Math.round((today.getTime() - firstReceivedOn.getTime()) / DAY_MS))
+  const dayOffset = (date: Date) => Math.round((date.getTime() - firstReceivedOn.getTime()) / DAY_MS)
+
+  let pool = 0
+  let receivedBase = 0
+  let consumedBase = 0
+  let nextReceipt = 0
+  for (let day = 0; day <= elapsedDays; day++) {
+    if (day > 0) {
+      const used = Math.min(pool, dailyUseBase)
+      pool -= used
+      consumedBase += used
+    }
+    while (nextReceipt < receipts.length && dayOffset(receipts[nextReceipt].date) === day) {
+      const base = (receipts[nextReceipt].amount?.amount ?? 0) * (receipts[nextReceipt].amount?.factor ?? 1)
+      pool += base
+      receivedBase += base
+      nextReceipt++
+    }
+  }
+  const remainingBase = pool
 
   let availableTill: Date | null = null
   if (dailyUseBase > 0) {
-    availableTill = new Date(receivedOn)
-    availableTill.setDate(receivedOn.getDate() + Math.floor(stockBase / dailyUseBase))
+    availableTill = new Date(today)
+    availableTill.setDate(today.getDate() + Math.floor(remainingBase / dailyUseBase))
   }
 
   const status =
-    remainingBase <= 0 ? 'Out of Stock' : remainingBase / stockBase <= LOW_STOCK_RATIO ? 'Low Stock' : 'Adequate'
+    remainingBase <= 0 ? 'Out of Stock' : remainingBase / receivedBase <= LOW_STOCK_RATIO ? 'Low Stock' : 'Adequate'
 
   return {
-    receivedOn,
-    unit: stock?.unit ?? '',
+    receivedOn: firstReceivedOn,
+    receipts: receipts.map((receipt) => ({ date: receipt.date, qty: receipt.qty })),
+    unit: unitSource?.unit ?? '',
+    totalQty: receivedBase / stockFactor,
     consumedQty: consumedBase / stockFactor,
     remainingQty: remainingBase / stockFactor,
     availableTill,
@@ -135,11 +179,16 @@ export const BAZPUR_CHEMICAL_INVENTORY: ChemicalInventoryItem[] = [
   {
     name: 'Manganous Sulphate',
     category: 'Lab Reagents',
-    currentQty: '500 g',
+    currentQty: '1000 g',
     requiredQty: '109.5 g (15 Days)',
     consumption: '109.5 g (15 Days)',
     daysLeft: 68,
     status: 'Adequate',
+    receipts: [
+      { date: '2026-09-01', qty: '500 g' },
+      { date: '2026-09-05', qty: '200 g' },
+      { date: '2026-10-05', qty: '300 g' },
+    ],
   },
   {
     name: 'Sodium Iodide',
