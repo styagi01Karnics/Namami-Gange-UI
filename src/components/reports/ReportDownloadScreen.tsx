@@ -4,6 +4,10 @@ import { useTableExport } from '../export/useTableExport'
 import { downloadCsv } from '../../lib/csv'
 import Select from '../ui/Select'
 import DateRangeField from '../ui/DateRangeField'
+import Ico from '../ui/Ico'
+import ReportQrModal from '../export/ReportQrModal'
+import { useExportMeta } from '../export/exportMeta'
+import { buildTableReportUrl, type TableReportTone } from '../../lib/tableReportQr'
 
 type ReportDownloadScreenProps = {
   moduleKey: 'parameters' | 'cctv' | 'manpower' | 'inventory' | 'contracts' | 'violation'
@@ -17,6 +21,10 @@ type ReportDownloadScreenProps = {
   exportFileName?: string
   topContent?: React.ReactNode
   withTimeRange?: boolean
+  /** Shows a QR button that opens this table (as in the PDF) on a public page. */
+  qrEnabled?: boolean
+  /** Colours cells the way renderCell does (red/green/amber), so the QR page matches the PDF. */
+  cellTone?: (row: any, col: any) => TableReportTone | null
   categoryFilter?: {
     label: string
     value: string
@@ -37,6 +45,8 @@ export default function ReportDownloadScreen({
   topContent,
   categoryFilter,
   withTimeRange = false,
+  qrEnabled = false,
+  cellTone,
 }: ReportDownloadScreenProps) {
   const { stpId, setStpId, stpOptions, plantLabel, range, setRange } = useReportFilters()
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf')
@@ -45,6 +55,7 @@ export default function ReportDownloadScreen({
   const [email, setEmail] = useState('rajesh.nair@example.com')
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null)
+  const [qrUrl, setQrUrl] = useState<string | null>(null)
 
   const effectiveTitle = exportTitle || `${title} - ${plantLabel || 'STP'}`
   const effectiveFileName = exportFileName || `${title.toLowerCase().replace(/\s+/g, '-')}-${plantLabel?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'stp'}`
@@ -72,6 +83,8 @@ export default function ReportDownloadScreen({
     return resolveValue(row, col) ?? '—'
   }
 
+  const exportMeta = useExportMeta()
+
   const { exportPdf, printNode } = useTableExport({
     title: effectiveTitle,
     fileName: effectiveFileName,
@@ -91,6 +104,33 @@ export default function ReportDownloadScreen({
     } else {
       downloadCsv(effectiveFileName, columns, rows, resolveValue)
       triggerDownloadNotice('Excel spreadsheet (.csv) downloaded successfully.')
+    }
+  }
+
+  const handleQr = async () => {
+    const payloadColumns = columns.map((col) => ({ key: col.key, label: col.label, align: col.align }))
+    const payloadRows = rows.map((row, index) => {
+      const cells: Record<string, string> = {}
+      columns.forEach((col) => {
+        cells[col.key] = col.key === 'sn' ? String(index + 1) : String(resolveValue(row, col) ?? '—')
+      })
+      const tones: Record<string, TableReportTone> = {}
+      columns.forEach((col) => {
+        const tone = cellTone?.(row, col)
+        if (tone) tones[col.key] = tone
+      })
+      return { cells, tones }
+    })
+    const url = await buildTableReportUrl({
+      title: effectiveTitle,
+      meta: { rangeLabel: exportMeta.rangeLabel, address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
+      columns: payloadColumns,
+      rows: payloadRows,
+    })
+    if (url) {
+      setQrUrl(url)
+    } else {
+      triggerDownloadNotice('This table is too large for a QR code. Please use Download instead.')
     }
   }
 
@@ -238,6 +278,19 @@ export default function ReportDownloadScreen({
         {/* Action Buttons: View, Email Me, Download */}
         <div className="flex items-center justify-end gap-[12px] border-t border-[#EFF7FF] pt-[20px]">
           <div className="flex flex-wrap items-center gap-[12px]">
+            {/* QR Button (icon only) */}
+            {qrEnabled && (
+              <button
+                type="button"
+                onClick={handleQr}
+                aria-label="QR Code"
+                title="QR Code"
+                className="flex items-center justify-center rounded-[10px] border border-[#CBD5E1] bg-white p-[10px] text-[#0768D2] shadow-sm transition hover:bg-[#F8FAFC]"
+              >
+                <Ico icon="mdi:qrcode-scan" size={20} />
+              </button>
+            )}
+
             {/* View Button */}
             <button
               type="button"
@@ -277,6 +330,16 @@ export default function ReportDownloadScreen({
           </div>
         </div>
       </div>
+
+      {qrUrl && (
+        <ReportQrModal
+          url={qrUrl}
+          heading={`Scan to view ${title}`}
+          title={plantLabel || effectiveTitle}
+          fileName={`${effectiveFileName}-qr`}
+          onClose={() => setQrUrl(null)}
+        />
+      )}
 
       {/* Preview Modal */}
       {showPreview && (

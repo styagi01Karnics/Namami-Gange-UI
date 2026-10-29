@@ -118,6 +118,13 @@ function ManpowerReportBody() {
       }}
       exportTitle={`Manpower Attendance & Deployment Report - ${fullPlantName}`}
       exportFileName={`manpower-report-${(plantLabel || 'stp').toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+      qrEnabled
+      cellTone={(r, col) => {
+        if (col.key === 'present') return 'green'
+        if (col.key === 'absent') return 'red'
+        if (col.key === 'shortage' && Number(r.shortage) > 0) return 'red'
+        return null
+      }}
     />
   )
 }

@@ -36,7 +36,7 @@ type ViolationTablePayload = {
   rows: QrViolationRow[]
 }
 
-function bytesToBase64Url(bytes: Uint8Array): string {
+export function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = ''
   bytes.forEach((b) => {
     binary += String.fromCharCode(b)
@@ -44,13 +44,13 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-function base64UrlToBytes(value: string): Uint8Array {
+export function base64UrlToBytes(value: string): Uint8Array {
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
   const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
   return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0))
 }
 
-async function runStream(input: Uint8Array, transform: TransformStream<BufferSource, Uint8Array>): Promise<Uint8Array> {
+export async function runStream(input: Uint8Array, transform: TransformStream<BufferSource, Uint8Array>): Promise<Uint8Array> {
   const output = new Blob([input as BlobPart]).stream().pipeThrough(transform)
   return new Uint8Array(await new Response(output).arrayBuffer())
 }
