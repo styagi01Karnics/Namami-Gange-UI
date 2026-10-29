@@ -110,7 +110,7 @@ function ViolationReportView({
 }) {
   const stpName = rows[0]?.stpName || title
   const metaOverride = useMemo(
-    () => ({ rangeLabel: meta.rangeLabel || undefined, address: meta.address, badge: meta.badge, badgeTone: meta.badgeTone }),
+    () => ({ stpName: meta.stpName, rangeLabel: meta.rangeLabel || undefined, address: meta.address, badge: meta.badge, badgeTone: meta.badgeTone }),
     [meta],
   )
   const { exportPdf, exportCsv, printNode } = useTableExport({

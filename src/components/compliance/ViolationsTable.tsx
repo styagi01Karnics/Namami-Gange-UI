@@ -249,6 +249,7 @@ export default function ViolationsTable({
       query,
       title: exportLabel,
       meta: {
+        stpName: exportMeta.stpName,
         rangeLabel: dateRangeLabel ?? exportMeta.rangeLabel,
         address: exportMeta.address,
         badge: exportMeta.badge,

@@ -7,6 +7,8 @@ export const MAX_QR_URL_LENGTH = 2300
 
 /** Header details the on-screen PDF gets from the STP export context. */
 export type ViolationReportMeta = {
+  /** STP name shown above the report title in the PDF. */
+  stpName: string | null
   /** Date-range label shown in the PDF header (e.g. "1 Sep 2026 - 30 Sep 2026"). */
   rangeLabel: string
   address: string | null
@@ -94,6 +96,7 @@ export function buildViolationReportLinkUrl(link: ViolationReportLink, origin = 
     to: link.to,
     title: link.title,
   })
+  if (link.meta.stpName) params.set('stp', link.meta.stpName)
   if (link.meta.rangeLabel) params.set('range', link.meta.rangeLabel)
   if (link.meta.address) params.set('address', link.meta.address)
   if (link.meta.badge) params.set('badge', link.meta.badge)
@@ -115,6 +118,7 @@ export function parseViolationReportLink(params: URLSearchParams): ViolationRepo
     query: params.get('q') ?? '',
     title: params.get('title') ?? plantCode,
     meta: {
+      stpName: params.get('stp') || null,
       rangeLabel: params.get('range') ?? '',
       address: params.get('address') || null,
       badge: params.get('badge') || null,
@@ -134,7 +138,7 @@ export async function parseViolationTablePayload(
     if (parsed?.v !== 1 || !Array.isArray(parsed.rows)) return null
     return {
       title: parsed.title,
-      meta: parsed.meta ?? { rangeLabel: '', address: null, badge: null, badgeTone: 'brand' },
+      meta: parsed.meta ?? { stpName: null, rangeLabel: '', address: null, badge: null, badgeTone: 'brand' },
       rows: parsed.rows.map((row, i) => ({
         ...row,
         id: `qr-${i + 1}`,
