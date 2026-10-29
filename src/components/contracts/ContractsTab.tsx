@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Download, Eye, FileText, X } from 'lucide-react'
+import Ico from '../ui/Ico'
+import ReportQrModal from '../export/ReportQrModal'
 
-const CONTRACTS = [
+export const CONTRACT_REPORT_PATH = '/contract-report'
+
+export const CONTRACTS = [
   { mld: '27', file: '27-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF', '7 pages', '3.45 MB'] },
   { mld: '18', file: '18-MLD-STP-JAGJEEPUR.pdf', meta: ['PDF'] },
   { mld: '18', location: 'Sarai', file: '18-MLD-STP-SARAI.pdf', meta: ['PDF'] },
@@ -21,7 +25,7 @@ const CONTRACTS = [
  * `location` appears in the plant name (plants can share a capacity).
  * Defaults to the 27 MLD contract.
  */
-function resolveContract(stpName: string) {
+export function resolveContract(stpName: string) {
   const mld = stpName.match(/(\d+)\s*MLD/i)?.[1]
   const lowerName = stpName.toLowerCase()
   return (
@@ -31,15 +35,28 @@ function resolveContract(stpName: string) {
   )
 }
 
+/** Looks up a contract by its file name; the public report page only serves files from this list. */
+export function findContractByFile(file: string) {
+  return CONTRACTS.find((c) => c.file === file) ?? null
+}
+
+/** Link the contract QR opens: the STP name and the contract file to show. */
+export function buildContractReportUrl(stpName: string, file: string, origin = window.location.origin): string {
+  const params = new URLSearchParams({ stp: stpName, file })
+  return `${origin}${CONTRACT_REPORT_PATH}?${params.toString()}`
+}
+
 const actionBase =
   'inline-flex h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] px-[14px] text-[14px] font-semibold leading-[20px] transition-opacity hover:opacity-90'
 
 /** Shared by the Contracts page and the Contracts tab in STP Management. */
 export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stpName?: string }) {
   const [viewing, setViewing] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const contract = resolveContract(stpName)
   const CONTRACT_URL = `${import.meta.env.BASE_URL}contracts/${contract.file}`
   const downloadName = `${stpName}.pdf`
+  const qrUrl = buildContractReportUrl(stpName, contract.file)
 
   useEffect(() => {
     if (!viewing) return undefined
@@ -71,6 +88,15 @@ export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stp
           <div className="flex items-center gap-[8px]">
             <button
               type="button"
+              onClick={() => setQrOpen(true)}
+              aria-label="Show QR code for this contract"
+              title="Show QR code for this contract"
+              className="inline-flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[8px] border border-[rgba(7,104,210,0.4)] bg-white text-[#0768D2] hover:bg-[#EFF7FF]"
+            >
+              <Ico icon="mdi:qrcode-scan" size={18} />
+            </button>
+            <button
+              type="button"
               onClick={() => setViewing(true)}
               className={`${actionBase} border border-[rgba(7,104,210,0.4)] bg-white text-[#0768D2]`}
             >
@@ -88,6 +114,16 @@ export default function ContractsTab({ stpName = '27 MLD STP Jagjeepur' }: { stp
           </div>
         </div>
       </div>
+
+      {qrOpen && (
+        <ReportQrModal
+          url={qrUrl}
+          heading="Scan to view Contract"
+          title={stpName}
+          fileName={stpName}
+          onClose={() => setQrOpen(false)}
+        />
+      )}
 
       {viewing && (
         <div

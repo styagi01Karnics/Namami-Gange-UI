@@ -121,8 +121,15 @@ function InventoryReportBody() {
         }
         return r[col.key]
       }}
-      exportTitle={`${title} - ${fullPlantName}`}
+      exportTitle={title}
       exportFileName={`${subTab.toLowerCase()}-inventory-report-${(plantLabel || 'stp').toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+      qrEnabled
+      cellTone={(r, col) => {
+        if (col.key === 'closing') return 'green'
+        if (col.key === 'lowStock' && Number(r.lowStock) > 0) return 'amber'
+        if (col.key === 'outOfStock' && Number(r.outOfStock) > 0) return 'red'
+        return null
+      }}
     />
   )
 }

@@ -10,10 +10,8 @@ const pct = (value: number, total: number) => (total ? (value / total) * 100 : 0
 export default function ManpowerTab({ stpId, plantCode }: { stpId?: string; plantCode?: string }) {
   const [detailsOpen, setDetailsOpen] = useState(true)
   const key = stpId ?? plantCode ?? 'default'
-  const today = useMemo(
-    () => buildTodayManpower(key, stpDetails[key]?.name ?? plantCode ?? key),
-    [key, plantCode],
-  )
+  const stpName = stpDetails[key]?.name ?? plantCode ?? key
+  const today = useMemo(() => buildTodayManpower(key, stpName), [key, stpName])
   const { required, present, absent, leave } = today
 
   return (
@@ -46,6 +44,8 @@ export default function ManpowerTab({ stpId, plantCode }: { stpId?: string; plan
       <StaffAvailabilityCard
         rows={today.rows}
         dateLabel={today.date}
+        seed={key}
+        stpName={stpName}
         open={detailsOpen}
         onToggle={() => setDetailsOpen((v) => !v)}
       />

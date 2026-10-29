@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import BuildingIcon from '../ui/BuildingIcon'
 import { ico } from '../ui/Ico'
 import Logo from '../ui/Logo'
 import StatusPill from '../ui/StatusPill'
@@ -15,6 +14,7 @@ const CalendarIcon = ico('fluent:calendar-32-filled')
 export default function PrintDocument({
   title,
   fileName = null,
+  stpName = null,
   badge = null,
   badgeTone = 'brand',
   address = null,
@@ -68,6 +68,42 @@ export default function PrintDocument({
   if (!target || !columns?.length) return null
 
   return createPortal(
+    <PrintDocumentBody
+      title={title}
+      stpName={stpName}
+      badge={badge}
+      badgeTone={badgeTone}
+      address={address}
+      rangeLabel={rangeLabel}
+      rangeTitle={rangeTitle}
+      columns={columns}
+      rows={rows}
+      renderCell={renderCell}
+    >
+      {children}
+    </PrintDocumentBody>,
+    target,
+  )
+}
+
+/**
+ * The letterhead + table itself. Used inside the print portal and on the public
+ * QR report page, so what the PDF shows is exactly what the scanned page shows.
+ */
+export function PrintDocumentBody({
+  title,
+  stpName = null,
+  badge = null,
+  badgeTone = 'brand',
+  address = null,
+  rangeLabel = null,
+  rangeTitle = 'Date Range',
+  columns,
+  rows,
+  renderCell = (row, col) => row[col.key] ?? '—',
+  children = null,
+}) {
+  return (
     <article className="px-[4px] py-[2px] font-sans text-ink">
       <header className="flex items-start justify-between gap-[24px]">
         <Logo />
@@ -81,10 +117,10 @@ export default function PrintDocument({
 
       <div className="dashed-divider my-[18px]" />
 
-      <div className="flex items-start justify-between gap-[24px]">
+      <div className="flex flex-wrap items-start justify-between gap-[16px]">
         <div className="min-w-0">
-          <p className="flex items-center gap-[8px]">
-            <BuildingIcon size={16} className="shrink-0 text-brand" />
+          {stpName && <p className="text-[16px] font-bold leading-6 text-[#0F766E]">{stpName}</p>}
+          <p className={`flex items-center gap-[8px] ${stpName ? 'mt-[4px]' : ''}`}>
             <span className="text-[14px] font-bold leading-5 text-brand">{title}</span>
             {badge && <StatusPill tone={badgeTone}>{badge}</StatusPill>}
           </p>
@@ -109,7 +145,8 @@ export default function PrintDocument({
         )}
       </div>
 
-      <table className="mt-[20px] w-full border-collapse border border-[#B8C9DC]">
+      <div className="mt-[20px] overflow-x-auto print:overflow-visible">
+      <table className="w-full min-w-[560px] border-collapse border border-[#B8C9DC] print:min-w-0">
         <thead>
           <tr>
             {columns.map((c) => (
@@ -142,9 +179,9 @@ export default function PrintDocument({
           ))}
         </tbody>
       </table>
+      </div>
 
       {children}
-    </article>,
-    target,
+    </article>
   )
 }

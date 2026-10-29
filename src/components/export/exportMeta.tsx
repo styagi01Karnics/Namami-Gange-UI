@@ -2,7 +2,8 @@ import { createContext, useContext, type ReactNode } from 'react'
 import { defaultDateRange } from '../../data/mockData'
 import { statusTone } from '../ui/StatusPill'
 
-type ExportMeta = {
+export type ExportMeta = {
+  stpName: string | null
   address: string | null
   badge: string | null
   badgeTone: string
@@ -10,6 +11,7 @@ type ExportMeta = {
 }
 
 const DEFAULT_META: ExportMeta = {
+  stpName: null,
   address: null,
   badge: null,
   badgeTone: 'brand',
@@ -26,8 +28,9 @@ export function useExportMeta() {
   return useContext(ExportMetaContext)
 }
 
-export function stpExportMeta(stp: { address?: string; status?: string }, rangeLabel: string): ExportMeta {
+export function stpExportMeta(stp: { name?: string; address?: string; status?: string }, rangeLabel: string): ExportMeta {
   return {
+    stpName: stp.name ?? null,
     address: stp.address ?? null,
     badge: stp.status ?? null,
     badgeTone: statusTone(stp.status ?? ''),

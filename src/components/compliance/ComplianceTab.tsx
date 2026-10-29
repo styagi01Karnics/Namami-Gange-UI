@@ -185,6 +185,7 @@ export default function ComplianceTab({
         exportLabel={exportLabel || (rows[0] as StpMonthlyViolation)?.stpName}
         stpManagementPdf={stpManagementPdf}
         plantCode={plantCode}
+        dateRangeLabel={dateRangeLabel}
       />
     </div>
   )

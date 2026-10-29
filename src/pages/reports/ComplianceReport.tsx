@@ -63,6 +63,7 @@ function ComplianceReportBody() {
       }}
       exportTitle="STP Violation & Penalty Report"
       exportFileName="violation-report"
+      qrEnabled
     />
   )
 }

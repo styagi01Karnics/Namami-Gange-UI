@@ -24,6 +24,10 @@ import RemoteCalibration from './pages/RemoteCalibration'
 import TransactionLogs from './pages/TransactionLogs'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
+import ViolationReport from './pages/ViolationReport'
+import ContractReport from './pages/ContractReport'
+import ManpowerStaffReport from './pages/ManpowerStaffReport'
+import TableReport from './pages/TableReport'
 import ComingSoon from './pages/ComingSoon'
 import FloatingCctvButton from './components/cctv/FloatingCctvButton'
 import { PAGE_TITLES, STP_TAB_PATHS, pageTitle, stpTabPath } from './routes'
@@ -150,6 +154,10 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/violation-report" element={<ViolationReport />} />
+      <Route path="/contract-report" element={<ContractReport />} />
+      <Route path="/manpower-report" element={<ManpowerStaffReport />} />
+      <Route path="/table-report" element={<TableReport />} />
       <Route
         path="/*"
         element={
