@@ -80,12 +80,23 @@ function resolveImages(stp: StpInfo, plantCode?: string): string[] {
   return []
 }
 
+const OM_AGENCY_BY_VENDOR: Record<string, string> = {
+  UKPJN: 'Uttarakhand Peyjal Nigam',
+  UJS: 'Uttarakhand Jal Sansthan',
+}
+
+function getOmAgency(vendorCode?: string | null): string | undefined {
+  return vendorCode ? OM_AGENCY_BY_VENDOR[vendorCode.trim().toUpperCase()] : undefined
+}
+
 function DetailsPanel({
   stp,
   vendorName,
+  omAgency,
 }: {
   stp: StpInfo
   vendorName?: string | null
+  omAgency?: string
 }) {
   const { inCharge, vendor, site } = stp
   const capacity = stp.name.match(/[\d.]+\s*MLD/i)?.[0]
@@ -104,6 +115,7 @@ function DetailsPanel({
           ['Latitude', site.lat],
           ['Longitude', site.lng],
           ['Capacity', capacity],
+          ['O&M Agency', omAgency],
           ['Technology', site.technology],
           ['Commissioned On', site.commissionedOn],
         ]}
@@ -122,7 +134,7 @@ function DetailsPanel({
       />
       <DetailColumn
         bordered
-        title="Vendor Details"
+        title="Contractor Details"
         rows={[
           ['Vendor Name', vendorName || vendor.name],
           ['Contact Person', vendor.contactPerson],
@@ -155,6 +167,11 @@ export default function StpHeaderCard({
     const stpKey = plantCode || stp.vendor?.prefixId || stp.name
     navigate(`/dashboard?stp=${encodeURIComponent(stpKey)}`)
   }
+
+  const omVendorCode =
+    (plantCode && Object.values(stpDetails).find((detail) => detail.vendor?.prefixId === plantCode)?.vendor?.name) ||
+    stp.vendor?.name
+  const omAgency = getOmAgency(omVendorCode)
 
   const rawImages = resolveImages(stp, plantCode)
   const images = rawImages.filter((src) => !failedImages[src])
@@ -248,7 +265,7 @@ export default function StpHeaderCard({
       </div>
 
       {showDetails && (
-        <DetailsPanel stp={stp} vendorName={vendorName} />
+        <DetailsPanel stp={stp} vendorName={vendorName} omAgency={omAgency} />
       )}
 
       {/* Lightbox Preview Modal */}

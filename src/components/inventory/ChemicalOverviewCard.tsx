@@ -90,6 +90,7 @@ interface ChemicalListModalProps {
 function ChemicalListModal({ onClose, stpName, chemicals }: ChemicalListModalProps) {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
+  const [openReceiptsKey, setOpenReceiptsKey] = useState<string | null>(null)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -196,17 +197,41 @@ function ChemicalListModal({ onClose, stpName, chemicals }: ChemicalListModalPro
             <tbody>
               {filteredList.map((chemical, idx) => {
                 const position = getChemicalStockPosition(chemical)
+                const rowKey = `${chemical.name}-${idx}`
+                const receiptsOpen = openReceiptsKey === rowKey
 
                 return (
                   <tr
-                    key={`${chemical.name}-${idx}`}
+                    key={rowKey}
                     className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]"
                   >
                     <td className="px-3 py-3 font-semibold text-[#254064]">{chemical.name}</td>
                     <td className="px-3 py-3 text-[#526783]">{chemical.category}</td>
-                    <td className="px-3 py-3">
-                      <p className="font-medium text-[#1677F2]">{chemical.currentQty}</p>
-                      <p className="mt-0.5 text-[11px] text-[#71829A]">from {formatDate(position.receivedOn)}</p>
+                    <td className="px-3 py-3 align-top">
+                      <p className="font-medium text-[#1677F2]">
+                        {formatQuantity(position.totalQty, position.unit)}
+                      </p>
+                      <p className="mt-0.5 whitespace-nowrap text-[11px] text-[#71829A]">
+                        {position.receipts.length} {position.receipts.length > 1 ? 'receipts' : 'receipt'} ·{' '}
+                        <button
+                          type="button"
+                          aria-expanded={receiptsOpen}
+                          onClick={() => setOpenReceiptsKey(receiptsOpen ? null : rowKey)}
+                          className="cursor-pointer font-semibold text-[#1677F2] underline underline-offset-2 hover:text-[#0B5FD0]"
+                        >
+                          {receiptsOpen ? 'hide details' : 'view details'}
+                        </button>
+                      </p>
+                      {receiptsOpen && (
+                        <ul className="mt-2 w-[220px] space-y-1 rounded-[8px] border border-[#D9E6F5] bg-[#F4F9FF] p-2 text-[11px] text-[#254064]">
+                          {position.receipts.map((receipt, receiptIdx) => (
+                            <li key={receiptIdx} className="flex items-center justify-between gap-3">
+                              <span>{formatDate(receipt.date)}</span>
+                              <span className="font-semibold">{receipt.qty}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-[#254064]">{chemical.consumption}</td>
                     <td className="px-3 py-3 font-medium text-[#254064]">

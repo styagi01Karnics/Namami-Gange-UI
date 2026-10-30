@@ -20,7 +20,12 @@ const NON_OPERATIONAL_PERCENT = (EQUIPMENT.nonOperational / EQUIPMENT.total) * 1
 const CATEGORY_TOTAL = EQUIPMENT.categories.reduce((sum, category) => sum + category.working, 0)
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 66
 
+const formatReceiptDate = (isoDate: string) =>
+  new Date(`${isoDate}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+
 function EquipmentListModal({ onClose }: { onClose: () => void }) {
+  const [openReceiptsKey, setOpenReceiptsKey] = useState<string | null>(null)
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -68,19 +73,50 @@ function EquipmentListModal({ onClose }: { onClose: () => void }) {
               </tr>
             </thead>
             <tbody>
-              {equipmentInventory.rows.map((item) => (
-                <tr key={item.name} className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]">
-                  <td className="px-3 py-3 font-semibold text-[#254064]">{item.name}</td>
-                  <td className="px-3 py-3 text-[#526783]">{item.category}</td>
-                  <td className="px-3 py-3 text-[#254064]">{item.currentQty}</td>
-                  <td className="px-3 py-3 text-[#254064]">{item.requiredQty}</td>
-                  <td className="px-3 py-3">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${item.status === 'Adequate' ? 'bg-[#E8F8EF] text-[#168849]' : item.status === 'Low Stock' ? 'bg-[#FFF5E5] text-[#B66A00]' : 'bg-[#FFF0F0] text-[#D6333F]'}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {equipmentInventory.rows.map((item) => {
+                const rowKey = item.name
+                const receiptsOpen = openReceiptsKey === rowKey
+                const receiptCount = item.receipts.length
+
+                return (
+                  <tr key={rowKey} className="border-b border-[#EAF0F6] last:border-0 hover:bg-[#F8FBFF]">
+                    <td className="px-3 py-3 font-semibold text-[#254064]">{item.name}</td>
+                    <td className="px-3 py-3 text-[#526783]">{item.category}</td>
+                    <td className="px-3 py-3 align-top text-[#254064]">
+                      <p className="font-medium">{item.currentQty}</p>
+                      {receiptCount > 0 && (
+                        <p className="mt-0.5 whitespace-nowrap text-[11px] text-[#71829A]">
+                          {receiptCount} {receiptCount > 1 ? 'receipts' : 'receipt'} ·{' '}
+                          <button
+                            type="button"
+                            aria-expanded={receiptsOpen}
+                            onClick={() => setOpenReceiptsKey(receiptsOpen ? null : rowKey)}
+                            className="cursor-pointer font-semibold text-[#1677F2] underline underline-offset-2 hover:text-[#0B5FD0]"
+                          >
+                            {receiptsOpen ? 'hide details' : 'view details'}
+                          </button>
+                        </p>
+                      )}
+                      {receiptsOpen && (
+                        <ul className="mt-2 w-[200px] space-y-1 rounded-[8px] border border-[#D9E6F5] bg-[#F4F9FF] p-2 text-[11px] text-[#254064]">
+                          {item.receipts.map((receipt) => (
+                            <li key={receipt.date} className="flex items-center justify-between gap-3">
+                              <span>{formatReceiptDate(receipt.date)}</span>
+                              <span className="font-semibold">{receipt.qty}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-[#254064]">{item.requiredQty}</td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${item.status === 'Adequate' ? 'bg-[#E8F8EF] text-[#168849]' : item.status === 'Low Stock' ? 'bg-[#FFF5E5] text-[#B66A00]' : 'bg-[#FFF0F0] text-[#D6333F]'}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
