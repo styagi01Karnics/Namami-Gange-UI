@@ -287,7 +287,7 @@ export default function MediaMtxWhepPlayer({
         autoPlay
         muted
         playsInline
-        className="absolute inset-0 h-full w-full bg-[#07121e] object-cover"
+        className="absolute inset-0 h-full w-full bg-[#07121e] object-contain"
       />
 
       {error && (
