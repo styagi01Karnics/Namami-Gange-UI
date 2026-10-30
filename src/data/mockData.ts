@@ -2194,7 +2194,8 @@ export const monthlyViolationColumns = [
   { key: 'parameters', label: 'Non-complying parameters', width: '14%' },
   { key: 'range', label: 'Range', width: '7%' },
   { key: 'date', label: 'Date', width: '10%' },
-  { key: 'nonComplianceTime', label: 'Non-compliance time', width: '17%' },
+  { key: 'nonComplianceTime', label: 'Non-compliance time', width: '15%' },
+  { key: 'totalPenalty', label: 'Penalty', width: '9%' },
 ]
 
 export const monthlyComplianceSummary = [
@@ -2300,6 +2301,21 @@ export const monthlyViolations: StpMonthlyViolation[] = [
     ],
     nonComplianceTime: '09:15 AM to 11:45 AM',
     totalPenalty: '₹7,500',
+  },
+  {
+    id: 'VIO-2026-10-14',
+    sn: 14,
+    date: '12/10/2026',
+    stpName: '33 MLD STP, Saliyar, Roorkee',
+    plantCode: '33mldsali',
+    capacity: 33,
+    district: 'Haridwar',
+    omDepartment: 'Uttarakhand Jal Sansthan',
+    parameters: [
+      { name: 'TSS', observedValue: '24.80', range: '0 – 20' },
+    ],
+    nonComplianceTime: '10:05 AM to 12:20 PM',
+    totalPenalty: '₹4,000',
   },
   {
     id: 'VIO-2026-09-07',
@@ -2606,9 +2622,19 @@ export const PLANT_METADATA: Record<string, {
 
 export const complianceSummary = [
   { key: 'violations', label: 'Total Violations', value: '10', tone: 'brand' as const },
+  { key: 'vendorPayment', label: 'Vendor Monthly Payment', value: '₹4,80,000', tone: 'violet' as const },
   { key: 'penalty', label: 'Total Penalty Amount', value: '₹45,000', tone: 'warn' as const },
-  { key: 'payable', label: 'Total Amount to Pay', value: '₹45,000', tone: 'ok' as const },
+  { key: 'payable', label: 'Net Amount to Pay', value: '₹4,35,000', tone: 'ok' as const },
 ]
+
+/**
+ * Monthly STP O&M payment to the vendor (₹) before penalty deduction, keyed by YYYY-MM.
+ * Placeholder until the billing API provides it. `paid` marks months already settled.
+ */
+export const stpVendorMonthlyPayments: Record<string, { amount: number; paid: boolean }> = {
+  '2026-09': { amount: 480000, paid: true },
+  '2026-10': { amount: 480000, paid: false },
+}
 
 export const complianceTypes = ['Parameter Breach']
 export const complianceBasisOptions = ['Based On Parameter Breach', 'Based On Equipment Failure']

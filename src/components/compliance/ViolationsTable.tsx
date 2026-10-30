@@ -346,7 +346,7 @@ export default function ViolationsTable({
       )}
 
       <div className="scroll-thin table-scroll">
-        <table className="w-full min-w-[1060px] table-fixed border-collapse">
+        <table className="w-full min-w-[1140px] table-fixed border-collapse">
           <colgroup>
             {monthlyViolationColumns.map((c) => (
               <col key={c.key} style={{ width: c.width }} />
@@ -451,6 +451,11 @@ export default function ViolationsTable({
                     {/* Non-compliance time */}
                     <td className="px-[16px] py-[18px] text-[13px] font-medium leading-[20px] text-[#07121E] whitespace-nowrap">
                       {v.nonComplianceTime || '—'}
+                    </td>
+
+                    {/* Penalty for this row's violation(s) */}
+                    <td className="px-[16px] py-[18px] text-[13px] font-semibold leading-[20px] text-[#B45309] whitespace-nowrap">
+                      {v.totalPenalty || '—'}
                     </td>
                   </tr>
                 )
