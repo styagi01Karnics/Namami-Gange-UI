@@ -229,14 +229,15 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
   const total = useMemo(() => Object.values(granted).reduce((n, list) => n + (list?.length || 0), 0), [granted])
 
-  if (!open) return null
-
   const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const canSubmit = form.role.trim() && form.description.trim()
 
   const modulesList = catalog?.modules || []
   const statusesList = catalog?.statuses?.length ? catalog.statuses.map((s) => s.label) : ['Active', 'Inactive']
-  const templatesList = catalog?.permissionPresets?.length ? catalog.permissionPresets.map((p) => p.label) : []
+  const templatesList = useMemo(() => {
+    const list = catalog?.permissionPresets?.length ? catalog.permissionPresets.map((p) => p.label) : []
+    return [...list, 'Custom']
+  }, [catalog?.permissionPresets])
 
   // Modules without sub-permissions count as a single "module" grant.
   const toggleModule = (module: any, checked: boolean) =>
@@ -258,7 +259,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
   const handleTemplateChange = (templateName: string) => {
     set('template')(templateName)
-    if (!templateName) return
+    if (!templateName || templateName === 'Custom') return
 
     // Find preset in database catalog presetGrants
     if (catalog?.presetGrants) {
@@ -280,13 +281,50 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
     try {
       setSubmitting(true)
       setSubmitError('')
-      await onSubmit({
+
+      // 1. Determine status ("ACTIVE" / "INACTIVE")
+      const matchedStatus = catalog?.statuses?.find(
+        (s) => s.label.toLowerCase() === form.status.toLowerCase() || s.id.toLowerCase() === form.status.toLowerCase(),
+      )
+      const statusValue = matchedStatus ? matchedStatus.id : (form.status.toUpperCase() === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE')
+
+      // 2. Clean granted object (remove modules with empty arrays)
+      const cleanedGranted: Record<string, string[]> = {}
+      Object.entries(granted).forEach(([modKey, perms]) => {
+        if (Array.isArray(perms) && perms.length > 0) {
+          cleanedGranted[modKey] = perms
+        }
+      })
+
+      // 3. Resolve preset
+      const isCustom = !form.template || form.template === 'Custom'
+      let matchedPreset: string | undefined = undefined
+      if (!isCustom) {
+        const found = catalog?.permissionPresets?.find(
+          (p) =>
+            p.label.toLowerCase() === form.template.toLowerCase() ||
+            p.id.toLowerCase() === form.template.toLowerCase(),
+        )
+        matchedPreset = found ? found.label : form.template
+      }
+
+      // 4. Construct payload according to API endpoints specs
+      const payload: any = {
         name: form.role.trim(),
         description: form.description.trim(),
-        status: form.status,
-        permissionPreset: form.template || undefined,
-        granted,
-      })
+        status: statusValue,
+      }
+
+      if (matchedPreset) {
+        payload.permissionPreset = matchedPreset
+        if (Object.keys(cleanedGranted).length > 0) {
+          payload.granted = cleanedGranted
+        }
+      } else {
+        payload.granted = cleanedGranted
+      }
+
+      await onSubmit(payload)
       onClose()
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')
@@ -294,6 +332,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       setSubmitting(false)
     }
   }
+
+  if (!open) return null
 
   return (
     <div

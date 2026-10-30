@@ -8,12 +8,19 @@ const LockIcon = ico('fluent:lock-closed-24-filled')
 const CalendarIcon = ico('fluent:calendar-32-filled')
 
 export default function RoleCard({ role, onEdit, onDelete, onViewUsers }: any) {
+  const displayStatus =
+    role.statusLabel ||
+    (role.status === 'ACTIVE' ? 'Active' : role.status === 'INACTIVE' ? 'Inactive' : role.status || 'Active')
+
+  const usersCount = role.userCount ?? role.users ?? 0
+  const permissionsCount = role.permissionCount ?? role.permissions ?? 0
+
   return (
     <div className="rounded-[12px] border border-line bg-white p-[16px] shadow-card">
       <div className="flex items-start justify-between gap-[12px]">
         <div className="flex min-w-0 items-center gap-[9px]">
           <h4 className="truncate text-[14.5px] font-bold leading-5 text-ink">{role.name}</h4>
-          <StatusPill tone={statusTone(role.status)}>{role.status}</StatusPill>
+          <StatusPill tone={statusTone(displayStatus)}>{displayStatus}</StatusPill>
         </div>
 
         <div className="flex shrink-0 items-center gap-[10px]">
@@ -41,11 +48,11 @@ export default function RoleCard({ role, onEdit, onDelete, onViewUsers }: any) {
       <div className="mt-[13px] flex items-center gap-[18px] text-[12.5px] leading-4 text-ink-soft">
         <span className="flex items-center gap-[6px]">
           <TeamIcon size={15} className="text-ink-muted" />
-          {role.users} users
+          {usersCount} {usersCount === 1 ? 'user' : 'users'}
         </span>
         <span className="flex items-center gap-[6px]">
           <LockIcon size={14} className="text-ink-muted" />
-          {role.permissions} permissions
+          {permissionsCount} {permissionsCount === 1 ? 'permission' : 'permissions'}
         </span>
       </div>
 

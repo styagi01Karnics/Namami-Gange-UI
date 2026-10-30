@@ -10,6 +10,10 @@ interface ImportMetaEnv {
   readonly VITE_DASHBOARD_API_BASE_URL?: string
   readonly VITE_PENALTY_API_URL?: string
   readonly VITE_PENALTY_API_BASE_URL?: string
+  readonly VITE_ROLE_API_URL?: string
+  readonly VITE_ROLE_API_BASE_URL?: string
+  readonly VITE_USER_API_URL?: string
+  readonly VITE_USER_API_BASE_URL?: string
   readonly VITE_STP_LIVE_POLL_MS?: string
 }
 
