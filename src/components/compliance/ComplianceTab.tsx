@@ -6,16 +6,19 @@ import {
   complianceSummary,
   monthlyComplianceSummary,
   monthlyViolations,
+  stpVendorMonthlyPayments,
   type StpMonthlyViolation,
 } from '../../data/mockData'
 import {
   defaultOccurrencesRange,
   fetchPenaltyOccurrences,
-  fetchPenaltySummary,
-  formatPenaltyAmount,
   type ViolationListItem,
 } from '../../api/penalty'
 import { fetchDashboardPlants, toPlantNameByCode } from '../../api/plants'
+
+function formatRupees(value: number) {
+  return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+}
 
 /** Shared by the Compliance page and the Compliance tab in STP Management. */
 export default function ComplianceTab({
@@ -45,13 +48,11 @@ export default function ComplianceTab({
         (exportLabel && v.stpName?.toLowerCase().includes(exportLabel.toLowerCase())),
     )
   })
-  const [totalAssessedAmount, setTotalAssessedAmount] = useState<number | null>(null)
   const [loading, setLoading] = useState(Boolean(plantCode))
 
   useEffect(() => {
     if (!plantCode) {
       setRows(monthlyViolations)
-      setTotalAssessedAmount(null)
       setLoading(false)
       return undefined
     }
@@ -59,7 +60,6 @@ export default function ComplianceTab({
     const code = plantCode
     let cancelled = false
     setLoading(true)
-    setTotalAssessedAmount(null)
 
     async function loadCompliance() {
       const plants = await fetchDashboardPlants()
@@ -70,18 +70,12 @@ export default function ComplianceTab({
       const apiRange = selectedRange ?? defaultOccurrencesRange()
 
       let nextRows: ViolationListItem[] = []
-      let penaltySummaryData: { totalAssessedAmount: number } | null = null
 
       try {
-        const [apiRows, apiSummary] = await Promise.all([
-          fetchPenaltyOccurrences(code, apiRange, {
-            plantNameByCode,
-            plantName,
-          }),
-          fetchPenaltySummary(code, apiRange),
-        ])
-        nextRows = apiRows
-        penaltySummaryData = apiSummary
+        nextRows = await fetchPenaltyOccurrences(code, apiRange, {
+          plantNameByCode,
+          plantName,
+        })
       } catch {
         nextRows = []
       }
@@ -96,7 +90,8 @@ export default function ComplianceTab({
           })),
         )
       } else {
-        // Fallback to mock violations for THIS selected plant only
+        // Fallback to mock violations for THIS selected plant and month only
+        const selectedMonth = selectedRange?.from.slice(0, 7)
         const matchingMock = monthlyViolations.filter(
           (v) =>
             v.plantCode === code ||
@@ -105,10 +100,10 @@ export default function ComplianceTab({
               (plantName && v.stpName.toLowerCase().includes(plantName.toLowerCase()))
             )),
         )
+          .filter((v) => !selectedMonth || (v.date ?? '').split('/').reverse().join('-').startsWith(selectedMonth))
         setRows(matchingMock)
       }
 
-      setTotalAssessedAmount(penaltySummaryData ? penaltySummaryData.totalAssessedAmount : null)
       setLoading(false)
     }
 
@@ -141,38 +136,41 @@ export default function ComplianceTab({
       return sum + (Number.isFinite(amount) ? amount : 0)
     }, 0)
 
+    const now = new Date()
+    const paymentMonth = dateRangeLabel
+      ? toPenaltyRangeFromLabel(dateRangeLabel)?.from.slice(0, 7)
+      : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const payment = (paymentMonth && stpVendorMonthlyPayments[paymentMonth]) || { amount: 0, paid: false }
+    const vendorPayment = payment.amount
+
+    const netPayable = Math.max(0, vendorPayment - totalPenalty)
+
     return complianceSummary.map((item) => {
       if (item.key === 'violations') {
         return { ...item, value: String(rows.length) }
       }
+      if (item.key === 'vendorPayment') {
+        return { ...item, value: formatRupees(vendorPayment) }
+      }
       if (item.key === 'penalty') {
-        return {
-          ...item,
-          value: `₹${totalPenalty.toLocaleString('en-IN', {
-            maximumFractionDigits: 2,
-          })}`,
-        }
+        return { ...item, value: formatRupees(totalPenalty) }
       }
       if (item.key === 'payable') {
         return {
           ...item,
-          value:
-            totalAssessedAmount == null
-              ? totalPenalty > 0
-                ? `₹${totalPenalty.toLocaleString('en-IN')}`
-                : '—'
-              : formatPenaltyAmount(totalAssessedAmount),
+          label: payment.paid ? 'Net Amount Paid' : 'Net Amount to Pay',
+          value: formatRupees(netPayable),
         }
       }
       return item
     })
-  }, [plantCode, rows, totalAssessedAmount])
+  }, [plantCode, rows, dateRangeLabel])
 
   return (
     <div className="space-y-[16px]">
       <SoftStatCardsRow
         items={summary}
-        columns={plantCode ? 3 : 5}
+        columns={plantCode ? 4 : 5}
         gap={16}
       />
       <ViolationsTable

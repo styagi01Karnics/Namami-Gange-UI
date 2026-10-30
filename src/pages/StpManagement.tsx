@@ -72,6 +72,29 @@ function formatInventoryMonth(value: string) {
   return new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
 }
 
+/** First month the app is live; violation month picker cannot go earlier. */
+const VIOLATION_FIRST_MONTH = '2026-09'
+
+function monthValue(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** Previous calendar month, clamped to the launch month. */
+function defaultViolationMonth() {
+  const now = new Date()
+  const previous = monthValue(new Date(now.getFullYear(), now.getMonth() - 1, 1))
+  return previous < VIOLATION_FIRST_MONTH ? VIOLATION_FIRST_MONTH : previous
+}
+
+/** "1 Sep 2026 - 30 Sep 2026" — DateRangeField label format. */
+function monthRangeLabel(value: string) {
+  const [year, month] = value.split('-').map(Number)
+  const first = new Date(year, month - 1, 1)
+  const last = new Date(year, month, 0)
+  const short = (date: Date) => date.toLocaleString('en-US', { month: 'short' })
+  return `1 ${short(first)} ${year} - ${last.getDate()} ${short(last)} ${year}`
+}
+
 export default function StpManagement() {
   const { tab: slug } = useParams()
   const navigate = useNavigate()
@@ -86,17 +109,8 @@ export default function StpManagement() {
   const [inventoryMonth, setInventoryMonth] = useState(currentInventoryMonth)
   const [inventoryMonthManuallySet, setInventoryMonthManuallySet] = useState(false)
   const [billingMonth, setBillingMonth] = useState('June 2026')
-  const previousMonth = useMemo(() => {
-    const today = new Date()
-    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-    const end = new Date(today.getFullYear(), today.getMonth(), 0)
-    const month = start.toLocaleString('en-US', { month: 'long' })
-    const shortMonth = start.toLocaleString('en-US', { month: 'short' })
-    return {
-      label: `${month} ${start.getFullYear()}`,
-      range: `1 ${shortMonth} ${start.getFullYear()} - ${end.getDate()} ${shortMonth} ${start.getFullYear()}`,
-    }
-  }, [])
+  const [violationMonth, setViolationMonth] = useState(defaultViolationMonth)
+  const violationRange = useMemo(() => monthRangeLabel(violationMonth), [violationMonth])
 
   useEffect(() => {
     let cancelled = false
@@ -224,9 +238,13 @@ export default function StpManagement() {
         Today, {todayLabel()}
       </span>
     ) : tab === 'Violation' ? (
-      <span className="flex h-[32px] shrink-0 items-center whitespace-nowrap rounded-[9px] border border-line bg-white px-[14px] text-[13px] font-medium text-ink">
-        {previousMonth.label}
-      </span>
+      <MonthField
+        label="Violation month"
+        value={violationMonth}
+        min={VIOLATION_FIRST_MONTH}
+        onChange={setViolationMonth}
+        className="w-[205px] shrink-0"
+      />
     ) : tab === 'CCTV' || tab === 'Contracts' ? null : (
       <DateRangeField compact value={range} onChange={setRange} className="w-[236px] shrink-0" />
     )
@@ -242,7 +260,7 @@ export default function StpManagement() {
           : tab === 'Manpower'
             ? `Today, ${todayLabel()}`
             : tab === 'Violation'
-              ? previousMonth.range
+              ? violationRange
               : range,
       )}
     >
@@ -284,7 +302,7 @@ export default function StpManagement() {
                     selectedPlant?.label ||
                     stp.name
                   }
-                  dateRangeLabel={previousMonth.range}
+                  dateRangeLabel={violationRange}
                   stpManagementPdf
                 />
               ) : tab === 'Contracts' ? (
