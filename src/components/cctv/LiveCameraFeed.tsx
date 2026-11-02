@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import CameraTile from './CameraTile'
 import CameraLightbox from './CameraLightbox'
 import {
+  getMothorowala2RecordingChannel,
   hasCpvRecordings,
   isCameraOnline,
   type LiveSiteCamera,
@@ -50,7 +51,8 @@ export default function LiveCameraFeed({
                       plantCode,
                       stpId,
                       channel:
-                        /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(stpId ?? plantCode ?? '')
+                        getMothorowala2RecordingChannel(stpId ?? plantCode, camera) ??
+                        (/mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(stpId ?? plantCode ?? '')
                           ? String(camera.location ?? '').toLowerCase().includes('effluent') ||
                             String(camera.location ?? '').toLowerCase().includes('treated')
                             ? 1
@@ -59,7 +61,7 @@ export default function LiveCameraFeed({
                             (String(camera.location ?? '').toLowerCase().includes('effluent') ||
                             String(camera.location ?? '').toLowerCase().includes('treated')
                             ? 2
-                            : 1),
+                            : 1)),
                       location: camera.location,
                     }
                   : undefined

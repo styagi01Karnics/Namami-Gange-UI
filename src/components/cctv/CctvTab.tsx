@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import LiveCameraFeed from './LiveCameraFeed'
 import {
   fetchCctvCameras,
+  fetchCctvSiteNames,
   fetchCctvSites,
   getCamerasForStp,
   hasCpvRecordings,
@@ -153,7 +154,19 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
     return { total, online, offline }
   }, [cameras, stpId, plantCode])
 
-  const siteName = (stpId && stpDetails[stpId]?.name) || stpId || 'STP Plant'
+  const [apiSiteName, setApiSiteName] = useState<string>()
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCctvSiteNames().then((names) => {
+      if (!cancelled) setApiSiteName(plantCode ? names[plantCode] : undefined)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [plantCode])
+
+  const siteName = apiSiteName || (stpId && stpDetails[stpId]?.name) || stpId || 'STP Plant'
 
   return (
     <div className="space-y-[14px]">

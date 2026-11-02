@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { CameraStill } from './CameraTile'
-import { hasCpvRecordings } from '../../api/cctv'
+import { getMothorowala2RecordingChannel, hasCpvRecordings } from '../../api/cctv'
 
 /** Full-screen view behind the expand button on a camera tile. */
 export default function CameraLightbox({ camera, siteName, plantCode, stpId, onClose }) {
@@ -52,10 +52,11 @@ export default function CameraLightbox({ camera, siteName, plantCode, stpId, onC
                     plantCode,
                     stpId,
                     channel:
-                      /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(stpId ?? plantCode ?? '')
+                      getMothorowala2RecordingChannel(stpId ?? plantCode, camera) ??
+                      (/mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(stpId ?? plantCode ?? '')
                         ? (String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent') ? 1 : 2)
                         : (camera.channel ??
-                          (String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent') ? 2 : 1)),
+                          (String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent') ? 2 : 1))),
                     location: camera.location,
                   }
                 : undefined

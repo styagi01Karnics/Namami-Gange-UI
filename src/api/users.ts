@@ -3,7 +3,9 @@
  * Microservice endpoint: /api/users
  */
 
-const USER_API_URL = import.meta.env.VITE_USER_API_URL ?? 'http://45.195.229.15:18090/api'
+import { API_BASE_URL, ENDPOINTS } from '../config/api'
+
+const USER_API_URL = API_BASE_URL.user
 
 export type UserItem = {
   id: string
@@ -92,7 +94,7 @@ export async function fetchUsers(params?: {
   if (params?.roleName && params.roleName !== 'All Roles') search.set('roleName', params.roleName)
 
   const query = search.toString() ? `?${search.toString()}` : ''
-  const data = await request<any[]>(`/users${query}`)
+  const data = await request<any[]>(`${ENDPOINTS.users.list}${query}`)
   if (!Array.isArray(data)) return []
 
   return data.map((item) => ({
@@ -114,14 +116,14 @@ export async function fetchUsers(params?: {
  * GET /api/users/{id} - Get user details
  */
 export async function fetchUser(id: string): Promise<UserItem> {
-  return request<UserItem>(`/users/${encodeURIComponent(id)}`)
+  return request<UserItem>(ENDPOINTS.users.byId(id))
 }
 
 /**
  * POST /api/users - Create user
  */
 export async function createUser(user: UserRequest): Promise<UserItem> {
-  return request<UserItem>('/users', {
+  return request<UserItem>(ENDPOINTS.users.list, {
     method: 'POST',
     body: JSON.stringify(user),
   })
@@ -131,7 +133,7 @@ export async function createUser(user: UserRequest): Promise<UserItem> {
  * PUT /api/users/{id} - Full update user
  */
 export async function updateUser(id: string, user: UserRequest): Promise<UserItem> {
-  return request<UserItem>(`/users/${encodeURIComponent(id)}`, {
+  return request<UserItem>(ENDPOINTS.users.byId(id), {
     method: 'PUT',
     body: JSON.stringify(user),
   })
@@ -141,7 +143,7 @@ export async function updateUser(id: string, user: UserRequest): Promise<UserIte
  * PATCH /api/users/{id} - Partial update user (role, status)
  */
 export async function patchUser(id: string, patch: UserPatchRequest): Promise<UserItem> {
-  return request<UserItem>(`/users/${encodeURIComponent(id)}`, {
+  return request<UserItem>(ENDPOINTS.users.byId(id), {
     method: 'PATCH',
     body: JSON.stringify(patch),
   })
@@ -151,7 +153,7 @@ export async function patchUser(id: string, patch: UserPatchRequest): Promise<Us
  * DELETE /api/users/{id} - Delete user
  */
 export async function deleteUser(id: string): Promise<void> {
-  await request<void>(`/users/${encodeURIComponent(id)}`, {
+  await request<void>(ENDPOINTS.users.byId(id), {
     method: 'DELETE',
   })
 }
@@ -168,5 +170,5 @@ export async function countUsersByRole(params?: {
   if (params?.roleName) search.set('roleName', params.roleName)
 
   const query = search.toString() ? `?${search.toString()}` : ''
-  return request<number>(`/users/count${query}`)
+  return request<number>(`${ENDPOINTS.users.count}${query}`)
 }

@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/cctv-api': {
-          target: env.VITE_CCTV_API_BASE_URL || 'http://45.195.229.15:18091',
+          target: env.VITE_CCTV_API_BASE_URL || 'http://45.195.229.15:8905',
           changeOrigin: true,
           timeout: 0,
           proxyTimeout: 0,
@@ -48,28 +48,33 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_STP_CCTV_BASE_URL || 'http://45.195.229.15:18085',
           changeOrigin: true,
         },
+        '/stp-details-api': {
+          target: env.VITE_STP_DETAILS_API_BASE_URL || 'http://45.195.229.15:8907',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/stp-details-api/, '/api'),
+        },
         '/penalty-api': {
           target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:18088',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/penalty-api/, '/api'),
         },
         '/role-api': {
-          target: env.VITE_ROLE_API_BASE_URL || 'http://45.195.229.15:18089',
+          target: env.VITE_ROLE_API_BASE_URL || 'http://45.195.229.15:8903',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/role-api/, '/api'),
         },
         '/user-api': {
-          target: env.VITE_USER_API_BASE_URL || 'http://45.195.229.15:18090',
+          target: env.VITE_USER_API_BASE_URL || 'http://45.195.229.15:8904',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/user-api/, '/api'),
         },
         '/auth-api': {
-          target: env.VITE_AUTH_API_BASE_URL || 'http://45.195.229.15:18092',
+          target: env.VITE_AUTH_API_BASE_URL || 'http://45.195.229.15:8906',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/auth-api/, '/api'),
         },
         '/attendance-api': {
-          target: env.VITE_ATTENDANCE_API_BASE_URL || 'http://45.195.229.15:18086',
+          target: env.VITE_ATTENDANCE_API_BASE_URL || 'http://45.195.229.15:8908',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/attendance-api/, '/api'),
         },

@@ -27,7 +27,9 @@ import { CameraStill } from '../components/cctv/CameraTile'
 import { cctvSites } from '../data/mockData'
 import {
   emptyCameras,
+  fetchCctvSiteInfo,
   getCamerasForStp,
+  getMothorowala2RecordingChannel,
   hasCpvRecordings,
   isCameraOnline,
   loadLiveCamerasByStp,
@@ -37,9 +39,7 @@ import {
 import {
   ALL_STP_FILTER_OPTION,
   fetchDashboardPlants,
-  resolveStpDetail,
   toFilterPlantOptions,
-  type PlantOption,
 } from '../api/plants'
 
 const AUTO_SWITCH_DURATION = 15
@@ -269,7 +269,9 @@ function recordingFor(
   return {
     plantCode: site.plantCode,
     stpId: site.stpId,
-    channel: cameraChannel(camera, site.stpId || site.plantCode),
+    channel:
+      getMothorowala2RecordingChannel(site.stpId || site.plantCode, camera) ??
+      cameraChannel(camera, site.stpId || site.plantCode),
     location: camera.location,
   }
 }
@@ -362,6 +364,7 @@ export default function CctvMonitoring() {
       .map((option) => option.id),
   )
   const [liveByStp, setLiveByStp] = useState<Record<string, LiveSiteCamera[]>>({})
+  const [addressByPlant, setAddressByPlant] = useState<Record<string, string>>({})
   const [view, setView] = useState<'carousel' | 'list'>('carousel')
   const [cameraLayout, setCameraLayout] = useState<'parallel' | 'stacked'>('parallel')
   const [showQueue, setShowQueue] = useState(true)
@@ -393,10 +396,18 @@ export default function CctvMonitoring() {
     let cancelled = false
 
     async function loadPlants() {
-      const plants = await fetchDashboardPlants()
+      const [plants, siteInfo] = await Promise.all([fetchDashboardPlants(), fetchCctvSiteInfo()])
       if (cancelled) return
-      const next = pinFilterPlantOptions(toFilterPlantOptions(plants))
+      const next = pinFilterPlantOptions(toFilterPlantOptions(plants)).map((option) => ({
+        ...option,
+        label: (option.plantCode && siteInfo[option.plantCode]?.name) || option.label,
+      }))
       setStpOptions(next)
+      setAddressByPlant(
+        Object.fromEntries(
+          Object.entries(siteInfo).flatMap(([code, site]) => (site.address ? [[code, site.address]] : [])),
+        ),
+      )
 
       const fromQuery = plantParam
         ? next.find(
@@ -441,12 +452,6 @@ export default function CctvMonitoring() {
   const allSites: StpSite[] = useMemo(() => {
     const rawSites: StpSite[] = plantOptions.map((option) => {
       const siteStpId = option.stpId || option.id
-      const detail = resolveStpDetail({
-        id: option.plantCode || option.id,
-        label: option.label,
-        plantCode: option.plantCode || option.id,
-        stpId: siteStpId,
-      } as PlantOption)
       const mockSite = cctvSites.find(
         (site) => site.stpId === siteStpId || site.stpId === option.plantCode || site.stpId === option.id,
       )
@@ -456,13 +461,13 @@ export default function CctvMonitoring() {
         stpId: siteStpId,
         plantCode: option.plantCode || option.id,
         name: option.label,
-        address: detail.address || mockSite?.address || '—',
+        address: (option.plantCode && addressByPlant[option.plantCode]) || '—',
         cameras: liveByStp[siteStpId] ?? mockSite?.cameras ?? emptyCameras(siteStpId),
       }
     })
 
     return pinCctvSiteOrder(rawSites)
-  }, [plantOptions, liveByStp])
+  }, [plantOptions, liveByStp, addressByPlant])
 
   const sites = useMemo(() => {
     if (stpId === ALL_STP_FILTER_OPTION.id) {

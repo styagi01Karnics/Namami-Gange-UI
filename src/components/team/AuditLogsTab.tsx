@@ -8,6 +8,7 @@ import StatusPill from '../ui/StatusPill'
 import TeamSectionHeader from './TeamSectionHeader'
 import { ACTION_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
+import { API_BASE_URL, ENDPOINTS } from '../../config/api'
 
 export const auditLogColumns = [
   { key: 'id', label: 'Log ID', width: '9%' },
@@ -57,7 +58,7 @@ export default function AuditLogsTab({ onExportPdf }: { onExportPdf?: any }) {
     const loadAuditLogs = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`${import.meta.env.VITE_USER_API_URL ?? 'http://45.195.229.15:18090/api'}/audit-logs`)
+        const res = await fetch(`${API_BASE_URL.user}${ENDPOINTS.users.auditLogs}`)
         if (res.ok) {
           const json = await res.json()
           setLogs(Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [])

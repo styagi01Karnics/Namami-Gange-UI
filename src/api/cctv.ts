@@ -1,5 +1,8 @@
-const CCTV_API = import.meta.env.VITE_CCTV_API_URL ?? '/cctv-api'
-const STREAM_BASE = import.meta.env.VITE_STREAM_BASE ?? 'https://stream.karnics.com'
+import { API_BASE_URL, ENDPOINTS, STREAM_BASE_URL } from '../config/api'
+
+const CCTV_API = API_BASE_URL.cctv
+const STP_DETAILS_API = API_BASE_URL.stpDetails
+const STREAM_BASE = STREAM_BASE_URL
 
 export type CameraPlayer = 'whep' | 'hls' | 'iframe' | 'mp4'
 
@@ -257,6 +260,20 @@ export function getCameraSiteCode(camera: CctvCamera) {
   return camera.siteCode ?? camera.nvr?.agent?.site?.siteCode ?? 'PLANT001'
 }
 
+/**
+ * Recording channel override for 20 MLD Mothorowala-2 only: influent is channel 1 and effluent is
+ * channel 2 on the NVR, independent of the channel flip used for live streams.
+ * Returns undefined for every other STP so their existing mapping is used.
+ */
+export function getMothorowala2RecordingChannel(
+  siteKey: string | undefined,
+  camera: { location?: string; id?: string | number },
+) {
+  if (!/mothorowala-20-2|20mldmoth_2/i.test(siteKey ?? '')) return undefined
+  const label = String(camera.location ?? camera.id ?? '').toLowerCase()
+  return label.includes('effluent') || label.includes('treated') ? 2 : 1
+}
+
 export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCamera) {
   if (camera?.streamUrl) return camera.streamUrl
 
@@ -377,17 +394,84 @@ async function parseJsonSafely<T = any>(response: Response): Promise<T | null> {
   }
 }
 
-export async function fetchCctvSites() {
-  try {
-    const response = await fetch(`${CCTV_API}/sites`)
-    if (!response.ok) return DEFAULT_SITES
+type StpDetail = {
+  id: number
+  stpCapacity?: string
+  address?: string
+  locationName?: string
+  city?: string
+}
 
-    const data = await parseJsonSafely<CctvSite[]>(response)
-    const sites = Array.isArray(data) ? data : []
-    return sites.length > 0 ? (sites as CctvSite[]) : DEFAULT_SITES
+export type CctvSiteInfo = { name: string; address?: string }
+
+/** Dashboard plantCode for each /stp-details record, indexed by the record's `id`. */
+const STP_DETAIL_PLANT_CODES = [
+  '14mldsarai',
+  '68mldjag',
+  '27mldjag_upg',
+  '18mldsarai_upg',
+  '18mldjag',
+  '26mldlkgt2',
+  '28mldindira',
+  '20mldmothorowala',
+  '68mldkargi',
+  '20mldmoth_2',
+  '33mldsali',
+  '10mldbazpur',
+  '10mldkashipur',
+]
+
+/** "stpCapacity, locationName, city" — city is skipped when it repeats locationName. */
+function formatStpName(detail: StpDetail) {
+  const location = detail.locationName?.trim()
+  const city = detail.city?.trim()
+  const parts = [
+    detail.stpCapacity?.trim(),
+    location,
+    city && city.toLowerCase() !== location?.toLowerCase() ? city : undefined,
+  ]
+  return parts.filter(Boolean).join(', ')
+}
+
+async function fetchStpDetails(): Promise<StpDetail[]> {
+  try {
+    const response = await fetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
+    if (!response.ok) return []
+
+    const data = await parseJsonSafely<StpDetail[]>(response)
+    return Array.isArray(data) ? data : []
   } catch {
-    return DEFAULT_SITES
+    return []
   }
+}
+
+/** CCTV site name + address keyed by plantCode, built from the /stp-details API. Empty when unavailable. */
+export async function fetchCctvSiteInfo(): Promise<Record<string, CctvSiteInfo>> {
+  const details = await fetchStpDetails()
+  const info: Record<string, CctvSiteInfo> = {}
+  for (const detail of details) {
+    const plantCode = STP_DETAIL_PLANT_CODES[detail.id]
+    const name = formatStpName(detail)
+    if (plantCode && name) info[plantCode] = { name, address: detail.address?.trim() || undefined }
+  }
+  return info
+}
+
+/** CCTV site names keyed by plantCode. */
+export async function fetchCctvSiteNames(): Promise<Record<string, string>> {
+  const info = await fetchCctvSiteInfo()
+  return Object.fromEntries(Object.entries(info).map(([code, site]) => [code, site.name]))
+}
+
+export async function fetchCctvSites() {
+  const details = await fetchStpDetails()
+  if (details.length === 0) return DEFAULT_SITES
+
+  return DEFAULT_SITES.map((site, index) => {
+    const detail = details.find((item) => item.id === index)
+    const name = detail ? formatStpName(detail) : ''
+    return name ? { ...site, name } : site
+  })
 }
 
 export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
@@ -396,7 +480,8 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
     if (plantCode) params.set('plantCode', plantCode)
     if (stpId) params.set('stpId', stpId)
     const query = params.toString()
-    const url = query ? `${CCTV_API}/cameras?${query}` : `${CCTV_API}/cameras`
+    const camerasUrl = `${CCTV_API}${ENDPOINTS.cctv.cameras}`
+    const url = query ? `${camerasUrl}?${query}` : camerasUrl
     const response = await fetch(url)
     if (!response.ok) {
       if (plantCode || stpId) {
@@ -438,7 +523,7 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
 
 export async function startCameraStream(cameraId: number) {
   try {
-    const response = await fetch(`${CCTV_API}/stream/start/${cameraId}`, { method: 'POST' })
+    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamStart(cameraId)}`, { method: 'POST' })
     const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
     if (!response.ok || !data?.success) {
@@ -451,7 +536,7 @@ export async function startCameraStream(cameraId: number) {
 
 export async function stopCameraStream(cameraId: number) {
   try {
-    const response = await fetch(`${CCTV_API}/stream/stop/${cameraId}`, { method: 'POST' })
+    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamStop(cameraId)}`, { method: 'POST' })
     const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
     if (!response.ok || !data?.success) {
@@ -522,7 +607,7 @@ export async function fetchRecordings(input: {
 
   const query = params.toString()
   try {
-    const response = await fetch(`${CCTV_API}/recordings${query ? `?${query}` : ''}`)
+    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.recordings}${query ? `?${query}` : ''}`)
     if (!response.ok) {
       const payload = await parseJsonSafely<{ message?: string }>(response)
       throw new Error(payload?.message ?? 'Unable to connect to CCTV server')
@@ -606,7 +691,7 @@ export type RecordingTarget = {
 export type ReadyRecording = PlaybackClip & { period: RecordingPeriod }
 
 export async function startRecordingPlayback(input: PlaybackStartInput) {
-  const response = await fetch(`${CCTV_API}/playback/start`, {
+  const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.playbackStart}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -664,7 +749,7 @@ export async function loadPeriodRecording(input: RecordingTarget) {
     if (input.plantCode) params.set('plantCode', input.plantCode)
     params.set('channel', String(input.channel))
 
-    const response = await fetch(`${CCTV_API}/feed?${params.toString()}`)
+    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.feed}?${params.toString()}`)
     const feed = await parseJsonSafely<any>(response)
     if (
       response.ok &&
@@ -744,7 +829,7 @@ export async function probeLiveStream(url?: string | null) {
   if (!url) return false
 
   try {
-    const response = await fetch(`${CCTV_API}/stream/health?url=${encodeURIComponent(url)}`)
+    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamHealth}?url=${encodeURIComponent(url)}`)
     if (!response.ok) return false
     const payload = await parseJsonSafely<{ live?: boolean }>(response)
     return Boolean(payload?.live)

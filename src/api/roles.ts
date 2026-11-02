@@ -3,7 +3,9 @@
  * Microservice endpoint: /api/roles
  */
 
-const ROLE_API_URL = import.meta.env.VITE_ROLE_API_URL ?? 'http://45.195.229.15:18089/api'
+import { API_BASE_URL, ENDPOINTS } from '../config/api'
+
+const ROLE_API_URL = API_BASE_URL.role
 
 export type LabeledValue = {
   id: string
@@ -122,7 +124,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
  * 1. GET /api/roles - List role cards
  */
 export async function fetchRoles(): Promise<RoleCardItem[]> {
-  const data = await request<any[]>('/roles')
+  const data = await request<any[]>(ENDPOINTS.roles.list)
   if (!Array.isArray(data)) return []
 
   return data.map((item) => ({
@@ -144,28 +146,28 @@ export async function fetchRoles(): Promise<RoleCardItem[]> {
  * 2. GET /api/roles/catalog - Dropdown and permission data for Create/Edit Role
  */
 export async function fetchRoleCatalog(): Promise<Catalog> {
-  return request<Catalog>('/roles/catalog')
+  return request<Catalog>(ENDPOINTS.roles.catalog)
 }
 
 /**
  * 3. GET /api/roles/{id} - Get role details
  */
 export async function fetchRole(id: string): Promise<RoleDetail> {
-  return request<RoleDetail>(`/roles/${encodeURIComponent(id)}`)
+  return request<RoleDetail>(ENDPOINTS.roles.byId(id))
 }
 
 /**
  * 4. GET /api/roles/{id}/users - Users assigned to a role
  */
 export async function fetchRoleUsers(id: string): Promise<RoleUsersResponse> {
-  return request<RoleUsersResponse>(`/roles/${encodeURIComponent(id)}/users`)
+  return request<RoleUsersResponse>(ENDPOINTS.roles.users(id))
 }
 
 /**
  * 5. POST /api/roles - Create role
  */
 export async function createRole(role: RoleRequest): Promise<RoleDetail> {
-  return request<RoleDetail>('/roles', {
+  return request<RoleDetail>(ENDPOINTS.roles.list, {
     method: 'POST',
     body: JSON.stringify(role),
   })
@@ -175,7 +177,7 @@ export async function createRole(role: RoleRequest): Promise<RoleDetail> {
  * 6. PUT /api/roles/{id} - Update role
  */
 export async function updateRole(id: string, role: RoleRequest): Promise<RoleDetail> {
-  return request<RoleDetail>(`/roles/${encodeURIComponent(id)}`, {
+  return request<RoleDetail>(ENDPOINTS.roles.byId(id), {
     method: 'PUT',
     body: JSON.stringify(role),
   })
@@ -185,7 +187,7 @@ export async function updateRole(id: string, role: RoleRequest): Promise<RoleDet
  * 7. DELETE /api/roles/{id} - Delete role
  */
 export async function deleteRole(id: string): Promise<void> {
-  await request<void>(`/roles/${encodeURIComponent(id)}`, {
+  await request<void>(ENDPOINTS.roles.byId(id), {
     method: 'DELETE',
   })
 }

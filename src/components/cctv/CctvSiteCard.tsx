@@ -3,6 +3,7 @@ import Card from '../ui/Card'
 import IconToggle from '../ui/IconToggle'
 import CameraTile from './CameraTile'
 import {
+  getMothorowala2RecordingChannel,
   hasCpvRecordings,
   type LiveSiteCamera,
 } from '../../api/cctv'
@@ -10,6 +11,8 @@ import {
 const PinIcon = ico('fluent:location-24-filled')
 
 function channelOf(camera: LiveSiteCamera, siteStpId?: string) {
+  const mothorowala2Channel = getMothorowala2RecordingChannel(siteStpId, camera)
+  if (mothorowala2Channel) return mothorowala2Channel
   const isFlipped = /mothorowala-20-2|20mldmoth_2|unit2|kashipur-10|10mldkashipur|kashipur/i.test(siteStpId ?? '')
   const isEffluent = String(camera.location ?? camera.id ?? '').toLowerCase().includes('effluent')
   if (isFlipped) {

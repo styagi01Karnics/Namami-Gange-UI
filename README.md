@@ -4,7 +4,7 @@ React + Vite + TypeScript + Tailwind implementation of the Figma design system.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # starts the Vite dev server (see terminal output for the URL)
 npm run build
 ```
 

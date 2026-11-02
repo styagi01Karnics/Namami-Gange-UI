@@ -1,4 +1,6 @@
-const PENALTY_API = import.meta.env.VITE_PENALTY_API_URL ?? 'http://45.195.229.15:18088/api'
+import { API_BASE_URL, ENDPOINTS } from '../config/api'
+
+const PENALTY_API = API_BASE_URL.penalty
 
 export type PenaltySummary = {
   stpCode: string
@@ -503,7 +505,7 @@ export async function fetchPenaltySummary(
       from: range.from,
       to: range.to,
     })
-    const response = await fetch(`${PENALTY_API}/penalty/summary?${params}`)
+    const response = await fetch(`${PENALTY_API}${ENDPOINTS.penalty.summary}?${params}`)
     if (!response.ok) throw new Error('Failed to load penalty summary')
 
     const payload = await response.json()
@@ -542,7 +544,7 @@ export async function fetchPenaltyVendors(stpCode: string): Promise<PenaltyVendo
 
   try {
     const params = new URLSearchParams({ stpCode })
-    const response = await fetch(`${PENALTY_API}/penalty/vendors?${params}`)
+    const response = await fetch(`${PENALTY_API}${ENDPOINTS.penalty.vendors}?${params}`)
     if (!response.ok) throw new Error('Failed to load vendors')
 
     const payload = await response.json()
@@ -581,7 +583,7 @@ export async function fetchPenaltyOccurrences(
       from: range.from,
       to: range.to,
     })
-    const response = await fetch(`${PENALTY_API}/penalty/occurrences?${params}`)
+    const response = await fetch(`${PENALTY_API}${ENDPOINTS.penalty.occurrences}?${params}`)
     if (!response.ok) throw new Error('Failed to load penalty occurrences')
 
     const payload = await response.json()

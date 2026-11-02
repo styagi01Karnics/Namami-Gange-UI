@@ -1,6 +1,7 @@
 import { stpDetails, stpOptions } from '../data/mockData'
+import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
-const DASHBOARD_API = import.meta.env.VITE_DASHBOARD_API_URL ?? 'http://45.195.229.15:18087/api'
+const DASHBOARD_API = API_BASE_URL.dashboard
 
 export type DashboardPlant = {
   plantName: string
@@ -161,7 +162,7 @@ export function toPlantNameByCode(plants: DashboardPlant[]): Record<string, stri
 
 export async function fetchDashboardPlants(): Promise<DashboardPlant[]> {
   try {
-    const response = await fetch(`${DASHBOARD_API}/dashboard/plants`)
+    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.plants}`)
     if (!response.ok) throw new Error('Failed to load plants')
 
     const payload = await response.json()
@@ -174,7 +175,7 @@ export async function fetchDashboardPlants(): Promise<DashboardPlant[]> {
 
 /** Live / inlet / outlet paths for whichever plantCode was selected from /dashboard/plants. */
 export function dashboardResourceUrl(plantCode: string, resource: 'live' | 'inlet' | 'outlet') {
-  return `${DASHBOARD_API}/dashboard/${encodeURIComponent(plantCode)}/${resource}`
+  return `${DASHBOARD_API}${ENDPOINTS.dashboard.plantResource(plantCode, resource)}`
 }
 
 export async function loadPlantPickerOptions(): Promise<PlantOption[]> {
@@ -205,7 +206,7 @@ export type StpActiveStatusData = {
 
 export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusData | null> {
   try {
-    const response = await fetch(`${DASHBOARD_API}/dashboard/active-status?hours=${hours}`)
+    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.activeStatus}?hours=${hours}`)
     if (!response.ok) throw new Error('Failed to load active status')
     const payload = await response.json()
     return payload?.data ?? null
@@ -216,7 +217,7 @@ export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusDa
 
 export async function fetchLatestViolations(): Promise<any[] | null> {
   try {
-    const response = await fetch(`${DASHBOARD_API}/dashboard/latest-violations`)
+    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.latestViolations}`)
     if (!response.ok) throw new Error('Failed to load latest violations')
     const payload = await response.json()
     return Array.isArray(payload?.data) ? payload.data : null
