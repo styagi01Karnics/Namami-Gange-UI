@@ -41,6 +41,7 @@ import {
   toFilterPlantOptions,
   type PlantOption,
 } from '../api/plants'
+import CameraRecorder from '../components/cctv/CameraRecorder'
 
 const AUTO_SWITCH_DURATION = 15
 
@@ -623,6 +624,7 @@ export default function CctvMonitoring() {
 
   return (
     <div className="flex flex-col gap-[14px] pb-[22px]">
+      <CameraRecorder />
       <section className="flex min-h-0 flex-col overflow-hidden rounded-[16px] border border-[#DCE8F5] bg-white shadow-card">
         {/* Header bar with View Toggle & STP Filter */}
         <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#E8EEF5] px-4 py-3 sm:px-5">
