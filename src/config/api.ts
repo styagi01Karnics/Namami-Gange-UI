@@ -3,14 +3,13 @@
  * Base URLs come from `.env` (VITE_*); the fallbacks below are used when a variable is unset.
  */
 
-const API_HOST = import.meta.env.VITE_API_HOST ?? 'http://45.195.229.15'
-
 export const API_BASE_URL = {
   cctv: import.meta.env.VITE_CCTV_API_URL ?? '/cctv-api',
-  dashboard: import.meta.env.VITE_DASHBOARD_API_URL ?? `${API_HOST}:18087/api`,
-  penalty: import.meta.env.VITE_PENALTY_API_URL ?? `${API_HOST}:18088/api`,
-  role: import.meta.env.VITE_ROLE_API_URL ?? `${API_HOST}:8903/api`,
-  user: import.meta.env.VITE_USER_API_URL ?? `${API_HOST}:8904/api`,
+  // Same-origin proxy paths (see nginx.conf / vite.config.ts). Direct http:// IP calls are blocked on the https site.
+  dashboard: import.meta.env.VITE_DASHBOARD_API_URL ?? '/dashboard-api',
+  penalty: import.meta.env.VITE_PENALTY_API_URL ?? '/penalty-api',
+  role: import.meta.env.VITE_ROLE_API_URL ?? '/role-api',
+  user: import.meta.env.VITE_USER_API_URL ?? '/user-api',
   // Same-origin proxy (nginx / vite). A direct http:// call is blocked as mixed content on the https site.
   auth: import.meta.env.VITE_AUTH_API_URL ?? '/auth-api',
   // Served through the dev/nginx proxy because the upstream does not send CORS headers.
