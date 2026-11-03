@@ -11,6 +11,7 @@ export const API_BASE_URL = {
   penalty: import.meta.env.VITE_PENALTY_API_URL ?? `${API_HOST}:18088/api`,
   role: import.meta.env.VITE_ROLE_API_URL ?? `${API_HOST}:8903/api`,
   user: import.meta.env.VITE_USER_API_URL ?? `${API_HOST}:8904/api`,
+  auth: import.meta.env.VITE_AUTH_API_URL ?? `${API_HOST}:8906/api`,
   // Served through the dev/nginx proxy because the upstream does not send CORS headers.
   stpDetails: import.meta.env.VITE_STP_DETAILS_API_URL ?? '/stp-details-api',
 } as const

@@ -1,14 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
+import { useAuth } from '../auth/AuthContext'
 import Logo from '../components/ui/Logo'
-import SettingsIcon from '../components/ui/SettingsIcon'
-import { MENU_ITEMS, REPORT_ITEMS, type MenuItem } from '../routes'
+import { MENU_ITEMS, REPORT_ITEMS, SETTINGS_ITEM, canAccess, type MenuItem } from '../routes'
 
-const NAV_ITEMS: MenuItem[] = [
-  ...MENU_ITEMS,
-  ...REPORT_ITEMS,
-  { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/settings' },
-]
+const NAV_ITEMS: MenuItem[] = [...MENU_ITEMS, ...REPORT_ITEMS, SETTINGS_ITEM]
 
 const isItemActive = (item: MenuItem, pathname: string) =>
   item.match ? pathname.startsWith(item.match) : pathname === item.path || pathname.startsWith(`${item.path}/`)
@@ -84,7 +80,9 @@ export default function Sidebar({
   variant?: 'default' | 'dashboard'
 }) {
   const { pathname } = useLocation()
+  const { can } = useAuth()
   const dashboard = variant === 'dashboard'
+  const visibleItems = NAV_ITEMS.filter((item) => canAccess(item.access, can))
 
   if (dashboard) {
     return (
@@ -116,7 +114,7 @@ export default function Sidebar({
           }`}
         >
           <div className="flex flex-col gap-[12px]">
-            {NAV_ITEMS.map((item) => (
+            {visibleItems.map((item) => (
               <NavItem key={item.id} item={item} pathname={pathname} collapsed={collapsed} dashboard />
             ))}
           </div>
@@ -164,7 +162,7 @@ export default function Sidebar({
 
       <nav className="scroll-thin relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-4 pt-4">
         <div className="space-y-[3px]">
-          {NAV_ITEMS.map((item) => (
+          {visibleItems.map((item) => (
             <NavItem key={item.id} item={item} pathname={pathname} collapsed={collapsed} dashboard={false} />
           ))}
         </div>

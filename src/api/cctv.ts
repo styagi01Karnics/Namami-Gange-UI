@@ -1,3 +1,4 @@
+import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS, STREAM_BASE_URL } from '../config/api'
 
 const CCTV_API = API_BASE_URL.cctv
@@ -435,7 +436,7 @@ function formatStpName(detail: StpDetail) {
 
 async function fetchStpDetails(): Promise<StpDetail[]> {
   try {
-    const response = await fetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
+    const response = await authFetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
     if (!response.ok) return []
 
     const data = await parseJsonSafely<StpDetail[]>(response)
@@ -482,7 +483,7 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
     const query = params.toString()
     const camerasUrl = `${CCTV_API}${ENDPOINTS.cctv.cameras}`
     const url = query ? `${camerasUrl}?${query}` : camerasUrl
-    const response = await fetch(url)
+    const response = await authFetch(url)
     if (!response.ok) {
       if (plantCode || stpId) {
         return getCamerasForStp(stpId) ?? getCamerasForStp(plantCode) ?? []
@@ -523,7 +524,7 @@ export async function fetchCctvCameras(plantCode?: string, stpId?: string) {
 
 export async function startCameraStream(cameraId: number) {
   try {
-    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamStart(cameraId)}`, { method: 'POST' })
+    const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.streamStart(cameraId)}`, { method: 'POST' })
     const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
     if (!response.ok || !data?.success) {
@@ -536,7 +537,7 @@ export async function startCameraStream(cameraId: number) {
 
 export async function stopCameraStream(cameraId: number) {
   try {
-    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamStop(cameraId)}`, { method: 'POST' })
+    const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.streamStop(cameraId)}`, { method: 'POST' })
     const data = await parseJsonSafely<{ success?: boolean; message?: string }>(response)
 
     if (!response.ok || !data?.success) {
@@ -607,7 +608,7 @@ export async function fetchRecordings(input: {
 
   const query = params.toString()
   try {
-    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.recordings}${query ? `?${query}` : ''}`)
+    const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.recordings}${query ? `?${query}` : ''}`)
     if (!response.ok) {
       const payload = await parseJsonSafely<{ message?: string }>(response)
       throw new Error(payload?.message ?? 'Unable to connect to CCTV server')
@@ -691,7 +692,7 @@ export type RecordingTarget = {
 export type ReadyRecording = PlaybackClip & { period: RecordingPeriod }
 
 export async function startRecordingPlayback(input: PlaybackStartInput) {
-  const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.playbackStart}`, {
+  const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.playbackStart}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -749,7 +750,7 @@ export async function loadPeriodRecording(input: RecordingTarget) {
     if (input.plantCode) params.set('plantCode', input.plantCode)
     params.set('channel', String(input.channel))
 
-    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.feed}?${params.toString()}`)
+    const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.feed}?${params.toString()}`)
     const feed = await parseJsonSafely<any>(response)
     if (
       response.ok &&
@@ -829,7 +830,7 @@ export async function probeLiveStream(url?: string | null) {
   if (!url) return false
 
   try {
-    const response = await fetch(`${CCTV_API}${ENDPOINTS.cctv.streamHealth}?url=${encodeURIComponent(url)}`)
+    const response = await authFetch(`${CCTV_API}${ENDPOINTS.cctv.streamHealth}?url=${encodeURIComponent(url)}`)
     if (!response.ok) return false
     const payload = await parseJsonSafely<{ live?: boolean }>(response)
     return Boolean(payload?.live)

@@ -1,4 +1,5 @@
 import { stpDetails, stpOptions } from '../data/mockData'
+import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
 const DASHBOARD_API = API_BASE_URL.dashboard
@@ -162,7 +163,7 @@ export function toPlantNameByCode(plants: DashboardPlant[]): Record<string, stri
 
 export async function fetchDashboardPlants(): Promise<DashboardPlant[]> {
   try {
-    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.plants}`)
+    const response = await authFetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.plants}`)
     if (!response.ok) throw new Error('Failed to load plants')
 
     const payload = await response.json()
@@ -206,7 +207,7 @@ export type StpActiveStatusData = {
 
 export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusData | null> {
   try {
-    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.activeStatus}?hours=${hours}`)
+    const response = await authFetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.activeStatus}?hours=${hours}`)
     if (!response.ok) throw new Error('Failed to load active status')
     const payload = await response.json()
     return payload?.data ?? null
@@ -217,7 +218,7 @@ export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusDa
 
 export async function fetchLatestViolations(): Promise<any[] | null> {
   try {
-    const response = await fetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.latestViolations}`)
+    const response = await authFetch(`${DASHBOARD_API}${ENDPOINTS.dashboard.latestViolations}`)
     if (!response.ok) throw new Error('Failed to load latest violations')
     const payload = await response.json()
     return Array.isArray(payload?.data) ? payload.data : null

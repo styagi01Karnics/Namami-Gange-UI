@@ -1,18 +1,40 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  AUTH_API_URL,
+  LAST_LOGIN_KEY,
+  SESSION_EXPIRED_EVENT,
+  clearSession,
+  getSession,
+  saveSession,
+  type AuthSession,
+} from './session'
+
+type LoginEnvelope = {
+  success?: boolean
+  message?: string
+  data?: {
+    token: string
+    expiresInSeconds: number
+    user: { userCode: string; name: string; email: string }
+    role: string
+    roleId: string
+    permissions: Record<string, string[]>
+  }
+}
 
 type AuthContextValue = {
   isAuthenticated: boolean
   /** Formatted last-login stamp for the current user, e.g. `08/15/2026, 3.56.42 PM`. */
   lastLoginAt: string | null
-  login: (username: string, password: string, remember?: boolean) => boolean
+  role: string | null
+  permissions: Record<string, string[]>
+  /** `can('stp')` = any grant in module; `can('stp', 'Manpower')` = that exact key. */
+  can: (moduleId: string, key?: string) => boolean
+  login: (email: string, password: string, remember?: boolean) => Promise<void>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-const STORAGE_KEY = 'ng-auth'
-const LAST_LOGIN_KEY = 'ng-last-login'
-
-const VALID = { username: 'admin', password: 'Admin@01' }
 
 function formatLoginStamp(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -26,64 +48,97 @@ function formatLoginStamp(date: Date) {
   return `${month}/${day}/${year}, ${hours}.${minutes}.${seconds} ${meridiem}`
 }
 
-function authStore() {
-  if (localStorage.getItem(STORAGE_KEY) === '1') return localStorage
-  if (sessionStorage.getItem(STORAGE_KEY) === '1') return sessionStorage
-  return null
-}
-
-function readStoredAuth() {
-  return Boolean(authStore())
-}
-
 function readLastLogin() {
   return localStorage.getItem(LAST_LOGIN_KEY) || sessionStorage.getItem(LAST_LOGIN_KEY)
 }
 
-function clearAuthStorage() {
-  sessionStorage.removeItem(STORAGE_KEY)
-  localStorage.removeItem(STORAGE_KEY)
-  sessionStorage.removeItem(LAST_LOGIN_KEY)
-  localStorage.removeItem(LAST_LOGIN_KEY)
-}
-
-function resolveInitialLastLogin() {
-  const existing = readLastLogin()
-  if (existing) return existing
-  if (!readStoredAuth()) return null
-
-  // Persist a stamp for an already-open session so Last seen is not blank after deploy.
-  const stamp = formatLoginStamp(new Date())
-  authStore()?.setItem(LAST_LOGIN_KEY, stamp)
-  return stamp
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(readStoredAuth)
-  const [lastLoginAt, setLastLoginAt] = useState<string | null>(resolveInitialLastLogin)
+  const [session, setSession] = useState<AuthSession | null>(getSession)
+  const [lastLoginAt, setLastLoginAt] = useState<string | null>(readLastLogin)
 
-  const login = (username: string, password: string, remember = false) => {
-    if (username !== VALID.username || password !== VALID.password) return false
+  const clearLocal = useCallback(() => {
+    clearSession()
+    setSession(null)
+    setLastLoginAt(null)
+  }, [])
 
-    clearAuthStorage()
+  useEffect(() => {
+    const onExpired = () => clearLocal()
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired)
+  }, [clearLocal])
+
+  const login = useCallback(async (email: string, password: string, remember = false) => {
+    const response = await fetch(`${AUTH_API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    let payload: LoginEnvelope | null = null
+    try {
+      payload = await response.json()
+    } catch {
+      // Non-JSON error body; handled below
+    }
+
+    if (!response.ok || !payload?.data?.token) {
+      throw new Error(payload?.message || 'Invalid email or password.')
+    }
+
+    const data = payload.data
+    const next: AuthSession = {
+      token: data.token,
+      expiresAt: Date.now() + data.expiresInSeconds * 1000,
+      userCode: data.user.userCode,
+      name: data.user.name,
+      email: data.user.email,
+      role: data.role,
+      roleId: data.roleId,
+      permissions: data.permissions ?? {},
+    }
+
+    clearSession()
+    saveSession(next, remember)
     const stamp = formatLoginStamp(new Date())
     const store = remember ? localStorage : sessionStorage
-    store.setItem(STORAGE_KEY, '1')
     store.setItem(LAST_LOGIN_KEY, stamp)
     setLastLoginAt(stamp)
-    setIsAuthenticated(true)
-    return true
-  }
+    setSession(next)
+  }, [])
 
-  const logout = () => {
-    clearAuthStorage()
-    setLastLoginAt(null)
-    setIsAuthenticated(false)
-  }
+  const logout = useCallback(() => {
+    const token = session?.token
+    if (token) {
+      // Best-effort server revoke; local state is cleared regardless.
+      fetch(`${AUTH_API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => undefined)
+    }
+    clearLocal()
+  }, [session, clearLocal])
 
-  const value = useMemo(
-    () => ({ isAuthenticated, lastLoginAt, login, logout }),
-    [isAuthenticated, lastLoginAt],
+  const can = useCallback(
+    (moduleId: string, key?: string) => {
+      const keys = session?.permissions?.[moduleId] ?? []
+      if (!key) return keys.length > 0
+      return keys.includes(key)
+    },
+    [session],
+  )
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      isAuthenticated: Boolean(session),
+      lastLoginAt,
+      role: session?.role ?? null,
+      permissions: session?.permissions ?? {},
+      can,
+      login,
+      logout,
+    }),
+    [session, lastLoginAt, can, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

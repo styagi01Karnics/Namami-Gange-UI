@@ -3,6 +3,7 @@
  * Microservice endpoint: /api/users
  */
 
+import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
 const USER_API_URL = API_BASE_URL.user
@@ -55,7 +56,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...(options.headers || {}),
   }
 
-  const response = await fetch(url, { ...options, headers })
+  const response = await authFetch(url, { ...options, headers })
   const text = await response.text()
 
   let payload: ApiResponseEnvelope<T> | null = null

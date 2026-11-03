@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { ChevronDown, RefreshCw } from 'lucide-react'
+import { authFetch } from '../../auth/session'
 import Avatar from '../ui/Avatar'
 import DataTable from '../ui/DataTable'
 import Select from '../ui/Select'
@@ -58,7 +59,7 @@ export default function AuditLogsTab({ onExportPdf }: { onExportPdf?: any }) {
     const loadAuditLogs = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`${API_BASE_URL.user}${ENDPOINTS.users.auditLogs}`)
+        const res = await authFetch(`${API_BASE_URL.user}${ENDPOINTS.users.auditLogs}`)
         if (res.ok) {
           const json = await res.json()
           setLogs(Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [])

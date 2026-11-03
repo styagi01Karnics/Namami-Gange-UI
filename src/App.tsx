@@ -30,7 +30,7 @@ import ManpowerStaffReport from './pages/ManpowerStaffReport'
 import TableReport from './pages/TableReport'
 import ComingSoon from './pages/ComingSoon'
 import FloatingCctvButton from './components/cctv/FloatingCctvButton'
-import { PAGE_TITLES, STP_TAB_PATHS, pageTitle, stpTabPath } from './routes'
+import { PAGE_TITLES, STP_TAB_PATHS, canAccess, firstAllowedPath, pageTitle, requiredAccessFor, stpTabPath } from './routes'
 
 const BUILT_PATHS = [
   '/dashboard',
@@ -58,8 +58,27 @@ const BUILT_PATHS = [
 ]
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, can, logout } = useAuth()
+  const { pathname } = useLocation()
   if (!isAuthenticated) return <Navigate to="/login" replace />
+
+  const required = requiredAccessFor(pathname)
+  if (required && !canAccess(required, can)) {
+    const landing = firstAllowedPath(can)
+    if (landing) return <Navigate to={landing} replace />
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 text-[15px] text-ink-soft">
+        <p>Your role does not have access to any module. Please contact an administrator.</p>
+        <button
+          type="button"
+          onClick={logout}
+          className="rounded-md border border-line px-4 py-2 text-ink hover:bg-surface-muted"
+        >
+          Logout and sign in again
+        </button>
+      </div>
+    )
+  }
   return children
 }
 

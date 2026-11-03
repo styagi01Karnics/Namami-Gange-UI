@@ -1,4 +1,5 @@
 import { stpRealtime } from '../data/mockData'
+import { authFetch } from '../auth/session'
 import { dashboardResourceUrl } from './plants'
 
 type LiveReading = Record<string, unknown>
@@ -459,7 +460,7 @@ export async function fetchStpLive(plantCode: string): Promise<LiveRealtimeData 
   if (!plantCode) return null
 
   try {
-    const response = await fetch(dashboardResourceUrl(plantCode, 'live'))
+    const response = await authFetch(dashboardResourceUrl(plantCode, 'live'))
     if (!response.ok) throw new Error('Failed to load live parameters')
 
     return mapLivePayloadToRealtime(await response.json())

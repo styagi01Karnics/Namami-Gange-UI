@@ -1,4 +1,5 @@
 import { mapRecordToReading, pickReadingTime, type LiveStreamData } from './stpLive'
+import { authFetch } from '../auth/session'
 import { dashboardResourceUrl } from './plants'
 import { streamTransactions } from '../data/mockData'
 
@@ -92,7 +93,7 @@ function uniqueByReadingTimeDesc(rows: TransactionRow[], limit = DEFAULT_LIMIT) 
 }
 
 async function fetchStreamRows(plantCode: string, side: 'inlet' | 'outlet', limit = DEFAULT_LIMIT) {
-  const response = await fetch(`${dashboardResourceUrl(plantCode, side)}?limit=${FETCH_LIMIT}`)
+  const response = await authFetch(`${dashboardResourceUrl(plantCode, side)}?limit=${FETCH_LIMIT}`)
   if (!response.ok) throw new Error(`Failed to load ${side} transactions`)
 
   const payload = await response.json()

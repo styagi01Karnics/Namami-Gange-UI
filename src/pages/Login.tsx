@@ -63,19 +63,24 @@ export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [loginRole, setLoginRole] = useState('user')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (login(username.trim(), password, remember)) {
+    setSubmitting(true)
+    try {
+      await login(email.trim(), password, remember)
       navigate('/dashboard', { replace: true })
-      return
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
-    setError('Invalid username or password.')
   }
 
   return (
@@ -153,12 +158,13 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="mt-3 space-y-3 [@media(min-height:820px)]:mt-5 [@media(min-height:820px)]:space-y-[18px]">
             <AuthField
               icon={PersonIcon}
-              value={username}
+              type="email"
+              value={email}
               onChange={(e) => {
-                setUsername(e.target.value)
+                setEmail(e.target.value)
                 setError('')
               }}
-              placeholder="Username"
+              placeholder="Email"
             />
 
             <AuthField
