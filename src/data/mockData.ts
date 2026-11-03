@@ -4073,7 +4073,7 @@ export const rolePermissionModules = [
     blurb: 'Manage STPs, Sensors and Operational Data',
     color: '#15803D',
     icon: 'building',
-    permissions: ['Manpower', 'Inventory', 'CCTV', 'Remote Calibration', 'Transaction Logs', 'Contracts', 'Compliance', 'Billing'],
+    permissions: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Violation'],
   },
   { id: 'cctv', label: 'Live Camera Feed', blurb: 'View live and recorded camera feed', color: '#B45309', icon: 'camera', permissions: [] },
   {
@@ -4090,7 +4090,7 @@ export const rolePermissionModules = [
     blurb: 'Access and export data reports',
     color: '#DC2626',
     icon: 'reports',
-    permissions: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Compliance'],
+    permissions: ['STP Parameter', 'CCTV', 'Manpower', 'Inventory', 'Violation'],
   },
   {
     id: 'team',
@@ -4117,13 +4117,13 @@ export const roleGrantedPresets = {
   'Super Admin': allModuleGrants(),
   'Content Manager': {
     dashboard: ['Dashboard'],
-    reports: ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Compliance'],
+    reports: ['STP Parameter', 'CCTV', 'Manpower', 'Inventory', 'Violation'],
     settings: ['Settings'],
   },
   Vendor: {
-    stp: ['Inventory', 'Contracts', 'Billing'],
+    stp: ['Inventory', 'Contracts', 'Violation'],
     support: ['View Tickets'],
-    reports: ['Contracts', 'Compliance'],
+    reports: ['Violation'],
   },
   'Field Volunteer': {
     dashboard: ['Dashboard'],

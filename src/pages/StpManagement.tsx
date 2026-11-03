@@ -21,6 +21,7 @@ import TransactionLogsTab from '../components/transactions/TransactionLogsTab'
 import ContractsTab from '../components/contracts/ContractsTab'
 import ComplianceTab from '../components/compliance/ComplianceTab'
 import BillingTab from '../components/billing/BillingTab'
+import { useAuth } from '../auth/AuthContext'
 import { defaultDateRange, stpDetails, stpSectionTabs } from '../data/mockData'
 import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
@@ -149,8 +150,15 @@ export default function StpManagement() {
     if (matched) setPlantCode(matched)
   }, [plantParam, plantOptions])
 
+  // Only show section tabs the user's role grants under the STP module.
+  const { can } = useAuth()
+  const visibleStpTabs = useMemo(
+    () => stpSectionTabs.filter((label) => can('stp', label)),
+    [can],
+  )
+
   // The active tab lives in the URL so the sidebar can deep link into it.
-  const tab = stpTabFromSlug(slug) ?? stpSectionTabs[0]
+  const tab = stpTabFromSlug(slug) ?? visibleStpTabs[0] ?? stpSectionTabs[0]
   const setTab = (next) => {
     const nextPath = stpTabPath(next)
     if (plantCode) {
@@ -289,7 +297,7 @@ export default function StpManagement() {
           />
         </AccordionCard>
 
-        <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />
+        <SectionTabs tabs={visibleStpTabs} active={tab} onChange={setTab} className="mt-[2px]" />
 
         <Card
           id={tab === 'Violation' ? 'stp-section-compliance' : undefined}

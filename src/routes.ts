@@ -57,7 +57,7 @@ export const ACCESS: Record<string, Access> = {
 }
 
 const PERMISSION_MODULES = ['dashboard', 'stp', 'cctv', 'support', 'reports', 'team', 'settings']
-const STP_KEYS = ['Manpower', 'Inventory', 'CCTV', 'Remote Calibration', 'Transaction Logs', 'Contracts', 'Compliance', 'Billing']
+const STP_KEYS = ['Manpower', 'Inventory', 'CCTV', 'Contracts', 'Violation']
 
 /** Sidebar structure + route paths. Add a section here and it appears in the nav. */
 export const MENU_ITEMS: MenuItem[] = [
@@ -128,7 +128,7 @@ const TOP_LEVEL_ACCESS: Record<string, Access> = {
   '/team-management': ACCESS.team,
   '/settings': ACCESS.settings,
   '/contracts': { module: 'stp', key: 'Contracts' },
-  '/compliance': { module: 'stp', key: 'Compliance' },
+  '/compliance': { module: 'stp', key: 'Violation' },
   '/manpower': { module: 'stp', key: 'Manpower' },
   '/inventory': { module: 'stp', key: 'Inventory' },
   '/remote-calibration': { module: 'stp', key: 'Remote Calibration' },
@@ -136,11 +136,11 @@ const TOP_LEVEL_ACCESS: Record<string, Access> = {
 }
 
 const REPORT_PATH_ACCESS: Record<string, Access> = {
-  '/reports/parameters': ACCESS.reports,
+  '/reports/parameters': { module: 'reports', key: 'STP Parameter' },
   '/reports/cctv-monitoring': { module: 'reports', key: 'CCTV' },
   '/reports/manpower': { module: 'reports', key: 'Manpower' },
   '/reports/inventory': { module: 'reports', key: 'Inventory' },
-  '/reports/compliance': { module: 'reports', key: 'Compliance' },
+  '/reports/compliance': { module: 'reports', key: 'Violation' },
 }
 
 /** Landing order used after login when the default page is not allowed. */
