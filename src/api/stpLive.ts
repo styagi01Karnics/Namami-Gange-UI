@@ -304,7 +304,7 @@ function buildStream(
           label: 'NH₄-N',
           icon: 'nh4n',
           value: `${formatNumber(nh4Val)} mg/L`,
-          tone: isBreach(nh4Val, 0, 10) ? 'breach' : 'ok',
+          tone: side === 'inlet' ? 'ok' : isBreach(nh4Val, 0, 10) ? 'breach' : 'ok',
           note: 'Ideal: 0 – 10',
         }
       : {
@@ -312,14 +312,14 @@ function buildStream(
           label: 'NO₃-N',
           icon: 'no3n',
           value: `${formatNumber(no3Val)} mg/L`,
-          tone: isBreach(no3Val, 0, 10) ? 'breach' : 'ok',
+          tone: side === 'inlet' ? 'ok' : isBreach(no3Val, 0, 10) ? 'breach' : 'ok',
           note: 'Ideal: 0 – 10',
         }
 
   return {
     at: timestamp,
     flow: {
-      value: formatNumber(flow),
+      value: flow == null ? '0' : formatNumber(flow),
       unit: 'm³/hr',
     },
     params: [
@@ -333,11 +333,13 @@ function buildStream(
         }
 
         const tone: LiveParam['tone'] =
-          value == null
-            ? 'ink'
-            : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined)
-              ? 'breach'
-              : 'ok'
+          side === 'inlet'
+            ? 'ok'
+            : value == null
+              ? 'ink'
+              : isBreach(value, 'min' in def ? def.min : undefined, 'max' in def ? def.max : undefined)
+                ? 'breach'
+                : 'ok'
 
         return {
           key: def.key,

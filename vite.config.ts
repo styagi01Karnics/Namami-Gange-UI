@@ -78,6 +78,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/attendance-api/, '/api'),
         },
+        '/stp-monitoring-api': {
+          target: env.VITE_STP_MONITORING_API_BASE_URL || 'http://45.195.229.15:8909',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/stp-monitoring-api/, '/api'),
+        },
       },
     },
   }

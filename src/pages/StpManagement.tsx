@@ -281,7 +281,12 @@ export default function StpManagement() {
           badge={<LivePill />}
           defaultOpen
         >
-          <RealtimeParametersPanel plantCode={selectedPlant?.plantCode} refreshTick={refreshTick} />
+          <RealtimeParametersPanel
+            plantCode={selectedPlant?.plantCode}
+            stpId={selectedPlant?.stpId}
+            plantName={selectedPlant?.label}
+            refreshTick={refreshTick}
+          />
         </AccordionCard>
 
         <SectionTabs tabs={stpSectionTabs} active={tab} onChange={setTab} className="mt-[2px]" />

@@ -14,11 +14,17 @@ export const API_BASE_URL = {
   auth: import.meta.env.VITE_AUTH_API_URL ?? '/auth-api',
   // Served through the dev/nginx proxy because the upstream does not send CORS headers.
   stpDetails: import.meta.env.VITE_STP_DETAILS_API_URL ?? '/stp-details-api',
+  // STP monitoring data service (8909) exposing snapshots per site enum
+  stpMonitoring: import.meta.env.VITE_STP_MONITORING_API_URL ?? '/stp-monitoring-api',
 } as const
 
 export const STREAM_BASE_URL = import.meta.env.VITE_STREAM_BASE ?? 'https://stream.karnics.com'
 
 export const ENDPOINTS = {
+  stpMonitoring: {
+    latest: (site: string) => `/stp/${encodeURIComponent(site)}/latest`,
+    readings: (site: string) => `/stp/${encodeURIComponent(site)}/readings`,
+  },
   stpDetails: {
     list: '/stp-details',
   },
