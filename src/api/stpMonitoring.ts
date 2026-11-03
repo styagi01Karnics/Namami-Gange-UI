@@ -539,6 +539,7 @@ export interface FetchStpReadingsParams {
 
 export interface StpParameterReportRow {
   id: string
+  sn?: number
   stream: 'Influent' | 'Effluent'
   date: string
   time: string
@@ -619,6 +620,7 @@ export function mapStpReadingToParameterReportRow(
 
   return {
     id: `${reading.id ?? index}-${side}`,
+    sn: index + 1,
     stream: isInlet ? 'Influent' : 'Effluent',
     date,
     time,
@@ -683,6 +685,22 @@ function normalizePagedReadingsResponse(
   }
 }
 
+/** Fetches pages of readings for the site and range; null if any page fails. */
+export async function fetchAllStpReadings(
+  params: Omit<FetchStpReadingsParams, 'page' | 'size'>,
+  pageSize = 200,
+  maxPages = 3,
+): Promise<StpReadingResponse[] | null> {
+  const all: StpReadingResponse[] = []
+  for (let page = 0; page < maxPages; page += 1) {
+    const response = await fetchStpReadings({ ...params, page, size: pageSize })
+    if (!response) return null
+    all.push(...response.content)
+    if (response.content.length === 0 || page + 1 >= response.page.totalPages) break
+  }
+  return all
+}
+
 /**
  * Fetch paginated readings for a specific STP site from the 8909 API endpoint.
  * Example: /api/stp/BAZPUR/readings?from=2026-11-01T00:00:00&to=2026-11-03T23:59:59&page=0&size=50
@@ -731,4 +749,3 @@ export async function fetchStpReadings({
 
   return null
 }
-

@@ -10,8 +10,8 @@ function toExportColumns(columns) {
   return columns.filter((c) => !SKIP_KEYS.has(c.key)).map(({ key, label, align }) => ({ key, label, align }))
 }
 
-function formatExportValue(row, col, getValue) {
-  const custom = getValue?.(row, col)
+function formatExportValue(row, col, getValue, index?: number) {
+  const custom = getValue?.(row, col, index)
   if (custom !== undefined) return custom == null || custom === '' ? '—' : custom
 
   const value = row[col.key]
@@ -40,9 +40,9 @@ export function useTableExport({
   title: string
   fileName: string | (() => string)
   columns: { key: string; label: string; align?: string }[]
-  getValue?: (row: any, col: { key: string; label: string; align?: string }) => unknown
+  getValue?: (row: any, col: { key: string; label: string; align?: string }, index?: number) => unknown
   /** Optional rich cell renderer for PDF (falls back to getValue / plain text). */
-  renderPdfCell?: (row: any, col: { key: string; label: string; align?: string }) => unknown
+  renderPdfCell?: (row: any, col: { key: string; label: string; align?: string }, index?: number) => unknown
   rangeLabel?: string
   /** Override letterhead badge from the rows being exported. */
   resolveBadge?: (rows: any[]) => { badge: string | null; badgeTone?: string } | null | undefined
@@ -61,11 +61,11 @@ export function useTableExport({
   } | null>(null)
   const cols = useMemo(() => toExportColumns(columns), [columns])
 
-  const valueOf = (row, col) => formatExportValue(row, col, getValue)
-  const pdfCell = (row, col) => {
-    const rich = renderPdfCell?.(row, col)
+  const valueOf = (row, col, index?: number) => formatExportValue(row, col, getValue, index)
+  const pdfCell = (row, col, index?: number) => {
+    const rich = renderPdfCell?.(row, col, index)
     if (rich !== undefined) return rich
-    return valueOf(row, col)
+    return valueOf(row, col, index)
   }
 
   const resolveFileName = () => (typeof fileName === 'function' ? fileName() : fileName)

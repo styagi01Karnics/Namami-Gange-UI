@@ -3,7 +3,20 @@ import { useSearchParams } from 'react-router-dom'
 import ExportButton from '../components/ui/ExportButton'
 import { PrintDocumentBody } from '../components/export/PrintDocument'
 import { useTableExport } from '../components/export/useTableExport'
-import { parseTableReportPayload, type TableReportColumn, type TableReportRow, type TableReportTone } from '../lib/tableReportQr'
+import { stpParameterReportColumns } from '../data/mockData'
+import {
+  fetchAllStpReadings,
+  mapStpReadingToParameterReportRow,
+  type StpParameterReportRow,
+} from '../api/stpMonitoring'
+import {
+  parseTableReportLink,
+  parseTableReportPayload,
+  type TableReportColumn,
+  type TableReportLink,
+  type TableReportRow,
+  type TableReportTone,
+} from '../lib/tableReportQr'
 
 const TONE_CLASS: Record<TableReportTone, string> = {
   red: 'font-bold text-[#DC2626]',
@@ -11,27 +24,140 @@ const TONE_CLASS: Record<TableReportTone, string> = {
   amber: 'font-bold text-[#D97706]',
 }
 
+const PARAM_KEYS = new Set(['bod', 'cod', 'tss', 'ph', 'temp', 'nh4n'])
+
 type ReportState =
   | { status: 'loading' }
-  | { status: 'invalid' }
-  | { status: 'ready'; title: string; meta: { stpName: string | null; rangeLabel: string; address: string | null; badge: string | null; badgeTone: string }; columns: TableReportColumn[]; rows: TableReportRow[] }
+  | { status: 'invalid'; message?: string }
+  | {
+      status: 'ready'
+      title: string
+      meta: {
+        stpName: string | null
+        rangeLabel: string
+        address: string | null
+        badge: string | null
+        badgeTone: string
+      }
+      columns: TableReportColumn[]
+      rows: TableReportRow[]
+    }
+
+async function loadLinkedParameterReport(link: TableReportLink): Promise<Extract<ReportState, { status: 'ready' }> | null> {
+  const readings = await fetchAllStpReadings({
+    site: link.site,
+    from: link.from,
+    to: link.to,
+  })
+  if (!readings) return null
+
+  const streamFilter = link.stream ?? 'Effluent'
+  const mappedRows: StpParameterReportRow[] =
+    streamFilter === 'Influent'
+      ? readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'inlet', idx))
+      : streamFilter === 'Both'
+        ? readings.flatMap((item, idx) => [
+            mapStpReadingToParameterReportRow(item, 'inlet', idx),
+            mapStpReadingToParameterReportRow(item, 'outlet', idx),
+          ])
+        : readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'outlet', idx))
+
+  const baseCols =
+    streamFilter === 'Both'
+      ? [
+          stpParameterReportColumns[0],
+          stpParameterReportColumns[1],
+          stpParameterReportColumns[2],
+          { key: 'stream', label: 'Stream', width: '10%' },
+          ...stpParameterReportColumns.slice(3),
+        ]
+      : stpParameterReportColumns
+
+  const columns: TableReportColumn[] = baseCols.map((c) => ({
+    key: c.key,
+    label: c.label,
+    align: (c as { align?: string }).align,
+  }))
+
+  const rows: TableReportRow[] = mappedRows.map((r, index) => {
+    const cells: Record<string, string> = {}
+    const tones: Record<string, TableReportTone> = {}
+
+    for (const col of columns) {
+      if (col.key === 'sn') {
+        cells[col.key] = String(index + 1)
+      } else {
+        const val = (r as unknown as Record<string, unknown>)[col.key]
+        cells[col.key] = val != null ? String(val) : '—'
+      }
+
+      if (PARAM_KEYS.has(col.key) && r.breaches?.[col.key]) {
+        tones[col.key] = 'red'
+      }
+    }
+
+    return {
+      id: `qr-${index + 1}`,
+      cells,
+      tones,
+    }
+  })
+
+  return {
+    status: 'ready',
+    title: link.title,
+    meta: link.meta,
+    columns,
+    rows,
+  }
+}
 
 /** Public page a table QR opens: the same table as the PDF, with PDF/CSV download. */
 export default function TableReport() {
   const [searchParams] = useSearchParams()
-  const encoded = searchParams.get('d')
+  const paramString = searchParams.toString()
   const [state, setState] = useState<ReportState>({ status: 'loading' })
 
   useEffect(() => {
     let cancelled = false
-    parseTableReportPayload(encoded).then((data) => {
-      if (cancelled) return
-      setState(data ? { status: 'ready', ...data } : { status: 'invalid' })
-    })
+    const params = new URLSearchParams(paramString)
+    const link = parseTableReportLink(params)
+    const encoded = params.get('d')
+
+    const run = async () => {
+      if (link) {
+        setState({ status: 'loading' })
+        const loaded = await loadLinkedParameterReport(link)
+        if (cancelled) return
+        if (loaded) {
+          setState(loaded)
+        } else {
+          setState({
+            status: 'invalid',
+            message: 'Unable to fetch STP parameter records from the API. Please try again later.',
+          })
+        }
+        return
+      }
+
+      if (encoded) {
+        const data = await parseTableReportPayload(encoded)
+        if (!cancelled) {
+          setState(data ? { status: 'ready', ...data } : { status: 'invalid' })
+        }
+        return
+      }
+
+      if (!cancelled) {
+        setState({ status: 'invalid' })
+      }
+    }
+
+    run()
     return () => {
       cancelled = true
     }
-  }, [encoded])
+  }, [paramString])
 
   return (
     <div className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-[#EEF8FC] p-[16px] sm:p-[32px]">
@@ -45,7 +171,7 @@ export default function TableReport() {
 
         {state.status === 'invalid' && (
           <div className="p-[24px] text-[14px] text-[#646464]">
-            This report link is invalid or incomplete. Please scan the QR code again.
+            {state.message || 'This report link is invalid or incomplete. Please scan the QR code again.'}
           </div>
         )}
 

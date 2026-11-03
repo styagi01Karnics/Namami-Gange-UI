@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useReportFilters } from './ReportShell'
 import { useTableExport } from '../export/useTableExport'
 import { downloadCsv } from '../../lib/csv'
@@ -7,7 +7,12 @@ import DateRangeField from '../ui/DateRangeField'
 import Ico from '../ui/Ico'
 import ReportQrModal from '../export/ReportQrModal'
 import { useExportMeta } from '../export/exportMeta'
-import { buildTableReportUrl, type TableReportTone } from '../../lib/tableReportQr'
+import {
+  buildTableReportLinkUrl,
+  buildTableReportUrl,
+  type TableReportLink,
+  type TableReportTone,
+} from '../../lib/tableReportQr'
 
 type ReportDownloadScreenProps = {
   moduleKey: 'parameters' | 'cctv' | 'manpower' | 'inventory' | 'contracts' | 'violation'
@@ -23,8 +28,19 @@ type ReportDownloadScreenProps = {
   withTimeRange?: boolean
   /** Shows a QR button that opens this table (as in the PDF) on a public page. */
   qrEnabled?: boolean
+  /** Optional API link parameters so the QR page can fetch records directly from the backend API. */
+  qrReportLink?: Omit<TableReportLink, 'title' | 'meta'>
   /** Colours cells the way renderCell does (red/green/amber), so the QR page matches the PDF. */
   cellTone?: (row: any, col: any) => TableReportTone | null
+  /**
+   * When set, QR / View / Email / Download first call this to fetch fresh records from the API
+   * (using the current filters). Return null when the request fails.
+   */
+  loadRows?: () => Promise<any[] | null>
+  /** True while the page's own data request is in flight. */
+  loading?: boolean
+  /** Error from the page's own data request. */
+  error?: string | null
   categoryFilter?: {
     label: string
     value: string
@@ -46,7 +62,11 @@ export default function ReportDownloadScreen({
   categoryFilter,
   withTimeRange = false,
   qrEnabled = false,
+  qrReportLink,
   cellTone,
+  loadRows,
+  loading = false,
+  error = null,
 }: ReportDownloadScreenProps) {
   const { stpId, setStpId, stpOptions, plantLabel, range, setRange } = useReportFilters()
   const [format, setFormat] = useState<'pdf' | 'excel'>('pdf')
@@ -56,13 +76,32 @@ export default function ReportDownloadScreen({
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null)
   const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [fetching, setFetching] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [fetchedRows, setFetchedRows] = useState<any[] | null>(null)
+
+  const categoryValue = categoryFilter?.value
+  useEffect(() => {
+    setFetchedRows(null)
+    setActionError(null)
+  }, [stpId, range, categoryValue])
+
+  const displayRows = fetchedRows ?? rows
+  const activeRowsRef = useRef<any[]>(displayRows)
+  useEffect(() => {
+    activeRowsRef.current = displayRows
+  }, [displayRows])
 
   const effectiveTitle = exportTitle || `${title} - ${plantLabel || 'STP'}`
-  const effectiveFileName = exportFileName || `${title.toLowerCase().replace(/\s+/g, '-')}-${plantLabel?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'stp'}`
+  const effectiveFileName =
+    exportFileName ||
+    `${title.toLowerCase().replace(/\s+/g, '-')}-${plantLabel?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'stp'}`
 
-  const resolveValue = (row: any, col: any) => {
+  const resolveValue = (row: any, col: any, index?: number) => {
     if (col.key === 'sn') {
-      const idx = rows.indexOf(row)
+      if (typeof index === 'number' && index >= 0) return index + 1
+      if (typeof row?.sn === 'number') return row.sn
+      const idx = activeRowsRef.current.indexOf(row)
       return idx >= 0 ? idx + 1 : 1
     }
     if (getValue) {
@@ -80,7 +119,11 @@ export default function ReportDownloadScreen({
       const custom = renderCell(row, col, index)
       if (custom !== undefined) return custom
     }
-    return resolveValue(row, col) ?? '—'
+    if (getValue) {
+      const custom = getValue(row, col)
+      if (custom !== undefined) return custom
+    }
+    return row[col.key] ?? '—'
   }
 
   const exportMeta = useExportMeta()
@@ -90,49 +133,109 @@ export default function ReportDownloadScreen({
     fileName: effectiveFileName,
     columns,
     getValue: resolveValue,
-    renderPdfCell: (row, col) => {
-      const idx = rows.indexOf(row)
+    renderPdfCell: (row, col, index) => {
+      const idx = typeof index === 'number' ? index : activeRowsRef.current.indexOf(row)
       return resolveCell(row, col, idx >= 0 ? idx : 0)
     },
     rangeLabel: range,
   })
 
-  const handleDownload = () => {
-    if (format === 'pdf') {
-      exportPdf(rows)
-      triggerDownloadNotice('PDF report generated. Please check print/download dialog.')
-    } else {
-      downloadCsv(effectiveFileName, columns, rows, resolveValue)
-      triggerDownloadNotice('Excel spreadsheet (.csv) downloaded successfully.')
+  /** Runs an action on records freshly fetched from the API (or the current rows when the page has no loader). */
+  const withFreshRows = async (action: (freshRows: any[]) => void | Promise<void>) => {
+    setActionError(null)
+    if (!loadRows) {
+      activeRowsRef.current = displayRows
+      await action(displayRows)
+      return
+    }
+
+    setFetching(true)
+    try {
+      const fresh = await loadRows()
+      if (!fresh) {
+        setActionError('Unable to fetch records from the API. Please try again later.')
+        return
+      }
+      if (fresh.length === 0) {
+        setFetchedRows([])
+        setActionError('No records found for the selected STP and date range.')
+        return
+      }
+      activeRowsRef.current = fresh
+      setFetchedRows(fresh)
+      await action(fresh)
+    } finally {
+      setFetching(false)
     }
   }
 
-  const handleQr = async () => {
-    const payloadColumns = columns.map((col) => ({ key: col.key, label: col.label, align: col.align }))
-    const payloadRows = rows.map((row, index) => {
-      const cells: Record<string, string> = {}
-      columns.forEach((col) => {
-        cells[col.key] = col.key === 'sn' ? String(index + 1) : String(resolveValue(row, col) ?? '—')
-      })
-      const tones: Record<string, TableReportTone> = {}
-      columns.forEach((col) => {
-        const tone = cellTone?.(row, col)
-        if (tone) tones[col.key] = tone
-      })
-      return { cells, tones }
+  const handleDownload = () =>
+    withFreshRows((freshRows) => {
+      if (format === 'pdf') {
+        exportPdf(freshRows)
+        triggerDownloadNotice(
+          `PDF report generated with ${freshRows.length} records. Please check print/download dialog.`,
+        )
+      } else {
+        downloadCsv(effectiveFileName, columns, freshRows, (row, col) =>
+          resolveValue(row, col, freshRows.indexOf(row)),
+        )
+        triggerDownloadNotice(
+          `Excel spreadsheet (.csv) with ${freshRows.length} records downloaded successfully.`,
+        )
+      }
     })
-    const url = await buildTableReportUrl({
-      title: effectiveTitle,
-      meta: { stpName: exportMeta.stpName, rangeLabel: exportMeta.rangeLabel, address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
-      columns: payloadColumns,
-      rows: payloadRows,
+
+  const handleView = () => withFreshRows(() => setShowPreview(true))
+
+  const handleEmail = () => withFreshRows(() => setShowEmailModal(true))
+
+  const handleQr = () =>
+    withFreshRows(async (freshRows) => {
+      const meta = {
+        stpName: exportMeta.stpName,
+        rangeLabel: exportMeta.rangeLabel,
+        address: exportMeta.address,
+        badge: exportMeta.badge,
+        badgeTone: exportMeta.badgeTone,
+      }
+
+      if (qrReportLink) {
+        const linkUrl = buildTableReportLinkUrl({
+          ...qrReportLink,
+          title: effectiveTitle,
+          meta,
+        })
+        setQrUrl(linkUrl)
+        return
+      }
+
+      const payloadColumns = columns.map((col) => ({ key: col.key, label: col.label, align: col.align }))
+      const payloadRows = freshRows.map((row, index) => {
+        const cells: Record<string, string> = {}
+        columns.forEach((col) => {
+          cells[col.key] =
+            col.key === 'sn' ? String(index + 1) : String(resolveValue(row, col, index) ?? '—')
+        })
+        const tones: Record<string, TableReportTone> = {}
+        columns.forEach((col) => {
+          const tone = cellTone?.(row, col)
+          if (tone) tones[col.key] = tone
+        })
+        return { cells, tones }
+      })
+      const url = await buildTableReportUrl({
+        title: effectiveTitle,
+        meta,
+        columns: payloadColumns,
+        rows: payloadRows,
+      })
+      if (url) {
+        setQrUrl(url)
+      } else {
+        triggerDownloadNotice('This table is too large for a QR code. Please use Download instead.')
+      }
     })
-    if (url) {
-      setQrUrl(url)
-    } else {
-      triggerDownloadNotice('This table is too large for a QR code. Please use Download instead.')
-    }
-  }
 
   const triggerDownloadNotice = (msg: string) => {
     setDownloadNotice(msg)
@@ -183,10 +286,24 @@ export default function ReportDownloadScreen({
           </div>
           <div className="flex items-center gap-[10px]">
             <span className="inline-flex items-center rounded-full bg-[#EBF5FF] px-[12px] py-[5px] text-[12.5px] font-semibold text-[#0768D2]">
-              {rows.length} Records Found
+              {loading || fetching ? 'Fetching records…' : `${displayRows.length} Records Found`}
             </span>
           </div>
         </div>
+
+        {(actionError || error) && (
+          <div
+            role="alert"
+            className="mt-[16px] flex items-center justify-between rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-[16px] py-[10px] text-[13.5px] font-medium text-[#B91C1C]"
+          >
+            <span>{actionError || error}</span>
+            {actionError && (
+              <button type="button" onClick={() => setActionError(null)} className="hover:text-[#7F1D1D]">
+                ✕
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Notice Banner */}
         {downloadNotice && (
@@ -208,7 +325,11 @@ export default function ReportDownloadScreen({
         )}
 
         {/* Scope Dropdowns Row: Target STP, Category Filter (optional), Date Range, Selected Format */}
-        <div className={`my-[24px] grid gap-[16px] ${categoryFilter ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
+        <div
+          className={`my-[24px] grid gap-[16px] ${
+            categoryFilter ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'
+          }`}
+        >
           {/* Box 1: Target STP Dropdown */}
           <div className="flex flex-col justify-between rounded-[12px] border border-[#E5E7EB] bg-[#F9FAFB] p-[16px]">
             <span className="text-[11.5px] font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -283,9 +404,10 @@ export default function ReportDownloadScreen({
               <button
                 type="button"
                 onClick={handleQr}
+                disabled={fetching}
                 aria-label="QR Code"
                 title="QR Code"
-                className="flex items-center justify-center rounded-[10px] border border-[#CBD5E1] bg-white p-[10px] text-[#0768D2] shadow-sm transition hover:bg-[#F8FAFC]"
+                className="flex items-center justify-center rounded-[10px] border border-[#CBD5E1] bg-white p-[10px] text-[#0768D2] shadow-sm transition hover:bg-[#F8FAFC] disabled:opacity-60"
               >
                 <Ico icon="mdi:qrcode-scan" size={20} />
               </button>
@@ -294,8 +416,9 @@ export default function ReportDownloadScreen({
             {/* View Button */}
             <button
               type="button"
-              onClick={() => setShowPreview(true)}
-              className="flex items-center gap-[8px] rounded-[10px] border border-[#0768D2] bg-white px-[18px] py-[10px] text-[13.5px] font-bold text-[#0768D2] shadow-sm transition hover:bg-[#EFF7FF]"
+              onClick={handleView}
+              disabled={fetching}
+              className="flex items-center gap-[8px] rounded-[10px] border border-[#0768D2] bg-white px-[18px] py-[10px] text-[13.5px] font-bold text-[#0768D2] shadow-sm transition hover:bg-[#EFF7FF] disabled:opacity-60"
             >
               <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -307,8 +430,9 @@ export default function ReportDownloadScreen({
             {/* Email Me Button */}
             <button
               type="button"
-              onClick={() => setShowEmailModal(true)}
-              className="flex items-center gap-[8px] rounded-[10px] border border-[#CBD5E1] bg-white px-[18px] py-[10px] text-[13.5px] font-bold text-[#334155] shadow-sm transition hover:bg-[#F8FAFC]"
+              onClick={handleEmail}
+              disabled={fetching}
+              className="flex items-center gap-[8px] rounded-[10px] border border-[#CBD5E1] bg-white px-[18px] py-[10px] text-[13.5px] font-bold text-[#334155] shadow-sm transition hover:bg-[#F8FAFC] disabled:opacity-60"
             >
               <svg className="h-[18px] w-[18px] text-[#0768D2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -320,7 +444,8 @@ export default function ReportDownloadScreen({
             <button
               type="button"
               onClick={handleDownload}
-              className="flex items-center gap-[8px] rounded-[10px] bg-[#0768D2] px-[22px] py-[10px] text-[13.5px] font-bold text-white shadow-md transition hover:bg-[#0658B3]"
+              disabled={fetching}
+              className="flex items-center gap-[8px] rounded-[10px] bg-[#0768D2] px-[22px] py-[10px] text-[13.5px] font-bold text-white shadow-md transition hover:bg-[#0658B3] disabled:opacity-60"
             >
               <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -352,7 +477,7 @@ export default function ReportDownloadScreen({
                   Preview: {title}
                 </h3>
                 <p className="mt-[2px] text-[13px] text-[#6B7280]">
-                  {plantLabel || '68 MLD Jagjeetpur'} • {range} • {rows.length} Records
+                  {plantLabel || 'STP'} • {range} • {displayRows.length} Records
                 </p>
               </div>
               <button
@@ -381,7 +506,7 @@ export default function ReportDownloadScreen({
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r, i) => (
+                    {displayRows.map((r, i) => (
                       <tr
                         key={r.id || i}
                         className={`border-b border-[#F3F4F6] transition-colors hover:bg-[#F9FAFB] ${
@@ -403,15 +528,16 @@ export default function ReportDownloadScreen({
             {/* Modal Footer */}
             <div className="flex items-center justify-between border-t border-[#E5E7EB] bg-[#F9FAFB] px-[24px] py-[16px] rounded-b-[16px]">
               <div className="text-[13px] text-[#6B7280]">
-                Viewing live preview of {rows.length} records
+                Viewing live preview of {displayRows.length} records
               </div>
               <div className="flex items-center gap-[10px]">
                 <button
                   type="button"
                   onClick={() => {
-                    exportPdf(rows)
+                    activeRowsRef.current = displayRows
+                    exportPdf(displayRows)
                     setShowPreview(false)
-                    triggerDownloadNotice('PDF downloaded.')
+                    triggerDownloadNotice(`PDF report generated with ${displayRows.length} records.`)
                   }}
                   className="rounded-[8px] border border-[#DC2626] bg-white px-[14px] py-[8px] text-[13px] font-bold text-[#DC2626] transition hover:bg-[#FEF2F2]"
                 >
@@ -420,9 +546,11 @@ export default function ReportDownloadScreen({
                 <button
                   type="button"
                   onClick={() => {
-                    downloadCsv(effectiveFileName, columns, rows, resolveValue)
+                    downloadCsv(effectiveFileName, columns, displayRows, (row, col) =>
+                      resolveValue(row, col, displayRows.indexOf(row)),
+                    )
                     setShowPreview(false)
-                    triggerDownloadNotice('Excel downloaded.')
+                    triggerDownloadNotice(`Excel spreadsheet (.csv) with ${displayRows.length} records downloaded.`)
                   }}
                   className="rounded-[8px] border border-[#16A34A] bg-white px-[14px] py-[8px] text-[13px] font-bold text-[#16A34A] transition hover:bg-[#F0FDF4]"
                 >
@@ -473,9 +601,10 @@ export default function ReportDownloadScreen({
 
               <div className="rounded-[8px] bg-[#F9FAFB] p-[12px] text-[12.5px] text-[#6B7280]">
                 <div><strong>Report:</strong> {title}</div>
-                <div><strong>STP:</strong> {plantLabel || '68 MLD Jagjeetpur'}</div>
+                <div><strong>STP:</strong> {plantLabel || 'STP'}</div>
                 <div><strong>Period:</strong> {range}</div>
                 <div><strong>Format:</strong> {format.toUpperCase()}</div>
+                <div><strong>Records:</strong> {displayRows.length}</div>
               </div>
 
               <div className="mt-[6px] flex items-center justify-end gap-[10px]">

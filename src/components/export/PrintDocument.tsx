@@ -22,7 +22,7 @@ export default function PrintDocument({
   rangeTitle = 'Date Range',
   columns,
   rows,
-  renderCell = (row, col) => row[col.key] ?? '—',
+  renderCell = (row, col, _index?: number) => row[col.key] ?? '—',
   onDone,
   children = null,
 }) {
@@ -100,7 +100,7 @@ export function PrintDocumentBody({
   rangeTitle = 'Date Range',
   columns,
   rows,
-  renderCell = (row, col) => row[col.key] ?? '—',
+  renderCell = (row, col, _index?: number) => row[col.key] ?? '—',
   children = null,
 }) {
   return (
@@ -172,7 +172,7 @@ export function PrintDocumentBody({
                     c.align === 'right' ? 'text-right' : ''
                   }`}
                 >
-                  {renderCell(row, c)}
+                  {renderCell(row, c, i)}
                 </td>
               ))}
             </tr>

@@ -1,19 +1,74 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportDownloadScreen from '../../components/reports/ReportDownloadScreen'
-import { complianceReportColumns, complianceReportRows } from '../../data/mockData'
+import { toPenaltyRangeFromLabel } from '../../components/ui/DateRangeField'
+import { normalizeViolations } from '../../components/compliance/ViolationsTable'
+import { complianceReportColumns, type StpMonthlyViolation } from '../../data/mockData'
+import { defaultOccurrencesRange, fetchPenaltyOccurrences } from '../../api/penalty'
+import { fetchDashboardPlants, toPlantNameByCode } from '../../api/plants'
 import { formatParameterName } from '../../lib/parameters'
 
-function ComplianceReportBody() {
-  const { plantLabel } = useReportFilters()
+const FETCH_ERROR = 'Unable to fetch STP violation records from the API. Please try again later.'
 
-  const rows = useMemo(() => {
-    if (!plantLabel) return complianceReportRows
-    const filtered = complianceReportRows.filter((r) =>
-      r.stpName.toLowerCase().includes(plantLabel.toLowerCase()),
-    )
-    return filtered.length > 0 ? filtered : complianceReportRows
-  }, [plantLabel])
+function ComplianceReportBody() {
+  const { stpId, plantCode, plantLabel, range } = useReportFilters()
+  const effectiveCode = plantCode || stpId
+
+  const apiRange = useMemo(
+    () => (range ? toPenaltyRangeFromLabel(range) : null) ?? defaultOccurrencesRange(),
+    [range],
+  )
+  const requestKey = `${effectiveCode ?? ''}|${apiRange.from}|${apiRange.to}`
+
+  const [fetchState, setFetchState] = useState<{
+    key: string
+    rows: StpMonthlyViolation[] | null
+    error: string | null
+  } | null>(null)
+
+  const fetchViolationRows = async (): Promise<StpMonthlyViolation[] | null> => {
+    if (!effectiveCode) return []
+    try {
+      const plants = await fetchDashboardPlants()
+      const plantNameByCode = toPlantNameByCode(plants)
+      const plantName = plantLabel || plantNameByCode[effectiveCode]
+      const occurrences = await fetchPenaltyOccurrences(effectiveCode, apiRange, {
+        plantNameByCode,
+        plantName,
+      })
+      return normalizeViolations(occurrences, effectiveCode)
+    } catch {
+      return null
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    fetchViolationRows().then((loaded) => {
+      if (cancelled) return
+      if (loaded) {
+        setFetchState({ key: requestKey, rows: loaded, error: null })
+      } else {
+        setFetchState({ key: requestKey, rows: null, error: FETCH_ERROR })
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestKey])
+
+  const isCurrentRequest = fetchState?.key === requestKey
+  const loading = Boolean(effectiveCode) && !isCurrentRequest
+  const loadError = isCurrentRequest ? fetchState.error : null
+  const rows = isCurrentRequest && fetchState.rows ? fetchState.rows : []
+
+  const loadRows = async () => {
+    const loaded = await fetchViolationRows()
+    if (!loaded) return null
+    setFetchState({ key: requestKey, rows: loaded, error: null })
+    return loaded
+  }
 
   return (
     <ReportDownloadScreen
@@ -22,6 +77,9 @@ function ComplianceReportBody() {
       description="Non-complying STPs with observed parameter values, permissible range, date and non-compliance time."
       columns={complianceReportColumns}
       rows={rows}
+      loadRows={loadRows}
+      loading={loading}
+      error={loadError}
       renderCell={(r, col) => {
         if (col.key === 'parameters') {
           return (

@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import ReportShell, { useReportFilters } from '../../components/reports/ReportShell'
 import ReportDownloadScreen from '../../components/reports/ReportDownloadScreen'
 import { parseDateRangeLabel } from '../../components/ui/DateRangeField'
-import { stpParameterReportColumns, stpParameterReportRows } from '../../data/mockData'
+import { stpParameterReportColumns } from '../../data/mockData'
 import {
-  fetchStpReadings,
+  fetchAllStpReadings,
   mapStpReadingToParameterReportRow,
   resolveStpSite,
-  StpSite,
   type StpParameterReportRow,
   type StpReadingResponse,
 } from '../../api/stpMonitoring'
@@ -54,43 +53,75 @@ function toReadingsRangeParams(rangeLabel: string): { from: string; to: string }
   return { from: fromStr, to: toStr }
 }
 
+function buildRows(readings: StpReadingResponse[], streamFilter: StreamFilter) {
+  const mapped =
+    streamFilter === 'Influent'
+      ? readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'inlet', idx))
+      : streamFilter === 'Both'
+        ? readings.flatMap((item, idx) => [
+            mapStpReadingToParameterReportRow(item, 'inlet', idx),
+            mapStpReadingToParameterReportRow(item, 'outlet', idx),
+          ])
+        : readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'outlet', idx))
+
+  return mapped.map((row, idx) => ({ ...row, sn: idx + 1 }))
+}
+
+const FETCH_ERROR = 'Unable to fetch STP parameter records from the API. Please try again later.'
+const UNMAPPED_SITE_ERROR = 'The selected STP is not mapped to a monitoring site, so no records can be fetched.'
+
 function StpParameterReportBody() {
   const { stpId, plantCode, plantLabel, range } = useReportFilters()
   const [streamFilter, setStreamFilter] = useState<StreamFilter>('Effluent')
-  const [readings, setReadings] = useState<StpReadingResponse[] | null>(null)
 
   const resolvedSite = useMemo(
-    () => resolveStpSite(plantCode || stpId || plantLabel) ?? StpSite.BAZPUR,
+    () => resolveStpSite(plantCode || stpId || plantLabel),
     [plantCode, stpId, plantLabel],
   )
 
   const { from, to } = useMemo(() => toReadingsRangeParams(range), [range])
+  const requestKey = `${resolvedSite ?? ''}|${from}|${to}`
 
+  const [fetchState, setFetchState] = useState<{
+    key: string
+    readings: StpReadingResponse[] | null
+    error: string | null
+  } | null>(null)
+
+  // Records for the current STP and date range; shown on the page and refreshed on every View/QR/Email/Download.
   useEffect(() => {
+    if (!resolvedSite) return undefined
+
     let cancelled = false
-
-    async function loadReadings() {
-      const response = await fetchStpReadings({
-        site: resolvedSite,
-        from,
-        to,
-        page: 0,
-        size: 50,
-      })
-
+    fetchAllStpReadings({ site: resolvedSite, from, to }).then((readings) => {
       if (cancelled) return
-      if (response) {
-        setReadings(response.content)
+      if (readings) {
+        setFetchState({ key: requestKey, readings, error: null })
       } else {
-        setReadings(null)
+        setFetchState({ key: requestKey, readings: null, error: FETCH_ERROR })
       }
-    }
+    })
 
-    loadReadings()
     return () => {
       cancelled = true
     }
-  }, [resolvedSite, from, to])
+  }, [resolvedSite, from, to, requestKey])
+
+  const isCurrentRequest = fetchState?.key === requestKey
+  const loading = Boolean(resolvedSite) && !isCurrentRequest
+  const loadError = !resolvedSite
+    ? UNMAPPED_SITE_ERROR
+    : isCurrentRequest
+      ? fetchState.error
+      : null
+
+  const loadRows = async () => {
+    if (!resolvedSite) return null
+    const readings = await fetchAllStpReadings({ site: resolvedSite, from, to })
+    if (!readings) return null
+    setFetchState({ key: requestKey, readings, error: null })
+    return buildRows(readings, streamFilter)
+  }
 
   const columns = useMemo(() => {
     if (streamFilter === 'Both') {
@@ -105,24 +136,11 @@ function StpParameterReportBody() {
     return stpParameterReportColumns
   }, [streamFilter])
 
-  const rows = useMemo(() => {
-    if (!readings) {
-      return stpParameterReportRows
-    }
-
-    if (streamFilter === 'Influent') {
-      return readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'inlet', idx))
-    }
-
-    if (streamFilter === 'Both') {
-      return readings.flatMap((item, idx) => [
-        mapStpReadingToParameterReportRow(item, 'inlet', idx),
-        mapStpReadingToParameterReportRow(item, 'outlet', idx),
-      ])
-    }
-
-    return readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'outlet', idx))
-  }, [readings, streamFilter])
+  const readings = isCurrentRequest ? fetchState.readings : null
+  const rows = useMemo(
+    () => (readings ? buildRows(readings, streamFilter) : []),
+    [readings, streamFilter],
+  )
 
   const isNonComplyingCell = (
     r: Partial<StpParameterReportRow> & { status?: string },
@@ -152,6 +170,19 @@ function StpParameterReportBody() {
       }}
       columns={columns}
       rows={rows}
+      loadRows={loadRows}
+      loading={loading}
+      error={loadError}
+      qrReportLink={
+        resolvedSite
+          ? {
+              site: resolvedSite,
+              from,
+              to,
+              stream: streamFilter,
+            }
+          : undefined
+      }
       renderCell={(r, col) => {
         if (col.key === 'stream') {
           const isInfluent = r.stream === 'Influent'
@@ -177,7 +208,7 @@ function StpParameterReportBody() {
       }}
       cellTone={(r, col) => (isNonComplyingCell(r, col.key) ? 'red' : null)}
       exportTitle="STP Parameter Compliance Report"
-      exportFileName={`stp-parameter-report-${(plantLabel || resolvedSite).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+      exportFileName={`stp-parameter-report-${(plantLabel || resolvedSite || 'stp').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
       withTimeRange
       qrEnabled
     />
