@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import PrintDocument from '../components/export/PrintDocument'
 import AuditLogsTab from '../components/team/AuditLogsTab'
 import RoleManagementTab from '../components/team/RoleManagementTab'
@@ -7,7 +8,11 @@ import UserManagementTab from '../components/team/UserManagementTab'
 const TEAM_TABS = ['User Management', 'Role Management', 'Audit Logs']
 
 export default function TeamManagement() {
-  const [tab, setTab] = useState(TEAM_TABS[0])
+  const { can } = useAuth()
+  // Only show team tabs the user's role grants under the team module.
+  const visibleTeamTabs = useMemo(() => TEAM_TABS.filter((label) => can('team', label)), [can])
+  const [selectedTab, setTab] = useState(TEAM_TABS[0])
+  const tab = visibleTeamTabs.includes(selectedTab) ? selectedTab : visibleTeamTabs[0]
   const [userRoleFilter, setUserRoleFilter] = useState('All Roles')
   const [printDoc, setPrintDoc] = useState(null)
 
@@ -20,7 +25,7 @@ export default function TeamManagement() {
 
   return (
     <div className="flex flex-col gap-[16px] pb-[22px]">
-      <TeamTabs tabs={TEAM_TABS} active={tab} onChange={setTab} />
+      <TeamTabs tabs={visibleTeamTabs} active={tab} onChange={setTab} />
 
       {tab === 'User Management' && (
         <UserManagementTab
