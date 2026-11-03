@@ -28,6 +28,9 @@ export const ENDPOINTS = {
   stpDetails: {
     list: '/stp-details',
   },
+  manpower: {
+    byStp: (stpId: string | number) => `/manpower/stp/${encodeURIComponent(stpId)}`,
+  },
   cctv: {
     cameras: '/cameras',
     streamStart: (cameraId: string | number) => `/stream/start/${cameraId}`,

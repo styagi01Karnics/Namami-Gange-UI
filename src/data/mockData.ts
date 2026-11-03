@@ -1670,33 +1670,6 @@ export const stpStreams = [
   },
 ]
 
-/** "Realtime Parameter Values" accordion — one flow headline + 6 tiles per stream. */
-export const stpRealtime = {
-  at: '19 May 2026, 05:30 PM',
-  influent: {
-    flow: { value: '748.83', unit: 'm³/hr' },
-    params: [
-      { key: 'bod', label: 'BOD', icon: 'bod', value: '394.74 mg/L', tone: 'breach', note: 'Ideal: 0 – 10' },
-      { key: 'ph', label: 'pH', icon: 'ph', value: '7.48 pH', tone: 'breach', note: 'Ideal: 5.5 - 9' },
-      { key: 'temp', label: 'Temperature', icon: 'temp', value: '24.8 °C', tone: 'ok', note: 'Ideal: 15 – 35' },
-      { key: 'tss', label: 'TSS', icon: 'tss', value: '114.34 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
-      { key: 'cod', label: 'COD', icon: 'cod', value: '852.44 mg/L', tone: 'breach', note: 'Ideal: 0 – 50' },
-      { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
-    ],
-  },
-  effluent: {
-    flow: { value: '6492.05', unit: 'm³/hr' },
-    params: [
-      { key: 'bod', label: 'BOD', icon: 'bod', value: '4.51 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
-      { key: 'ph', label: 'pH', icon: 'ph', value: '7.6 pH', tone: 'ok', note: 'Ideal: 5.5 - 9' },
-      { key: 'temp', label: 'Temperature', icon: 'temp', value: '25.2 °C', tone: 'ok', note: 'Ideal: 15 – 35' },
-      { key: 'tss', label: 'TSS', icon: 'tss', value: '134 mg/L', tone: 'breach', note: 'Ideal: 0 – 20' },
-      { key: 'cod', label: 'COD', icon: 'cod', value: '24.12 mg/L', tone: 'ok', note: 'Ideal: 0 – 50' },
-      { key: 'no3n', label: 'NO₃-N', icon: 'no3n', value: '6 mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
-    ],
-  },
-}
-
 /** Deterministic sparkline shape — Sparkline normalises, so raw units don't matter. */
 const wiggle = (seed, n = 34) =>
   Array.from(
@@ -1839,82 +1812,6 @@ export const billingLogRows = [
     payable: { amount: '₹3,00,000', date: '01/03/2026' },
     status: 'Pending',
   },
-]
-
-/* ---- Manpower ----------------------------------------------------------
-   Shared by the standalone /manpower page AND the Manpower tab inside
-   STP Management — both render components/manpower/ManpowerTab.
-   ------------------------------------------------------------------------ */
-
-export const stpManpower = {
-  totalEmployees: 98,
-  scopeLabel: 'Across all location',
-  // drives both the gauge segments and the legend
-  breakdown: [
-    { key: 'present', label: 'Present', value: 82, percent: '83.33%', color: '#2E9E5B' },
-    { key: 'absent', label: 'Absent', value: 8, percent: '10%', color: '#E5484D' },
-    { key: 'leave', label: 'On Leave', value: 8, percent: '10%', color: '#EE9B2C' },
-  ],
-}
-
-export const attendanceTrends = {
-  legend: [
-    { key: 'present', label: 'Present', color: '#2E9E5B' },
-    { key: 'leave', label: 'On leave', color: '#F5B417' },
-    { key: 'absent', label: 'Absent', color: '#E5484D' },
-  ],
-  // callout rendered on the chart
-  marker: { month: 'Jul', series: 'absent', value: 320, label: '320: July' },
-  series: [
-    { month: 'Jan', present: 290, leave: 250, absent: 180 },
-    { month: 'Feb', present: 320, leave: 200, absent: 130 },
-    { month: 'Mar', present: 330, leave: 150, absent: 150 },
-    { month: 'Apr', present: 260, leave: 210, absent: 275 },
-    { month: 'May', present: 160, leave: 255, absent: 235 },
-    { month: 'Jun', present: 220, leave: 130, absent: 185 },
-    { month: 'Jul', present: 175, leave: 205, absent: 320 },
-    { month: 'Aug', present: 240, leave: 275, absent: 300 },
-    { month: 'Sept', present: 290, leave: 230, absent: 250 },
-    { month: 'Oct', present: 285, leave: 265, absent: 210 },
-    { month: 'Nov', present: 250, leave: 190, absent: 150 },
-    { month: 'Dec', present: 230, leave: 145, absent: 105 },
-  ],
-}
-
-export const staffAvailability = {
-  filters: ['All', 'Present', 'On Leave', 'Absent'],
-  columns: ['ID', 'Employee', 'Role', 'Dept', 'Date', 'Punch Time', 'Status'],
-  rows: [
-    { id: '#1231456', name: 'Rahul Sharma', role: 'Plant Operator', dept: 'Operations', date: '19 May 2026', punchTime: '10:30 AM', status: 'Active' },
-    { id: '#1231457', name: 'Amit Verma', role: 'Shift Supervisor', dept: 'Operations', date: '19 May 2026', punchTime: '10:30 AM', status: 'On Leave' },
-    { id: '#1231458', name: 'Vikash Singh', role: 'Maintenance Tech', dept: 'Maintenance', date: '19 May 2026', punchTime: '10:30 AM', status: 'Absent' },
-    { id: '#1231459', name: 'Priya Menon', role: 'Lab Technician', dept: 'Quality', date: '19 May 2026', punchTime: '09:55 AM', status: 'Active' },
-    { id: '#1231460', name: 'Imran Qureshi', role: 'Electrician', dept: 'Electrical', date: '19 May 2026', punchTime: '10:05 AM', status: 'Active' },
-    { id: '#1231461', name: 'Sunita Devi', role: 'Safety Officer', dept: 'Safety', date: '19 May 2026', punchTime: '—', status: 'Absent' },
-    { id: '#1231462', name: 'Arjun Rawat', role: 'Site Engineer', dept: 'Operations', date: '19 May 2026', punchTime: '10:12 AM', status: 'Active' },
-    { id: '#1231463', name: 'Neha Kulkarni', role: 'Housekeeping Lead', dept: 'Housekeeping', date: '19 May 2026', punchTime: '—', status: 'On Leave' },
-    { id: '#1231464', name: 'Deepak Joshi', role: 'Fitter', dept: 'Maintenance', date: '19 May 2026', punchTime: '09:40 AM', status: 'Active' },
-    { id: '#1231465', name: 'Meera Patel', role: 'Quality Analyst', dept: 'Quality', date: '19 May 2026', punchTime: '10:18 AM', status: 'Active' },
-    { id: '#1231466', name: 'Ravi Chauhan', role: 'Instrument Tech', dept: 'Electrical', date: '19 May 2026', punchTime: '—', status: 'On Leave' },
-    { id: '#1231467', name: 'Kavita Rawat', role: 'Helper', dept: 'Housekeeping', date: '19 May 2026', punchTime: '—', status: 'Absent' },
-  ],
-}
-
-/** "All" maps to no filter; the rest match the row `status` values. */
-export const staffStatusFilterMap = {
-  All: null,
-  Present: 'Active',
-  'On Leave': 'On Leave',
-  Absent: 'Absent',
-}
-
-export const departmentManpower = [
-  { key: 'operations', name: 'Operations', total: 12, required: 4, shortage: 5, tone: 'blue' },
-  { key: 'maintenance', name: 'Maintenance', total: 12, required: 4, shortage: 5, tone: 'violet' },
-  { key: 'safety', name: 'Safety', total: 12, required: 4, shortage: 5, tone: 'rose' },
-  { key: 'quality', name: 'Quality', total: 12, required: 4, shortage: 5, tone: 'amber' },
-  { key: 'electrical', name: 'Electrical', total: 12, required: 4, shortage: 5, tone: 'green' },
-  { key: 'housekeeping', name: 'Housekeeping', total: 12, required: 4, shortage: 5, tone: 'peach' },
 ]
 
 /* ==========================================================================
@@ -3565,8 +3462,8 @@ export const transactionLogColumns = [
 
 /**
  * Transaction Logs section — the influent and effluent streams sit side by
- * side, and a row expands to the reading it carried. `params` reuses the tile
- * shape from `stpRealtime`, so both panels render through the same component.
+ * side, and a row expands to the reading it carried. `params` uses the same
+ * tile shape as the realtime panel, so both render through the same component.
  */
 export const streamTransactionColumns = [
   { key: 'id', label: 'ID', width: '18%' },

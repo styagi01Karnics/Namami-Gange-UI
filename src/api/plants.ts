@@ -1,6 +1,7 @@
 import { stpDetails, stpOptions } from '../data/mockData'
 import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
+import { fetchCctvSiteNames } from './cctv'
 
 const DASHBOARD_API = API_BASE_URL.dashboard
 
@@ -182,6 +183,12 @@ export function dashboardResourceUrl(plantCode: string, resource: 'live' | 'inle
 export async function loadPlantPickerOptions(): Promise<PlantOption[]> {
   const plants = await fetchDashboardPlants()
   return toPlantOptions(plants)
+}
+
+/** Picker options whose labels come from /stp-details ("stpCapacity, locationName, city"); canonical labels are kept when the API is unavailable. */
+export async function loadStpDetailsPlantOptions(): Promise<PlantOption[]> {
+  const [options, names] = await Promise.all([loadPlantPickerOptions(), fetchCctvSiteNames()])
+  return options.map((option) => ({ ...option, label: names[option.plantCode] || option.label }))
 }
 
 export type StpActiveStatusItem = {

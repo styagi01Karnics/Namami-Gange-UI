@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import StreamHeader from './StreamHeader'
 import ParamTile from './ParamTile'
 import { stpStreams } from '../../data/mockData'
 import {
   fetchStpLive,
-  getFallbackRealtime,
+  type LiveParam,
   type LiveRealtimeData,
 } from '../../api/stpLive'
 import {
@@ -14,9 +15,24 @@ import {
 } from '../../api/stpMonitoring'
 import { useFifteenMinuteInterval } from '../../hooks/useFifteenMinuteInterval'
 
+const NO_DATA_MESSAGE = 'Unable to fetch realtime parameter values for this STP.'
+
 const STREAM_SURFACE = {
   brand: 'bg-[#F4F8FE]',
   ok: 'bg-[#F8FCF9]',
+}
+
+/** The only parameters shown for influent and effluent, in display order. */
+const REALTIME_PARAM_KEYS = ['bod', 'ph', 'temp', 'tss', 'cod', 'nh4n']
+
+/** Placeholder tile when the source has no reading for one of the six parameters (e.g. only Total Nitrogen is reported). */
+const EMPTY_PARAMS: Record<string, LiveParam> = {
+  bod: { key: 'bod', label: 'BOD', icon: 'bod', value: '— mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
+  ph: { key: 'ph', label: 'pH', icon: 'ph', value: '— pH', tone: 'ok', note: 'Ideal: 5.5 - 9' },
+  temp: { key: 'temp', label: 'Temperature', icon: 'temp', value: '— °C', tone: 'ok', note: 'Ideal: 15 – 35' },
+  tss: { key: 'tss', label: 'TSS', icon: 'tss', value: '— mg/L', tone: 'ok', note: 'Ideal: 0 – 20' },
+  cod: { key: 'cod', label: 'COD', icon: 'cod', value: '— mg/L', tone: 'ok', note: 'Ideal: 0 – 50' },
+  nh4n: { key: 'nh4n', label: 'NH₄-N', icon: 'nh4n', value: '— mg/L', tone: 'ok', note: 'Ideal: 0 – 10' },
 }
 
 const IDEAL_RANGES: Record<string, { min?: number; max?: number }> = {
@@ -68,6 +84,14 @@ function isExceedingIdeal(key: string, valueStr: string, note?: string): boolean
   return false
 }
 
+function hasAnyReading(data: LiveRealtimeData): boolean {
+  return [data.influent, data.effluent].some(
+    (stream) =>
+      extractNumericValue(stream.flow?.value) != null ||
+      stream.params.some((param) => extractNumericValue(param.value) != null),
+  )
+}
+
 export default function RealtimeParametersPanel({
   plantCode,
   stpId,
@@ -81,13 +105,20 @@ export default function RealtimeParametersPanel({
   site?: string
   refreshTick?: number
 }) {
-  const [realtime, setRealtime] = useState<LiveRealtimeData>(() => getFallbackRealtime())
+  const [realtime, setRealtime] = useState<LiveRealtimeData | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   // Resolve matching backend StpSite enum constant
   const resolvedSite: StpSite | null = useMemo(() => {
     return resolveStpSite(site || plantCode || stpId || plantName)
   }, [site, plantCode, stpId, plantName])
+
+  // Never show the previous plant's readings while another plant loads
+  useEffect(() => {
+    setRealtime(null)
+    setError(null)
+  }, [resolvedSite, plantCode, site, stpId])
 
   // Fetch logic with 8909 monitoring endpoint as primary, dashboard /live as fallback
   const loadData = useCallback(async () => {
@@ -96,26 +127,30 @@ export default function RealtimeParametersPanel({
 
     setLoading(true)
     try {
-      // 1. Primary: fetch from STP monitoring service (http://localhost:8909/api/stp/${site}/latest)
+      // 1. Primary: fetch from STP monitoring service (http://45.195.229.15:8909/api/stp/${site}/latest)
       const monitoringData = await fetchStpMonitoringRealtime(queryKey)
-      if (monitoringData) {
+      if (monitoringData && hasAnyReading(monitoringData)) {
         setRealtime(monitoringData)
+        setError(null)
         return
       }
 
       // 2. Secondary: fall back to dashboard /live endpoint
       if (plantCode) {
         const liveData = await fetchStpLive(plantCode)
-        if (liveData) {
+        if (liveData && hasAnyReading(liveData)) {
           setRealtime(liveData)
+          setError(null)
           return
         }
       }
 
-      // 3. Fallback mock if both fail
-      setRealtime(getFallbackRealtime())
+      // 3. Nothing returned by either source
+      setRealtime(null)
+      setError(NO_DATA_MESSAGE)
     } catch {
-      setRealtime(getFallbackRealtime())
+      setRealtime(null)
+      setError(NO_DATA_MESSAGE)
     } finally {
       setLoading(false)
     }
@@ -130,17 +165,34 @@ export default function RealtimeParametersPanel({
 
   const isLoading = loading || isFetching
 
+  if (!realtime) {
+    return (
+      <div
+        role={error ? 'alert' : 'status'}
+        className="flex min-h-[200px] flex-col items-center justify-center rounded-[12px] border border-line bg-white py-[48px] text-center"
+      >
+        {error ? (
+          <>
+            <p className="text-[14.5px] font-medium text-ink-muted">{error}</p>
+            <p className="mt-1 text-[12.5px] text-ink-soft">Please try again later.</p>
+          </>
+        ) : (
+          <div className="flex items-center gap-2 text-[14px] text-ink-muted">
+            <RefreshCw size={18} className="animate-spin text-brand" />
+            Loading realtime parameter values...
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-2 gap-[16px]">
       {stpStreams.map((stream) => {
         const data = realtime[stream.key]
         const surface = STREAM_SURFACE[stream.tone] ?? STREAM_SURFACE.brand
-        // For nitrogen: NH4-N has priority over NO3-N if present.
-        const hasNh4n = data.params.some((p) => p.key === 'nh4n' && p.value !== '—')
         const isInfluent = stream.key === 'influent'
-        const params = data.params
-          .filter((param) => param.key !== 'flow' && param.key !== 'totalizer')
-          .filter((param) => !hasNh4n || param.key !== 'no3n')
+        const params = REALTIME_PARAM_KEYS.map((key) => data.params.find((param) => param.key === key) ?? EMPTY_PARAMS[key])
           .map((param) => {
             if (isInfluent) {
               return { ...param, tone: 'ok' as const }

@@ -5,6 +5,7 @@ import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { fetchPenaltyVendors } from '../../api/penalty'
+import { fetchStpDetailsByPlantCode, formatStpName, type StpDetail } from '../../api/cctv'
 import { stpDetails } from '../../data/mockData'
 
 const PinIcon = ico('fluent:location-24-filled')
@@ -93,14 +94,33 @@ function DetailsPanel({
   stp,
   vendorName,
   omAgency,
+  apiDetail,
 }: {
   stp: StpInfo
   vendorName?: string | null
   omAgency?: string
+  apiDetail?: StpDetail
 }) {
-  const { inCharge, vendor, site } = stp
-  const capacity = stp.name.match(/[\d.]+\s*MLD/i)?.[0]
-  const plantName = stp.name.replace(/\s+STP,?\s*/i, ' ').trim()
+  // Fields present in /stp-details override the local values; anything the API lacks stays as-is.
+  const api = (value?: string) => value?.trim() || undefined
+  const inCharge = {
+    ...stp.inCharge,
+    name: api(apiDetail?.concernPersonName) ?? stp.inCharge.name,
+    phone: api(apiDetail?.contactNo) ?? stp.inCharge.phone,
+  }
+  const { vendor } = stp
+  const site = {
+    ...stp.site,
+    state: api(apiDetail?.state) ?? stp.site.state,
+    city: api(apiDetail?.city) ?? stp.site.city,
+  }
+  const address = api(apiDetail?.address) ?? stp.address
+  const apiAgency = api(apiDetail?.omAgency)
+  const agency = (apiAgency && (getOmAgency(apiAgency) ?? apiAgency)) || omAgency
+  const apiName = apiDetail ? formatStpName(apiDetail) : ''
+  const capacityName = (apiDetail && api(apiDetail.stpCapacity)) || stp.name
+  const capacity = capacityName.match(/[\d.]+\s*MLD/i)?.[0]
+  const plantName = (apiName || stp.name).replace(/\s+STP,?\s*/i, ' ').trim()
 
   return (
     <div className="mt-[16px] grid grid-cols-1 gap-x-[28px] gap-y-[20px] rounded-[10px] border border-[#E3ECF7] bg-white px-[18px] py-[16px] lg:grid-cols-3">
@@ -110,12 +130,12 @@ function DetailsPanel({
           ['STP Name', plantName],
           ['State', site.state],
           ['City', site.city],
-          ['Address', stp.address],
+          ['Address', address],
           ['Zip Code', site.zip],
           ['Latitude', site.lat],
           ['Longitude', site.lng],
           ['Capacity', capacity],
-          ['O&M Agency', omAgency],
+          ['O&M Agency', agency],
           ['Technology', site.technology],
           ['Commissioned On', site.commissionedOn],
         ]}
@@ -162,7 +182,17 @@ export default function StpHeaderCard({
   const [vendorName, setVendorName] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
+  const [apiDetails, setApiDetails] = useState<Record<string, StpDetail>>({})
 
+  useEffect(() => {
+    let cancelled = false
+    fetchStpDetailsByPlantCode().then((details) => {
+      if (!cancelled) setApiDetails(details)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const handleViewLocation = () => {
     const stpKey = plantCode || stp.vendor?.prefixId || stp.name
     navigate(`/dashboard?stp=${encodeURIComponent(stpKey)}`)
@@ -265,7 +295,7 @@ export default function StpHeaderCard({
       </div>
 
       {showDetails && (
-        <DetailsPanel stp={stp} vendorName={vendorName} omAgency={omAgency} />
+        <DetailsPanel stp={stp} vendorName={vendorName} omAgency={omAgency} apiDetail={plantCode ? apiDetails[plantCode] : undefined} />
       )}
 
       {/* Lightbox Preview Modal */}

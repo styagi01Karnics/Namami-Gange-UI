@@ -10,16 +10,16 @@ export enum StpSite {
   BAZPUR = 'BAZPUR',
   KASHIPUR = 'KASHIPUR',
   SARAI = 'SARAI',
-  JAGJEETPUR = 'JAGJEETPUR',
+  JAG_18 = 'JAG_18',
   SARAI_18 = 'SARAI_18',
   MOTHOROWALA_1 = 'MOTHOROWALA_1',
   MOTHOROWALA_2 = 'MOTHOROWALA_2',
-  RISHIKESH = 'RISHIKESH',
   LAKKAR_GHAT = 'LAKKAR_GHAT',
   JAG_27 = 'JAG_27',
   INDRA_NAGAR = 'INDRA_NAGAR',
   SALIYAR = 'SALIYAR',
   KARGI_CHOWK = 'KARGI_CHOWK',
+  JAG_68 = 'JAG_68',
 }
 
 export interface StpSiteMeta {
@@ -32,20 +32,20 @@ export const STP_SITE_METADATA: Record<StpSite, StpSiteMeta> = {
   [StpSite.BAZPUR]: { site: StpSite.BAZPUR, displayName: '10 MLD STP Bazpur', capacityMld: 10 },
   [StpSite.KASHIPUR]: { site: StpSite.KASHIPUR, displayName: '10 MLD STP Kashipur', capacityMld: 10 },
   [StpSite.SARAI]: { site: StpSite.SARAI, displayName: '14 MLD STP Sarai', capacityMld: 14 },
-  [StpSite.JAGJEETPUR]: { site: StpSite.JAGJEETPUR, displayName: '18 MLD STP Jagjeetpur', capacityMld: 18 },
+  [StpSite.JAG_18]: { site: StpSite.JAG_18, displayName: '18 MLD STP Jagjeetpur', capacityMld: 18 },
   [StpSite.SARAI_18]: { site: StpSite.SARAI_18, displayName: '18 MLD STP Sarai', capacityMld: 18 },
   [StpSite.MOTHOROWALA_1]: { site: StpSite.MOTHOROWALA_1, displayName: '20 MLD STP Mothorowala', capacityMld: 20 },
   [StpSite.MOTHOROWALA_2]: { site: StpSite.MOTHOROWALA_2, displayName: '20 MLD STP Mothorowala', capacityMld: 20 },
-  [StpSite.RISHIKESH]: { site: StpSite.RISHIKESH, displayName: '26 MLD STP Lakkar Ghat', capacityMld: 26 },
   [StpSite.LAKKAR_GHAT]: { site: StpSite.LAKKAR_GHAT, displayName: '26 MLD STP Lakkar Ghat', capacityMld: 26 },
   [StpSite.JAG_27]: { site: StpSite.JAG_27, displayName: '27 MLD STP Jagjeetpur', capacityMld: 27 },
   [StpSite.INDRA_NAGAR]: { site: StpSite.INDRA_NAGAR, displayName: '28 MLD STP Indra Nagar', capacityMld: 28 },
   [StpSite.SALIYAR]: { site: StpSite.SALIYAR, displayName: '33 MLD STP Saliyar', capacityMld: 33 },
   [StpSite.KARGI_CHOWK]: { site: StpSite.KARGI_CHOWK, displayName: '68 MLD STP Kargi Chowk', capacityMld: 68 },
+  [StpSite.JAG_68]: { site: StpSite.JAG_68, displayName: '68 MLD STP Jagjeetpur', capacityMld: 68 },
 }
 
 /**
- * Uniform JSON response from http://localhost:8909/api/stp/${site}/latest
+ * Uniform JSON response from http://45.195.229.15:8909/api/stp/${site}/latest
  */
 export interface StpReadingResponse {
   id: number
@@ -68,6 +68,10 @@ export interface StpReadingResponse {
   inletTn?: number | null
   inletTp?: number | null
   inletNh4?: number | null
+  /** DB column inlet_nh4n_mg_l, under the names the API may serialise it as. */
+  inletNh4n?: number | null
+  inletNh4nMgL?: number | null
+  inlet_nh4n_mg_l?: number | null
   inletTemperatureC?: number | null
   inletTimestamp?: string | null
   // Outlet (Effluent)
@@ -79,9 +83,89 @@ export interface StpReadingResponse {
   outletTn?: number | null
   outletTp?: number | null
   outletNh4?: number | null
+  /** DB column outlet_nh4n_mg_l, under the names the API may serialise it as. */
+  outletNh4n?: number | null
+  outletNh4nMgL?: number | null
+  outlet_nh4n_mg_l?: number | null
   outletTemperatureC?: number | null
   outletTimestamp?: string | null
   fetchedAt?: string | null
+}
+
+/**
+ * Exact (lower-cased) UI identifiers -> backend StpSite.
+ * Each UI plant is listed by plantCode, stpId, map/hierarchy id and display name.
+ */
+const STP_SITE_LOOKUP: Record<string, StpSite> = {
+  // 10 MLD Bazpur
+  '10mldbazpur': StpSite.BAZPUR,
+  'bazpur-10': StpSite.BAZPUR,
+  'map-bazpur-10': StpSite.BAZPUR,
+  '10 mld stp, bazpur': StpSite.BAZPUR,
+  // 10 MLD Kashipur
+  '10mldkashipur': StpSite.KASHIPUR,
+  'kashipur-10': StpSite.KASHIPUR,
+  'map-kashipur-10': StpSite.KASHIPUR,
+  '10 mld stp, kashipur': StpSite.KASHIPUR,
+  // 14 MLD Sarai
+  '14mldsarai': StpSite.SARAI,
+  'sarai-14': StpSite.SARAI,
+  'map-sarai-14': StpSite.SARAI,
+  '14 mld stp, sarai, haridwar': StpSite.SARAI,
+  // 18 MLD Jagjeetpur
+  '18mldjag': StpSite.JAG_18,
+  'jagjeetpur-18': StpSite.JAG_18,
+  'map-jagjeetpur-18': StpSite.JAG_18,
+  '18 mld stp, jagjeetpur, haridwar': StpSite.JAG_18,
+  // 18 MLD Sarai
+  '18mldsarai_upg': StpSite.SARAI_18,
+  'sarai-18-upg': StpSite.SARAI_18,
+  'sarai-18': StpSite.SARAI_18,
+  'map-sarai-upgrade-18': StpSite.SARAI_18,
+  '18 mld stp, sarai': StpSite.SARAI_18,
+  // 20 MLD Mothorowala (1)
+  '20mldmothorowala': StpSite.MOTHOROWALA_1,
+  'mothorowala-20': StpSite.MOTHOROWALA_1,
+  'map-mothorowala-1-20': StpSite.MOTHOROWALA_1,
+  '20 mld stp, mothorowala-1, dehradun': StpSite.MOTHOROWALA_1,
+  // 20 MLD Mothorowala (2)
+  '20mldmoth_2': StpSite.MOTHOROWALA_2,
+  'mothorowala-20-2': StpSite.MOTHOROWALA_2,
+  'map-mothorowala-2-20': StpSite.MOTHOROWALA_2,
+  '20 mld stp, mothorowala-2, dehradun': StpSite.MOTHOROWALA_2,
+  // 26 MLD Lakkar Ghat
+  '26mldlkgt2': StpSite.LAKKAR_GHAT,
+  'lakkar-ghat-26': StpSite.LAKKAR_GHAT,
+  'lakkarghat-26': StpSite.LAKKAR_GHAT,
+  'map-lakkarghat-26': StpSite.LAKKAR_GHAT,
+  '26 mld stp, lakkarghat, rishikesh': StpSite.LAKKAR_GHAT,
+  // 27 MLD Jagjeetpur
+  '27mldjag_upg': StpSite.JAG_27,
+  'jagjeetpur-27-upg': StpSite.JAG_27,
+  'jagjeetpur-27': StpSite.JAG_27,
+  'map-jagjeetpur-upgrade-27': StpSite.JAG_27,
+  '27 mld stp, jagjeetpur': StpSite.JAG_27,
+  // 28 MLD Indra Nagar
+  '28mldindira': StpSite.INDRA_NAGAR,
+  'indira-nagar-28': StpSite.INDRA_NAGAR,
+  'map-haldwani-28': StpSite.INDRA_NAGAR,
+  '28 mld stp, indira nagar, haldwani': StpSite.INDRA_NAGAR,
+  // 33 MLD Saliyar
+  '33mldsali': StpSite.SALIYAR,
+  'saliar-33': StpSite.SALIYAR,
+  'saliyar-33': StpSite.SALIYAR,
+  'map-saliyar-33': StpSite.SALIYAR,
+  '33 mld stp, saliyar, roorkee': StpSite.SALIYAR,
+  // 68 MLD Kargi Chowk
+  '68mldkargi': StpSite.KARGI_CHOWK,
+  'kargi-68': StpSite.KARGI_CHOWK,
+  'map-kargi-68': StpSite.KARGI_CHOWK,
+  '68 mld stp, kargi chowk, dehradun': StpSite.KARGI_CHOWK,
+  // 68 MLD Jagjeetpur
+  '68mldjag': StpSite.JAG_68,
+  'jagjeetpur-68': StpSite.JAG_68,
+  'map-jagjeetpur-68': StpSite.JAG_68,
+  '68 mld stp, jagjeetpur, haridwar': StpSite.JAG_68,
 }
 
 /**
@@ -98,81 +182,7 @@ export function resolveStpSite(key?: string | null): StpSite | null {
     return upper as StpSite
   }
 
-  const clean = raw.toLowerCase()
-
-  // 10 MLD Bazpur
-  if (clean.includes('bazpur')) return StpSite.BAZPUR
-
-  // 10 MLD Kashipur
-  if (clean.includes('kashipur')) return StpSite.KASHIPUR
-
-  // 18 MLD Sarai
-  if (
-    clean.includes('sarai_18') ||
-    clean.includes('sarai-18') ||
-    clean.includes('18mldsarai') ||
-    clean.includes('jwalapur') ||
-    (clean.includes('sarai') && clean.includes('18'))
-  ) {
-    return StpSite.SARAI_18
-  }
-
-  // 14 MLD Sarai
-  if (clean.includes('sarai') || clean.includes('14mld')) return StpSite.SARAI
-
-  // 27 MLD Jagjeetpur
-  if (clean.includes('27') && (clean.includes('jag') || clean.includes('jagjeetpur'))) {
-    return StpSite.JAG_27
-  }
-
-  // 18 MLD Jagjeetpur
-  if (clean.includes('18') && (clean.includes('jag') || clean.includes('jagjeetpur'))) {
-    return StpSite.JAGJEETPUR
-  }
-
-  // 20 MLD Mothorowala-2
-  if (
-    clean.includes('moth_2') ||
-    clean.includes('mothorowala-2') ||
-    clean.includes('mothorowala_2') ||
-    clean.includes('mothorowala-ii') ||
-    clean.includes('mothorowala ii')
-  ) {
-    return StpSite.MOTHOROWALA_2
-  }
-
-  // 20 MLD Mothorowala-1
-  if (clean.includes('mothorowala') || clean.includes('moth')) {
-    return StpSite.MOTHOROWALA_1
-  }
-
-  // 26 MLD Lakkar Ghat / Rishikesh
-  if (clean.includes('lakkar') || clean.includes('lkgt')) {
-    return StpSite.LAKKAR_GHAT
-  }
-  if (clean.includes('rishikesh')) {
-    return StpSite.RISHIKESH
-  }
-
-  // 28 MLD Indra Nagar
-  if (clean.includes('indira') || clean.includes('indra')) {
-    return StpSite.INDRA_NAGAR
-  }
-
-  // 33 MLD Saliyar
-  if (clean.includes('sali') || clean.includes('saliyar')) {
-    return StpSite.SALIYAR
-  }
-
-  // 68 MLD Kargi Chowk (and fallback for 68 MLD Jagjeetpur)
-  if (clean.includes('kargi')) {
-    return StpSite.KARGI_CHOWK
-  }
-  if (clean.includes('68mld') || clean.includes('68 mld')) {
-    return StpSite.KARGI_CHOWK
-  }
-
-  return null
+  return STP_SITE_LOOKUP[raw.toLowerCase()] ?? null
 }
 
 export function parseNumeric(val: unknown): number | null {
@@ -233,33 +243,40 @@ export async function fetchLatestStpReading(
 ): Promise<StpReadingResponse | null> {
   const resolved = resolveStpSite(site) ?? site
   const endpoint = `${API_BASE_URL.stpMonitoring}${ENDPOINTS.stpMonitoring.latest(resolved)}`
+  const directBaseUrl =
+    import.meta.env.VITE_STP_MONITORING_API_BASE_URL || 'http://45.195.229.15:8909'
+  const directUrl = `${directBaseUrl}/api/stp/${encodeURIComponent(resolved)}/latest`
 
   try {
     const response = await authFetch(endpoint)
     if (!response.ok) {
-      // If same-origin proxy fails in local dev, try direct port 8909
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        try {
-          const directRes = await fetch(`http://localhost:8909/api/stp/${encodeURIComponent(resolved)}/latest`)
-          if (directRes.ok) return (await directRes.json()) as StpReadingResponse
-        } catch {
-          // ignore direct fallback error
-        }
+      try {
+        const directRes = await fetch(directUrl)
+        if (directRes.ok) return (await directRes.json()) as StpReadingResponse
+      } catch {
+        // ignore direct fallback error
       }
       return null
     }
     return (await response.json()) as StpReadingResponse
   } catch {
-    // Direct fallback for local dev when proxy is unavailable
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      try {
-        const directRes = await fetch(`http://localhost:8909/api/stp/${encodeURIComponent(resolved)}/latest`)
-        if (directRes.ok) return (await directRes.json()) as StpReadingResponse
-      } catch {
-        // ignore
-      }
+    try {
+      const directRes = await fetch(directUrl)
+      if (directRes.ok) return (await directRes.json()) as StpReadingResponse
+    } catch {
+      // ignore
     }
     return null
+  }
+}
+
+/** Fills inletNh4/outletNh4 from the inlet_nh4n_mg_l / outlet_nh4n_mg_l DB column, however the API names it. */
+function withNh4n(reading: StpReadingResponse): StpReadingResponse {
+  const pick = (...values: Array<number | null | undefined>) => values.find((value) => value != null) ?? null
+  return {
+    ...reading,
+    inletNh4: pick(reading.inletNh4, reading.inletNh4n, reading.inletNh4nMgL, reading.inlet_nh4n_mg_l),
+    outletNh4: pick(reading.outletNh4, reading.outletNh4n, reading.outletNh4nMgL, reading.outlet_nh4n_mg_l),
   }
 }
 
@@ -269,9 +286,10 @@ export async function fetchLatestStpReading(
  * Effluent: maps all outlet params (outletFlowM3Hr, outletBod, outletCod, outletTss, outletPh, outletTemperatureC, outletNh4, outletTn, outletTp)
  */
 export function mapStpReadingToLiveRealtime(
-  reading: StpReadingResponse,
+  rawReading: StpReadingResponse,
   _site?: StpSite | null,
 ): LiveRealtimeData {
+  const reading = withNh4n(rawReading)
   const inletAt = formatTimestamp(reading.inletTimestamp ?? reading.fetchedAt)
   const outletAt = formatTimestamp(reading.outletTimestamp ?? reading.fetchedAt)
   const generalAt = inletAt !== '—' ? inletAt : outletAt !== '—' ? outletAt : formatTimestamp(reading.fetchedAt)
@@ -498,3 +516,219 @@ export async function fetchStpMonitoringRealtime(
 
   return mapStpReadingToLiveRealtime(reading, site)
 }
+
+export interface StpReadingsPageInfo {
+  size: number
+  number: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface StpReadingsPagedResponse {
+  content: StpReadingResponse[]
+  page: StpReadingsPageInfo
+}
+
+export interface FetchStpReadingsParams {
+  site: StpSite | string
+  from: string
+  to: string
+  page?: number
+  size?: number
+}
+
+export interface StpParameterReportRow {
+  id: string
+  stream: 'Influent' | 'Effluent'
+  date: string
+  time: string
+  flow: string
+  bod: string
+  cod: string
+  tss: string
+  ph: string
+  temp: string
+  nh4n: string
+  tn: string
+  tp: string
+  status: 'Compliant' | 'Non-Complying'
+  breaches: Record<string, boolean>
+}
+
+function formatReportDateAndTime(rawTimestamp?: string | null): { date: string; time: string } {
+  if (!rawTimestamp) return { date: '—', time: '—' }
+  const raw = String(rawTimestamp).trim()
+  const parsed = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T'))
+  if (Number.isNaN(parsed.getTime())) {
+    return { date: raw, time: '—' }
+  }
+
+  const day = String(parsed.getDate()).padStart(2, '0')
+  const month = String(parsed.getMonth() + 1).padStart(2, '0')
+  const year = parsed.getFullYear()
+  const date = `${day}/${month}/${year}`
+
+  const time = parsed.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })
+
+  return { date, time }
+}
+
+/**
+ * Maps a single StpReadingResponse to a parameter report row for either Effluent or Influent.
+ */
+export function mapStpReadingToParameterReportRow(
+  rawReading: StpReadingResponse,
+  side: 'inlet' | 'outlet' = 'outlet',
+  index = 0,
+): StpParameterReportRow {
+  const reading = withNh4n(rawReading)
+  const isInlet = side === 'inlet'
+  const rawTs = isInlet
+    ? reading.inletTimestamp ?? reading.outletTimestamp ?? reading.fetchedAt
+    : reading.outletTimestamp ?? reading.inletTimestamp ?? reading.fetchedAt
+  const { date, time } = formatReportDateAndTime(rawTs)
+
+  const flowVal = isInlet ? reading.inletFlowM3Hr : reading.outletFlowM3Hr
+  const bodVal = isInlet ? reading.inletBod : reading.outletBod
+  const codVal = isInlet ? reading.inletCod : reading.outletCod
+  const tssVal = isInlet ? reading.inletTss : reading.outletTss
+  const phVal = isInlet ? reading.inletPh : reading.outletPh
+  const tempVal = isInlet ? reading.inletTemperatureC : reading.outletTemperatureC
+  const nh4Val = isInlet ? reading.inletNh4 : reading.outletNh4
+  const tnVal = isInlet ? reading.inletTn : reading.outletTn
+  const tpVal = isInlet ? reading.inletTp : reading.outletTp
+
+  const breaches: Record<string, boolean> = isInlet
+    ? {}
+    : {
+        bod: isBreach(bodVal, 0, 10),
+        cod: isBreach(codVal, 0, 50),
+        tss: isBreach(tssVal, 0, 20),
+        ph: isBreach(phVal, 5.5, 9),
+        temp: isBreach(tempVal, 15, 35),
+        nh4n: isBreach(nh4Val, 0, 10),
+        tn: isBreach(tnVal, 0, 10),
+        tp: isBreach(tpVal, 0, 5),
+      }
+
+  const hasAnyBreach = Object.values(breaches).some(Boolean)
+
+  return {
+    id: `${reading.id ?? index}-${side}`,
+    stream: isInlet ? 'Influent' : 'Effluent',
+    date,
+    time,
+    flow: formatNumber(flowVal),
+    bod: formatNumber(bodVal),
+    cod: formatNumber(codVal),
+    tss: formatNumber(tssVal),
+    ph: formatNumber(phVal),
+    temp: formatNumber(tempVal),
+    nh4n: formatNumber(nh4Val),
+    tn: formatNumber(tnVal),
+    tp: formatNumber(tpVal),
+    status: hasAnyBreach ? 'Non-Complying' : 'Compliant',
+    breaches,
+  }
+}
+
+function normalizePagedReadingsResponse(
+  raw: unknown,
+  fallbackPage: number,
+  fallbackSize: number,
+): StpReadingsPagedResponse {
+  if (Array.isArray(raw)) {
+    return {
+      content: raw as StpReadingResponse[],
+      page: {
+        size: fallbackSize,
+        number: fallbackPage,
+        totalElements: raw.length,
+        totalPages: raw.length > 0 ? 1 : 0,
+      },
+    }
+  }
+
+  const obj = (raw ?? {}) as Record<string, any>
+  const content = Array.isArray(obj.content)
+    ? (obj.content as StpReadingResponse[])
+    : Array.isArray(obj.data)
+      ? (obj.data as StpReadingResponse[])
+      : []
+
+  const pageObj = obj.page && typeof obj.page === 'object' ? obj.page : obj
+  const size = typeof pageObj.size === 'number' ? pageObj.size : fallbackSize
+  const number = typeof pageObj.number === 'number' ? pageObj.number : fallbackPage
+  const totalElements =
+    typeof pageObj.totalElements === 'number' ? pageObj.totalElements : content.length
+  const totalPages =
+    typeof pageObj.totalPages === 'number'
+      ? pageObj.totalPages
+      : size > 0
+        ? Math.ceil(totalElements / size)
+        : 1
+
+  return {
+    content,
+    page: {
+      size,
+      number,
+      totalElements,
+      totalPages,
+    },
+  }
+}
+
+/**
+ * Fetch paginated readings for a specific STP site from the 8909 API endpoint.
+ * Example: /api/stp/BAZPUR/readings?from=2026-11-01T00:00:00&to=2026-11-03T23:59:59&page=0&size=50
+ */
+export async function fetchStpReadings({
+  site,
+  from,
+  to,
+  page = 0,
+  size = 50,
+}: FetchStpReadingsParams): Promise<StpReadingsPagedResponse | null> {
+  const resolved = resolveStpSite(site) ?? site
+  if (!resolved) return null
+
+  const query = new URLSearchParams({
+    from,
+    to,
+    page: String(page),
+    size: String(size),
+  }).toString()
+
+  const endpoint = `${API_BASE_URL.stpMonitoring}${ENDPOINTS.stpMonitoring.readings(resolved)}?${query}`
+  const directBaseUrl =
+    import.meta.env.VITE_STP_MONITORING_API_BASE_URL || 'http://45.195.229.15:8909'
+  const directUrl = `${directBaseUrl}/api/stp/${encodeURIComponent(resolved)}/readings?${query}`
+
+  try {
+    const response = await authFetch(endpoint)
+    if (response.ok) {
+      const json = await response.json()
+      return normalizePagedReadingsResponse(json, page, size)
+    }
+  } catch {
+    // fallback below
+  }
+
+  try {
+    const directRes = await fetch(directUrl)
+    if (directRes.ok) {
+      const json = await directRes.json()
+      return normalizePagedReadingsResponse(json, page, size)
+    }
+  } catch {
+    // ignore fallback error
+  }
+
+  return null
+}
+

@@ -1,17 +1,39 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ExportButton from '../components/ui/ExportButton'
 import { PrintDocumentBody } from '../components/export/PrintDocument'
 import { useTableExport } from '../components/export/useTableExport'
 import { STAFF_COLUMNS } from '../components/manpower/StaffAvailabilityCard'
-import { buildTodayManpower } from '../components/manpower/todayManpower'
+import type { TodayStaffRow } from '../components/manpower/todayManpower'
+import { fetchManpowerRows, resolveManpowerStpId } from '../api/manpower'
 import { parseManpowerReportLink } from '../lib/manpowerReportQr'
 
 /** Public page a staff-availability QR opens: the same table as the Manpower tab, with PDF/CSV. */
 export default function ManpowerStaffReport() {
   const [searchParams] = useSearchParams()
   const link = useMemo(() => parseManpowerReportLink(searchParams), [searchParams])
-  const rows = useMemo(() => (link ? buildTodayManpower(link.seed, link.stpName).rows : []), [link])
+  const [rows, setRows] = useState<TodayStaffRow[] | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setRows(null)
+    if (!link) return undefined
+    const stpDetailId = resolveManpowerStpId(undefined, link.seed) ?? resolveManpowerStpId(link.seed)
+    if (stpDetailId === null) return undefined
+
+    let cancelled = false
+    setLoading(true)
+    fetchManpowerRows(stpDetailId).then((result) => {
+      if (cancelled) return
+      setRows(result)
+      setLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [link])
+
+  const staffRows = rows ?? []
   const rangeLabel = link ? `Today, ${link.dateLabel}` : ''
   const title = link ? `Staff Availability — ${link.dateLabel}` : ''
 
@@ -34,15 +56,21 @@ export default function ManpowerStaffReport() {
           <div className="p-[24px] text-[14px] text-[#646464]">
             This report link is invalid or incomplete. Please scan the QR code again.
           </div>
+        ) : loading ? (
+          <div className="p-[24px] text-[14px] text-[#646464]">Loading manpower data...</div>
+        ) : staffRows.length === 0 ? (
+          <div role="alert" className="p-[24px] text-[14px] text-[#646464]">
+            Unable to fetch manpower data for this STP. Please try again later.
+          </div>
         ) : (
           <div className="flex flex-col gap-[16px] p-[20px]">
             <div className="flex flex-wrap items-center justify-between gap-[12px]">
               <h2 className="text-[15px] font-semibold text-[#07121E]">
-                {link.stpName} — Staff Availability ({rows.length})
+                {link.stpName} — Staff Availability ({staffRows.length})
               </h2>
               <div className="flex items-center gap-[10px]">
-                <ExportButton label="PDF" onClick={() => exportPdf(rows)} />
-                <ExportButton label="CSV" onClick={() => exportCsv(rows)} />
+                <ExportButton label="PDF" onClick={() => exportPdf(staffRows)} />
+                <ExportButton label="CSV" onClick={() => exportCsv(staffRows)} />
               </div>
             </div>
 
@@ -55,7 +83,7 @@ export default function ManpowerStaffReport() {
                 address={link.meta.address}
                 rangeLabel={rangeLabel}
                 columns={STAFF_COLUMNS}
-                rows={rows}
+                rows={staffRows}
               />
             </div>
           </div>

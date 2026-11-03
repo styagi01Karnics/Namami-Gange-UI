@@ -5,7 +5,7 @@ export const MANPOWER_REPORT_PATH = '/manpower-report'
 export type ManpowerReportMeta = Pick<ExportMeta, 'address' | 'badge' | 'badgeTone'>
 
 export type ManpowerReportLink = {
-  /** Seed passed to buildTodayManpower, so the scanned page rebuilds the same roster. */
+  /** Seed passed to the report page, which resolves the STP and fetches its staff from the manpower API. */
   seed: string
   stpName: string
   dateLabel: string

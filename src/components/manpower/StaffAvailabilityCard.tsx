@@ -10,9 +10,18 @@ import Ico from '../ui/Ico'
 import { useTableExport } from '../export/useTableExport'
 import { useExportMeta } from '../export/exportMeta'
 import ReportQrModal from '../export/ReportQrModal'
-import { staffAvailability, staffStatusFilterMap } from '../../data/mockData'
 import { buildManpowerReportUrl } from '../../lib/manpowerReportQr'
 import type { TodayStaffRow } from './todayManpower'
+
+const STAFF_STATUS_FILTERS = ['All', 'Present', 'On Leave', 'Absent']
+
+/** "All" maps to no filter; the rest match the row `status` values. */
+const STAFF_STATUS_FILTER_MAP: Record<string, TodayStaffRow['status'] | null> = {
+  All: null,
+  Present: 'Active',
+  'On Leave': 'On Leave',
+  Absent: 'Absent',
+}
 
 export const STAFF_COLUMNS = [
   { key: 'id', label: 'SN' },
@@ -33,7 +42,7 @@ export default function StaffAvailabilityCard({
 }: {
   rows: TodayStaffRow[]
   dateLabel: string
-  /** With stpName, enables the QR button; the link rebuilds these rows. */
+  /** With stpName, enables the QR button; the scanned page reloads this STP's staff from the API. */
   seed?: string
   stpName?: string
   open?: boolean
@@ -66,7 +75,7 @@ export default function StaffAvailabilityCard({
       : ''
 
   const rows = useMemo(() => {
-    const wanted = staffStatusFilterMap[filter]
+    const wanted = STAFF_STATUS_FILTER_MAP[filter]
     const q = query.trim().toLowerCase()
 
     const list = staffRows.filter((r) => {
@@ -99,7 +108,7 @@ export default function StaffAvailabilityCard({
           <div className="flex flex-col gap-[24px] px-[15px] pb-[16px]">
             <PillTabs
               variant="segmented"
-              tabs={staffAvailability.filters}
+              tabs={STAFF_STATUS_FILTERS}
               active={filter}
               onChange={setFilter}
               className="w-[387px]"

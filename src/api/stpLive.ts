@@ -1,4 +1,3 @@
-import { stpRealtime } from '../data/mockData'
 import { authFetch } from '../auth/session'
 import { dashboardResourceUrl } from './plants'
 
@@ -266,8 +265,8 @@ function buildStream(
   // Nitrogen subcard priority: NH4-N comes first if present in the API; otherwise fallback to NO3-N.
   const nh4Keys =
     side === 'inlet'
-      ? (['nh4n_inlet', 'nh4_inlet', 'nh4__inlet', 'nh4n__inlet', 'inlet_nh4_mg_l', 'inlet_nh4'] as const)
-      : (['nh4n_outlet', 'nh4_outlet', 'nh4__outlet', 'nh4n__outlet', 'outlet_nh4_mg_l', 'outlet_nh4'] as const)
+      ? (['nh4n_inlet', 'nh4_inlet', 'nh4__inlet', 'nh4n__inlet', 'inlet_nh4n_mg_l', 'inlet_nh4_mg_l', 'inlet_nh4'] as const)
+      : (['nh4n_outlet', 'nh4_outlet', 'nh4__outlet', 'nh4n__outlet', 'outlet_nh4n_mg_l', 'outlet_nh4_mg_l', 'outlet_nh4'] as const)
   const no3Keys =
     side === 'inlet'
       ? (['tna_inlet', 'tna__inlet', 'no3n_inlet', 'no3_inlet', 'no3n__inlet', 'inlet_no3_mg_l', 'inlet_no3', 'inlet_tn'] as const)
@@ -468,27 +467,5 @@ export async function fetchStpLive(plantCode: string): Promise<LiveRealtimeData 
     return mapLivePayloadToRealtime(await response.json())
   } catch {
     return null
-  }
-}
-
-export function getFallbackRealtime(): LiveRealtimeData {
-  return {
-    at: stpRealtime.at,
-    influent: {
-      ...stpRealtime.influent,
-      at: stpRealtime.at,
-      params: stpRealtime.influent.params.map((param) => ({
-        ...param,
-        tone: param.tone as LiveParam['tone'],
-      })),
-    },
-    effluent: {
-      ...stpRealtime.effluent,
-      at: stpRealtime.at,
-      params: stpRealtime.effluent.params.map((param) => ({
-        ...param,
-        tone: param.tone as LiveParam['tone'],
-      })),
-    },
   }
 }

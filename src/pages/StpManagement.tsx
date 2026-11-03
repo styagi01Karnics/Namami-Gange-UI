@@ -27,7 +27,7 @@ import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMe
 import {
   FALLBACK_PLANT_OPTIONS,
   PLANT_CODE_TO_STP_ID,
-  loadPlantPickerOptions,
+  loadStpDetailsPlantOptions,
   resolveStpDetail,
   type PlantOption,
 } from '../api/plants'
@@ -116,7 +116,7 @@ export default function StpManagement() {
     let cancelled = false
 
     async function loadPlants() {
-      const next = await loadPlantPickerOptions()
+      const next = await loadStpDetailsPlantOptions()
       if (cancelled || next.length === 0) return
 
       setPlantOptions(next)

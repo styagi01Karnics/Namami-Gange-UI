@@ -395,10 +395,14 @@ async function parseJsonSafely<T = any>(response: Response): Promise<T | null> {
   }
 }
 
-type StpDetail = {
+export type StpDetail = {
   id: number
   stpCapacity?: string
   address?: string
+  omAgency?: string
+  concernPersonName?: string
+  contactNo?: string
+  state?: string
   locationName?: string
   city?: string
 }
@@ -406,7 +410,7 @@ type StpDetail = {
 export type CctvSiteInfo = { name: string; address?: string }
 
 /** Dashboard plantCode for each /stp-details record, indexed by the record's `id`. */
-const STP_DETAIL_PLANT_CODES = [
+export const STP_DETAIL_PLANT_CODES = [
   '14mldsarai',
   '68mldjag',
   '27mldjag_upg',
@@ -423,7 +427,7 @@ const STP_DETAIL_PLANT_CODES = [
 ]
 
 /** "stpCapacity, locationName, city" — city is skipped when it repeats locationName. */
-function formatStpName(detail: StpDetail) {
+export function formatStpName(detail: StpDetail) {
   const location = detail.locationName?.trim()
   const city = detail.city?.trim()
   const parts = [
@@ -439,11 +443,23 @@ async function fetchStpDetails(): Promise<StpDetail[]> {
     const response = await authFetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
     if (!response.ok) return []
 
-    const data = await parseJsonSafely<StpDetail[]>(response)
-    return Array.isArray(data) ? data : []
+    const data = await parseJsonSafely<StpDetail[] | { data?: StpDetail[] }>(response)
+    if (Array.isArray(data)) return data
+    return Array.isArray(data?.data) ? data.data : []
   } catch {
     return []
   }
+}
+
+/** Raw /stp-details records keyed by plantCode. Empty when unavailable. */
+export async function fetchStpDetailsByPlantCode(): Promise<Record<string, StpDetail>> {
+  const details = await fetchStpDetails()
+  const byCode: Record<string, StpDetail> = {}
+  for (const detail of details) {
+    const plantCode = STP_DETAIL_PLANT_CODES[detail.id]
+    if (plantCode) byCode[plantCode] = detail
+  }
+  return byCode
 }
 
 /** CCTV site name + address keyed by plantCode, built from the /stp-details API. Empty when unavailable. */
