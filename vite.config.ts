@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/cctv-api/, '/api'),
         },
         '/dashboard-api': {
-          target: env.VITE_DASHBOARD_API_BASE_URL || 'http://45.195.229.15:18087',
+          target: env.VITE_DASHBOARD_API_BASE_URL || 'http://45.195.229.15:8901',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/dashboard-api/, '/api'),
           // Keep MQTT SSE streams open (no proxy idle timeout / buffering).
@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/stp-details-api/, '/api'),
         },
         '/penalty-api': {
-          target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:18088',
+          target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:8902',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/penalty-api/, '/api'),
         },
