@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
-import { currentUser, dashboardGreeting } from '../../data/mockData'
+import { useAuth } from '../../auth/AuthContext'
+import { dashboardGreeting } from '../../data/mockData'
 
 const ClockIcon = ico('basil:history-outline')
 
@@ -19,7 +20,9 @@ function formatParts(date: Date) {
 
 export default function GreetingCard() {
   const [now, setNow] = useState(() => new Date())
-  const firstName = currentUser.name.split(' ')[0] ?? currentUser.name
+  const { name } = useAuth()
+  const displayName = name ?? ''
+  const firstName = displayName.split(' ')[0] ?? displayName
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000)

@@ -1,35 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { ico } from '../ui/Ico'
-import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
-import Field from '../ui/Field'
-import { settingsProfile } from '../../data/mockData'
+import ProfileDetails from './ProfileDetails'
+import { useMyProfile } from '../../hooks/useMyProfile'
 
 const PersonIcon = ico('fluent:person-32-filled')
 
 export default function ProfileModal({ open, onClose }) {
-  const [form, setForm] = useState(settingsProfile)
+  const hook = useMyProfile()
+  const { reload, discardChanges, confirmRemoveOpen } = hook
 
   useEffect(() => {
     if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !confirmRemoveOpen) onClose()
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, confirmRemoveOpen])
 
   useEffect(() => {
-    if (!open) setForm(settingsProfile)
-  }, [open])
+    if (open) reload()
+  }, [open, reload])
 
   if (!open) return null
 
-  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
+  const handleClose = () => {
+    discardChanges()
+    onClose()
+  }
 
   return (
     <div
       role="presentation"
-      onClick={onClose}
+      onClick={handleClose}
       className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/45 p-[20px]"
     >
       <div
@@ -50,7 +55,7 @@ export default function ProfileModal({ open, onClose }) {
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
             className="flex h-[28px] w-[28px] items-center justify-center rounded-[8px] border border-line text-ink-soft hover:text-brand"
           >
@@ -59,37 +64,19 @@ export default function ProfileModal({ open, onClose }) {
         </div>
 
         <div className="px-[22px] pb-[8px]">
-          <div className="flex items-center gap-[16px]">
-            <Avatar size={64} />
-            <div>
-              <p className="text-[13.5px] font-bold leading-5 text-ink">Profile photo</p>
-              <p className="mt-[3px] text-[12px] leading-4 text-ink-muted">PNG or JPG, up to 2 MB.</p>
-              <div className="mt-[10px] flex gap-[8px]">
-                <Button variant="outline" className="h-[32px] px-[13px]">
-                  Change photo
-                </Button>
-                <Button variant="ghost" className="h-[32px] px-[13px]">
-                  Remove
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-[18px] grid grid-cols-2 gap-x-[18px] gap-y-[16px]">
-            <Field label="Full name" value={form.name} onChange={set('name')} />
-            <Field label="Designation" value={form.designation} onChange={set('designation')} />
-            <Field label="Email address" type="email" value={form.email} onChange={set('email')} />
-            <Field label="Phone number" value={form.phone} onChange={set('phone')} />
-            <Field label="Employee ID" value={form.employeeId} onChange={set('employeeId')} />
-            <Field label="Reporting office" value={form.office} onChange={set('office')} />
-          </div>
+          <ProfileDetails hook={hook} />
         </div>
 
         <div className="mt-[10px] flex items-center justify-end gap-[10px] px-[22px] py-[16px]">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={onClose}>Save changes</Button>
+          <Button
+            onClick={hook.saveChanges}
+            disabled={hook.busy || hook.loading || !hook.isDirty}
+          >
+            Save changes
+          </Button>
         </div>
       </div>
     </div>

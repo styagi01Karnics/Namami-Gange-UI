@@ -1,9 +1,22 @@
 type AvatarProps = {
   size?: number
   className?: string
+  photoUrl?: string | null
 }
 
-export default function Avatar({ size = 36, className = '' }: AvatarProps) {
+export default function Avatar({ size = 36, className = '', photoUrl }: AvatarProps) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt=""
+        width={size}
+        height={size}
+        className={`shrink-0 rounded-full object-cover ${className}`}
+      />
+    )
+  }
+
   return (
     <svg viewBox="0 0 36 36" width={size} height={size} className={`shrink-0 rounded-full ${className}`}>
       <circle cx="18" cy="18" r="18" fill="#DCEAFB" />

@@ -8,21 +8,22 @@ import NotificationsModal from '../components/notifications/NotificationsModal'
 import ChangePasswordModal from '../components/settings/ChangePasswordModal'
 import PasswordUpdatedModal from '../components/settings/PasswordUpdatedModal'
 import ProfileModal from '../components/settings/ProfileModal'
-import { currentUser, inboxNotifications } from '../data/mockData'
+import { inboxNotifications } from '../data/mockData'
+import { useMyProfile } from '../hooks/useMyProfile'
 import type { PageTitle, TitleCrumb } from '../types'
 
 const UserIcon = ico('fluent:person-32-filled')
 const LockIcon = ico('fluent:lock-closed-24-filled')
 const BellIcon = ico('fluent:alert-20-filled')
 
-function Avatar({ size = 48, photo }: { size?: number; photo?: boolean }) {
-  if (photo) {
+function Avatar({ size = 48, photoUrl }: { size?: number; photoUrl?: string | null }) {
+  if (photoUrl) {
     return (
       <span
         className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#DCEAFB] ring-2 ring-white"
         style={{ width: size, height: size }}
       >
-        <img src="/dashboard/avatar-user.png" alt="" className="h-full w-full object-cover" />
+        <img src={photoUrl} alt="" className="h-full w-full object-cover" />
       </span>
     )
   }
@@ -65,7 +66,10 @@ export default function Topbar({
   variant?: 'default' | 'dashboard'
 }) {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, name, role } = useAuth()
+  const { profile } = useMyProfile()
+  const displayName = profile?.name || name
+  const displayRole = profile?.role || role
   const menuRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -230,11 +234,11 @@ export default function Topbar({
                 aria-label="Open account menu"
                 className="flex items-center gap-[10px] rounded-[12px] py-1 pl-1 pr-1 transition-colors hover:bg-white/50"
               >
-                <Avatar size={48} photo />
+                <Avatar size={48} photoUrl={profile?.photo} />
                 <span className="text-left leading-tight">
-                  <span className="block text-[14px] font-medium text-[#07121E]">{currentUser.name}</span>
+                  <span className="block text-[14px] font-medium text-[#07121E]">{displayName}</span>
                   <span className="mt-[2px] block text-[11px] font-medium text-[#646464]">
-                    {currentUser.role}
+                    {displayRole}
                   </span>
                 </span>
                 <ChevronDown
@@ -331,10 +335,10 @@ export default function Topbar({
               aria-label="Open account menu"
               className="flex items-center gap-[10px] rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-white"
             >
-              <Avatar size={36} />
+              <Avatar size={36} photoUrl={profile?.photo} />
               <span className="text-left leading-tight">
-                <span className="block text-[13.5px] font-semibold text-ink">{currentUser.name}</span>
-                <span className="block text-[11.5px] text-ink-muted">{currentUser.role}</span>
+                <span className="block text-[13.5px] font-semibold text-ink">{displayName}</span>
+                <span className="block text-[11.5px] text-ink-muted">{displayRole}</span>
               </span>
               <ChevronDown
                 size={17}

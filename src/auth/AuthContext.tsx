@@ -24,6 +24,8 @@ type LoginEnvelope = {
 
 type AuthContextValue = {
   isAuthenticated: boolean
+  /** Logged-in user's display name from the session. */
+  name: string | null
   /** Formatted last-login stamp for the current user, e.g. `08/15/2026, 3.56.42 PM`. */
   lastLoginAt: string | null
   role: string | null
@@ -131,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: Boolean(session),
+      name: session?.name ?? null,
       lastLoginAt,
       role: session?.role ?? null,
       permissions: session?.permissions ?? {},
