@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import Button from '../ui/Button'
 import PasswordField from './PasswordField'
+import { changeMyPassword } from '../../api/profile'
 
 const LockIcon = ico('fluent:lock-closed-24-filled')
 const FileIcon = ico('famicons:document-sharp')
@@ -18,6 +19,8 @@ const RULES = [
 
 export default function ChangePasswordModal({ open, onClose, onSuccess }) {
   const [form, setForm] = useState(EMPTY)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return undefined
@@ -27,18 +30,34 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
   }, [open, onClose])
 
   useEffect(() => {
-    if (!open) setForm(EMPTY)
+    if (!open) {
+      setForm(EMPTY)
+      setError(null)
+    }
   }, [open])
 
   if (!open) return null
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
   const rulesOk = RULES.every((r) => r.test(form.next))
-  const canSubmit = form.current.trim() && rulesOk && form.next === form.confirm
+  const canSubmit = form.current.trim() && rulesOk && form.next === form.confirm && !busy
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return
-    onSuccess()
+    setBusy(true)
+    setError(null)
+    try {
+      await changeMyPassword({
+        currentPassword: form.current,
+        newPassword: form.next,
+        confirmPassword: form.confirm,
+      })
+      onSuccess()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -74,7 +93,13 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
         </div>
 
         <div className="px-[22px] pb-[18px]">
+          {error && (
+            <p role="alert" className="mb-[12px] rounded-[8px] bg-[#FDECEC] px-[12px] py-[8px] text-[12.5px] font-semibold leading-4 text-[#C62828]">
+              {error}
+            </p>
+          )}
           <section className="overflow-hidden rounded-[10px] border border-line">
+
             <header className="flex items-center gap-[9px] bg-[#EEF5FE] px-[14px] py-[10px]">
               <FileIcon size={16} className="text-brand" />
               <h3 className="text-[13px] font-bold leading-[18px] text-brand">Account Details</h3>
@@ -121,13 +146,14 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
         </div>
 
         <div className="flex items-center justify-end gap-[10px] px-[22px] pb-[18px]">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Apply Changes
+            {busy ? 'Applying...' : 'Apply Changes'}
           </Button>
         </div>
+
       </div>
     </div>
   )

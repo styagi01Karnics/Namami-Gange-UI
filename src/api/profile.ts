@@ -77,3 +77,7 @@ export async function uploadMyPhoto(file: File) {
 export function removeMyPhoto() {
   return request<MyProfile>('/photo', { method: 'DELETE' })
 }
+
+export function changeMyPassword(input: { currentPassword: string; newPassword: string; confirmPassword: string }) {
+  return request<void>('/password', { method: 'POST', body: JSON.stringify(input) })
+}
