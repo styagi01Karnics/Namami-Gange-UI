@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import StpAccessLink from '../stp/StpAccessLink'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
 import { fetchStpActiveStatus, type StpActiveStatusData, type StpActiveStatusItem } from '../../api/plants'
@@ -244,15 +245,16 @@ export default function DashboardKpiRow() {
                 >
                   <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
                     {official13StpDetails.map((stp) => (
-                      <Link
+                      <StpAccessLink
                         key={stp.stpId}
+                        plantCode={stp.plantCode || stp.stpId}
                         to={`/stp-management?plant=${encodeURIComponent(stp.plantCode || stp.stpId)}&name=${encodeURIComponent(stp.name)}`}
                         onClick={() => setTotalDropdownOpen(false)}
                         className="block truncate px-3.5 py-2.5 text-[12.5px] font-medium text-[#1E293B] transition-colors hover:bg-[#F0F7FF] hover:text-[#0768D2]"
                         title={stp.name}
                       >
                         {stp.name}
-                      </Link>
+                      </StpAccessLink>
                     ))}
                   </div>
                 </div>
@@ -266,15 +268,16 @@ export default function DashboardKpiRow() {
                 >
                   <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
                     {activeList.map((stp) => (
-                      <Link
+                      <StpAccessLink
                         key={stp.plantCode || stp.stpId}
+                        plantCode={stp.plantCode || stp.stpId}
                         to={`/stp-management?plant=${encodeURIComponent(stp.plantCode || stp.stpId)}&name=${encodeURIComponent(stp.name)}`}
                         onClick={() => setActiveDropdownOpen(false)}
                         className="block truncate px-3.5 py-2.5 text-[12.5px] font-medium text-[#1E293B] transition-colors hover:bg-[#F0FDF4] hover:text-[#168E3F]"
                         title={stp.name}
                       >
                         {stp.name}
-                      </Link>
+                      </StpAccessLink>
                     ))}
                   </div>
                 </div>

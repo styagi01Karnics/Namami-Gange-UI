@@ -21,6 +21,7 @@ import {
   Waves,
 } from 'lucide-react'
 import Select from '../components/ui/Select'
+import { useAuth } from '../auth/AuthContext'
 import CctvSiteCard from '../components/cctv/CctvSiteCard'
 import CameraLightbox from '../components/cctv/CameraLightbox'
 import { CameraStill } from '../components/cctv/CameraTile'
@@ -346,6 +347,7 @@ function getSiteStreams(site: StpSite) {
 export default function CctvMonitoring() {
   const [searchParams] = useSearchParams()
   const plantParam = searchParams.get('plant') || searchParams.get('stp')
+  const { hasStpAccess } = useAuth()
   const [stpOptions, setStpOptions] = useState(() => pinFilterPlantOptions(toFilterPlantOptions([])))
   const [stpId, setStpId] = useState<string>(() => {
     if (!plantParam) return ALL_STP_FILTER_OPTION.id
@@ -398,7 +400,11 @@ export default function CctvMonitoring() {
     async function loadPlants() {
       const [plants, siteInfo] = await Promise.all([fetchDashboardPlants(), fetchCctvSiteInfo()])
       if (cancelled) return
-      const next = pinFilterPlantOptions(toFilterPlantOptions(plants)).map((option) => ({
+      const next = pinFilterPlantOptions(
+        toFilterPlantOptions(plants).filter(
+          (option) => option.id === ALL_STP_FILTER_OPTION.id || hasStpAccess(option.plantCode ?? option.id),
+        ),
+      ).map((option) => ({
         ...option,
         label: (option.plantCode && siteInfo[option.plantCode]?.name) || option.label,
       }))
@@ -430,7 +436,7 @@ export default function CctvMonitoring() {
     return () => {
       cancelled = true
     }
-  }, [plantParam])
+  }, [plantParam, hasStpAccess])
 
   useEffect(() => {
     let cancelled = false

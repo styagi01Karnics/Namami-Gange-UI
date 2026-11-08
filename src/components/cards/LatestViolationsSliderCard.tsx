@@ -16,6 +16,7 @@ import { monthlyViolations, type StpMonthlyViolation } from '../../data/mockData
 import { FALLBACK_PLANT_OPTIONS, fetchLatestViolations } from '../../api/plants'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
+import StpAccessLink from '../stp/StpAccessLink'
 
 /**
  * Official 13 monitored STPs in Uttarakhand.
@@ -262,7 +263,8 @@ export default function LatestViolationsSliderCard({
                 {/* STP Name & Capacity row */}
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <Link
+                    <StpAccessLink
+                      plantCode={item.plantCode || item.stpName}
                       to={plantLink}
                       className="group inline-flex items-center gap-1.5 text-[14px] font-bold text-[#102653] hover:text-[#0768D2] sm:text-[15px]"
                     >
@@ -271,7 +273,7 @@ export default function LatestViolationsSliderCard({
                         size={15}
                         className="shrink-0 text-[#94A3B8] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#0768D2]"
                       />
-                    </Link>
+                    </StpAccessLink>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#64748B]">
                       <span className="inline-flex items-center gap-1">
                         <MapPin size={12} className="text-[#94A3B8]" />
@@ -338,12 +340,13 @@ export default function LatestViolationsSliderCard({
                     </span>
                   </div>
 
-                  <Link
+                  <StpAccessLink
+                    plantCode={item.plantCode || item.stpName}
                     to={plantLink}
                     className="inline-flex items-center gap-1 font-semibold text-[#0768D2] hover:underline"
                   >
                     View in STP Management &rarr;
-                  </Link>
+                  </StpAccessLink>
                 </div>
               </div>
             )

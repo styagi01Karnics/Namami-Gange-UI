@@ -1070,6 +1070,7 @@ export const stpMapMarkers = [
 export const nonActiveStpRows = [
   {
     id: 'kashipur-10',
+    plantCode: '10mldkashipur',
     name: '10 MLD STP, Kashipur',
     href: '/stp-management?plant=10mldkashipur&name=10%20MLD%20STP%20Kashipur',
     lastActiveDate: '15/02/2026',

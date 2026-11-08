@@ -50,8 +50,11 @@ const initialIndividualOptions: ReportStpOption[] = FALLBACK_PLANT_OPTIONS.map((
 export default function ReportShell({ children }: { children?: ReactNode }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const [stpOptions, setStpOptions] = useState<ReportStpOption[]>(() => initialIndividualOptions)
-  const [stpId, setStpId] = useState<string>(initialIndividualOptions[0]?.id ?? '68mldjag')
+  const { can, hasStpAccess } = useAuth()
+  const [stpOptions, setStpOptions] = useState<ReportStpOption[]>(() =>
+    initialIndividualOptions.filter((option) => hasStpAccess(option.plantCode ?? option.id)),
+  )
+  const [stpId, setStpId] = useState<string>(stpOptions[0]?.id ?? '68mldjag')
   const [range, setRange] = useState(defaultDateRange)
 
   useEffect(() => {
@@ -61,12 +64,14 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
       const plants = await fetchDashboardPlants()
       if (cancelled) return
       const plantList = plants.length > 0 ? toPlantOptions(plants) : FALLBACK_PLANT_OPTIONS
-      const next: ReportStpOption[] = plantList.map((p) => ({
-        id: p.plantCode,
-        label: p.label,
-        plantCode: p.plantCode,
-        stpId: p.stpId,
-      }))
+      const next: ReportStpOption[] = plantList
+        .filter((p) => hasStpAccess(p.plantCode))
+        .map((p) => ({
+          id: p.plantCode,
+          label: p.label,
+          plantCode: p.plantCode,
+          stpId: p.stpId,
+        }))
       setStpOptions(next)
       setStpId((current) => (next.some((option) => option.id === current) ? current : next[0]?.id ?? '68mldjag'))
     }
@@ -75,7 +80,7 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [hasStpAccess])
 
   const selected = useMemo(
     () => stpOptions.find((option) => option.id === stpId) ?? stpOptions[0],
@@ -95,7 +100,6 @@ export default function ReportShell({ children }: { children?: ReactNode }) {
     [stpId, setStpId, selected, stpOptions, range],
   )
 
-  const { can } = useAuth()
   // Only show report tabs the user's role grants under the reports module.
   const visibleReportTabs = useMemo(
     () => REPORT_TABS.filter((t) => can('reports', t.label)),

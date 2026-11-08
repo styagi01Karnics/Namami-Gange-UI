@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { ChevronDown, Trophy } from 'lucide-react'
 import { topPerformingStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
 import Card from '../ui/Card'
+import StpAccessLink from '../stp/StpAccessLink'
 
 const RANGES = ['Weekly'] as const
 const TOP_COUNT = 10
@@ -67,13 +67,14 @@ export default function TopPerformingStpsCard() {
             <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-[#0768D2] text-[11px] font-bold text-white">
               {row.rank}
             </span>
-            <Link
+            <StpAccessLink
+              plantCode={row.plantCode}
               to={stpCompliancePath(row.plantCode)}
               className="truncate text-[12px] font-semibold text-[#0768D2] hover:underline"
               title={row.name}
             >
               {row.name}
-            </Link>
+            </StpAccessLink>
             <div className="flex items-center gap-1.5">
               <div className="h-[5px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#E4EEF7]">
                 <div className="h-full rounded-full bg-[#16A765]" style={{ width: `${row.score}%` }} />

@@ -6,6 +6,7 @@ import PrintDocument from '../export/PrintDocument'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
+import StpAccessLink from '../stp/StpAccessLink'
 
 /** Earliest date that can be selected; earlier dates are disabled in the picker. */
 const PICKER_MIN = '2026-09-01'
@@ -155,13 +156,14 @@ export default function NonPerformingStpsCard() {
                 <tr key={row.id} className="border-b border-[#E2EBF5] bg-white transition-colors hover:bg-[#F8FAFC] last:border-0">
                   <td className="px-[5px] py-[8px] align-top pt-[10px] text-[11px] text-[#51647C]">{index + 1}</td>
                   <td className="px-[5px] py-[8px] align-top pt-[10px]">
-                    <Link
+                    <StpAccessLink
+                      plantCode={row.plantCode}
                       to={stpCompliancePath(row.plantCode)}
                       className="block truncate text-[11px] font-semibold leading-[15px] text-[#0768D2] underline hover:opacity-80"
                       title={row.name}
                     >
                       {row.name}
-                    </Link>
+                    </StpAccessLink>
                   </td>
                   <td className="px-[5px] py-[8px] align-top pt-[10px] text-[11px] font-medium text-[#07121E]">
                     {row.capacityMld}

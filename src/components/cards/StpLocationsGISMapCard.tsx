@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Layers3,
@@ -18,6 +19,9 @@ import {
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import Select from '../ui/Select'
+import Toast, { type ToastFeedback } from '../ui/Toast'
+import { useAuth } from '../../auth/AuthContext'
+import { NO_STP_ACCESS_MESSAGE } from '../../lib/stpAccess'
 import {
   stpDetails,
   type StpMapPoint,
@@ -359,6 +363,9 @@ function StpPopup({ point, onViewDetails }: { point: MappedPlant; onViewDetails:
 
 export default function StpLocationsGISMapCard() {
   const navigate = useNavigate()
+  const { hasStpAccess } = useAuth()
+  const [feedback, setFeedback] = useState<ToastFeedback | null>(null)
+  const dismissFeedback = () => setFeedback(null)
   const [searchParams] = useSearchParams()
   const targetParam = searchParams.get('stp') || searchParams.get('plant') || searchParams.get('mapStp')
 
@@ -503,7 +510,12 @@ export default function StpLocationsGISMapCard() {
 
   const openDetails = (point: StpMapPoint) => {
     const selected = point as MappedPlant
-    navigate(`/stp-management?plant=${encodeURIComponent(selected.detailCode ?? selected.id)}&name=${encodeURIComponent(point.label)}`)
+    const plantCode = selected.detailCode ?? selected.id
+    if (!hasStpAccess(plantCode)) {
+      setFeedback({ id: Date.now(), tone: 'error', text: NO_STP_ACCESS_MESSAGE })
+      return
+    }
+    navigate(`/stp-management?plant=${encodeURIComponent(plantCode)}&name=${encodeURIComponent(point.label)}`)
   }
 
   return (
@@ -628,6 +640,7 @@ export default function StpLocationsGISMapCard() {
           {satellite ? 'Satellite' : 'Street'}
         </button>
       </div>
+      {feedback && createPortal(<Toast feedback={feedback} onClose={dismissFeedback} />, document.body)}
     </section>
   )
 }

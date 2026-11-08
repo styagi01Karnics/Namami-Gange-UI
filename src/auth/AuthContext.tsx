@@ -8,6 +8,7 @@ import {
   saveSession,
   type AuthSession,
 } from './session'
+import { canAccessStp } from '../lib/stpAccess'
 
 type LoginEnvelope = {
   success?: boolean
@@ -19,6 +20,7 @@ type LoginEnvelope = {
     role: string
     roleId: string
     permissions: Record<string, string[]>
+    stps?: string[]
   }
 }
 
@@ -32,7 +34,9 @@ type AuthContextValue = {
   permissions: Record<string, string[]>
   /** `can('stp')` = any grant in module; `can('stp', 'Manpower')` = that exact key. */
   can: (moduleId: string, key?: string) => boolean
-  login: (email: string, password: string, remember?: boolean) => Promise<void>
+  /** True when the dashboard plant code maps to one of the STPs assigned to the user's role. */
+  hasStpAccess: (plantCode?: string | null) => boolean
+  login:  (email: string, password: string, remember?: boolean) => Promise<void>
   logout: () => void
 }
 
@@ -98,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role,
       roleId: data.roleId,
       permissions: data.permissions ?? {},
+      stps: data.stps ?? [],
     }
 
     clearSession()
@@ -130,6 +135,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session],
   )
 
+  const hasStpAccess = useCallback(
+    (plantCode?: string | null) => canAccessStp(session?.stps ?? [], plantCode),
+    [session],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: Boolean(session),
@@ -138,10 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: session?.role ?? null,
       permissions: session?.permissions ?? {},
       can,
+      hasStpAccess,
       login,
       logout,
     }),
-    [session, lastLoginAt, can, login, logout],
+    [session, lastLoginAt, can, hasStpAccess, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

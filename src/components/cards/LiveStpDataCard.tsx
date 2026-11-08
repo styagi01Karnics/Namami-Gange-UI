@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { liveStpData } from '../../data/mockData'
 import { stpRealtimePath } from '../../routes'
 import Card from '../ui/Card'
+import StpAccessLink from '../stp/StpAccessLink'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -124,13 +125,14 @@ export default function LiveStpDataCard() {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-[8px]">
-                  <Link
+                  <StpAccessLink
+                    plantCode={stp.plantCode}
                     to={`${stpRealtimePath(stp.plantCode)}&name=${encodeURIComponent(stp.name)}`}
                     className="truncate text-[14px] font-bold leading-5 text-[#0768D2] underline"
                     title={`${stp.name} \u00b7 ${stp.operator}`}
                   >
                     {stp.name}
-                  </Link>
+                  </StpAccessLink>
                   <span
                     title={stp.operator}
                     className="inline-flex h-[22px] max-w-[112px] shrink-0 items-center truncate rounded-full bg-[#EAF3EC] px-[7px] text-[10px] font-semibold text-[#168E3F]"

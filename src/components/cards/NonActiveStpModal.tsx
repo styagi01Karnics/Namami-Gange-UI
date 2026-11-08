@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { nonActiveStpRows, official13StpDetails } from '../../data/mockData'
 import { fetchStpActiveStatus, type StpActiveStatusItem } from '../../api/plants'
+import StpAccessLink from '../stp/StpAccessLink'
 
 type Props = {
   open: boolean
@@ -75,6 +75,7 @@ export default function NonActiveStpModal({ open, onClose, items }: Props) {
           const dt = formatLastActive(item.lastActive)
           return {
             id: item.plantCode,
+            plantCode: item.plantCode,
             name: item.plantName,
             href: `/stp-management?plant=${encodeURIComponent(item.plantCode)}&name=${encodeURIComponent(item.plantName)}`,
             lastActiveDate: dt.date,
@@ -148,14 +149,15 @@ export default function NonActiveStpModal({ open, onClose, items }: Props) {
                   className="border-b border-line bg-white odd:bg-white even:bg-[#FAFAFA] last:border-0 hover:bg-[#F1F5F9]/50 transition-colors"
                 >
                   <td className="px-[16px] py-[14px] align-top">
-                    <Link
+                    <StpAccessLink
+                      plantCode={row.plantCode}
                       to={row.href}
                       onClick={onClose}
                       className="block truncate text-[12.5px] font-semibold leading-4 text-brand-link hover:underline"
                       title={row.name}
                     >
                       {row.name}
-                    </Link>
+                    </StpAccessLink>
                   </td>
                   <td className="px-[16px] py-[14px] text-[12.5px] leading-4 text-ink align-top">
                     <p className="font-medium">{row.lastActiveDate}</p>

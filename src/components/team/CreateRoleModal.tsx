@@ -142,6 +142,8 @@ function ModuleRow({ module, selected, onToggleModule, onTogglePermission }: any
 export default function CreateRoleModal({ open, onClose, onSubmit, role = null }: any) {
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
+  const [stps, setStps] = useState<string[]>([])
+  const [stpOpen, setStpOpen] = useState(false)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [catalogError, setCatalogError] = useState('')
@@ -181,6 +183,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
     if (!open) {
       setForm(EMPTY)
       setGranted({})
+      setStps([])
+      setStpOpen(false)
       setSubmitError('')
       return
     }
@@ -193,6 +197,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         template: role.permissionLabel ?? role.permissionPreset ?? role.template ?? '',
       })
       setGranted(role.granted || {})
+      setStps(role.stps || [])
 
       // Endpoint 3: GET /api/roles/{id} from database
       if (role.id) {
@@ -209,6 +214,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               if (detail.granted) {
                 setGranted(detail.granted)
               }
+              setStps(detail.stps || [])
             }
           })
           .catch((err) => {
@@ -224,6 +230,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
     setForm(EMPTY)
     setGranted({})
+    setStps([])
     setSubmitError('')
   }, [open, role])
 
@@ -231,6 +238,29 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
   const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const canSubmit = form.role.trim() && form.description.trim()
+
+  const stpList = catalog?.stps || []
+  // Stored STPs come back as real labels; normalise them to catalog ids for the checkboxes and payload.
+  const selectedStpIds = useMemo(() => {
+    const idByLabel = new Map(stpList.map((s) => [s.label, s.id]))
+    const ids = stps
+      .map((value) => (stpList.some((s) => s.id === value) ? value : idByLabel.get(value)))
+      .filter((value): value is string => Boolean(value))
+    return Array.from(new Set(ids))
+  }, [stps, stpList])
+  const allStpsSelected = stpList.length > 0 && stpList.every((s) => selectedStpIds.includes(s.id))
+  const stpLabel = (() => {
+    if (selectedStpIds.length === 0) return 'Select STPs'
+    if (allStpsSelected) return 'All STPs'
+    return stpList
+      .filter((s) => selectedStpIds.includes(s.id))
+      .map((s) => s.label)
+      .join(', ')
+  })()
+
+  const toggleStp = (id: string, checked: boolean) =>
+    setStps(checked ? [...selectedStpIds.filter((x) => x !== id), id] : selectedStpIds.filter((x) => x !== id))
+  const toggleAllStps = (checked: boolean) => setStps(checked ? stpList.map((s) => s.id) : [])
 
   const modulesList = catalog?.modules || []
   const statusesList = catalog?.statuses?.length ? catalog.statuses.map((s) => s.label) : ['Active', 'Inactive']
@@ -324,7 +354,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         payload.granted = cleanedGranted
       }
 
-      await onSubmit(payload)
+      await onSubmit({ ...payload, stps: selectedStpIds })
       onClose()
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')
@@ -425,6 +455,44 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
                     onChange={handleTemplateChange}
                     placeholder={catalogLoading ? 'Loading templates...' : 'Select a template'}
                   />
+                </div>
+              </div>
+
+              <div>
+                <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">STP Selection</span>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setStpOpen((v) => !v)}
+                    disabled={stpList.length === 0}
+                    className="flex w-full items-center justify-between rounded-[9px] border border-line bg-white px-[13px] py-[10px] text-left text-[13px] leading-5 text-ink outline-none transition-colors focus:border-brand disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span className={`truncate ${selectedStpIds.length === 0 ? 'text-ink-muted' : ''}`}>
+                      {stpList.length === 0 ? 'No STPs in catalog' : stpLabel}
+                    </span>
+                    <ChevronDown size={14} className={`ml-2 shrink-0 text-ink-soft transition-transform ${stpOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {stpOpen && stpList.length > 0 && (
+                    <div className="mt-[4px] max-h-[260px] w-full overflow-y-auto rounded-[9px] border border-line bg-white p-[10px] shadow-sm">
+                      <div className="mb-[8px] border-b border-line pb-[8px]">
+                        <Checkbox
+                          label="All"
+                          checked={allStpsSelected}
+                          onChange={(next: boolean) => toggleAllStps(next)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-[14px] gap-y-[10px]">
+                        {stpList.map((stp) => (
+                          <Checkbox
+                            key={stp.id}
+                            label={stp.label}
+                            checked={selectedStpIds.includes(stp.id)}
+                            onChange={(next: boolean) => toggleStp(stp.id, next)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

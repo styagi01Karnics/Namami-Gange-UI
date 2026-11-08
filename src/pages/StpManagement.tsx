@@ -33,6 +33,7 @@ import {
   type PlantOption,
 } from '../api/plants'
 import { useSharedRefreshTick } from '../hooks/useSharedRefreshTick'
+import { NO_STP_ACCESS_MESSAGE } from '../lib/stpAccess'
 
 /** Each section tab renders the same widget set as its standalone page. */
 const TAB_BODY = {
@@ -150,8 +151,19 @@ export default function StpManagement() {
     if (matched) setPlantCode(matched)
   }, [plantParam, plantOptions])
 
+  // Deep links to STPs outside the user's role are sent back to the dashboard with an error toast.
+  const { can, hasStpAccess } = useAuth()
+  const requestedPlantCode = useMemo(() => {
+    const matchedId = resolvePlantId(plantOptions, plantParam)
+    return plantOptions.find((option) => option.id === matchedId)?.plantCode ?? plantParam
+  }, [plantOptions, plantParam])
+
+  useEffect(() => {
+    if (!plantParam || hasStpAccess(requestedPlantCode)) return
+    navigate('/dashboard', { replace: true, state: { stpAccessError: NO_STP_ACCESS_MESSAGE } })
+  }, [plantParam, requestedPlantCode, hasStpAccess, navigate])
+
   // Only show section tabs the user's role grants under the STP module.
-  const { can } = useAuth()
   const visibleStpTabs = useMemo(
     () => stpSectionTabs.filter((label) => can('stp', label)),
     [can],
@@ -180,12 +192,26 @@ export default function StpManagement() {
         : plantOptions[0]),
     [plantOptions, plantCode, plantParam, searchParams],
   )
-  const pickerOptions = useMemo(
-    () => selectedPlant && !plantOptions.some((option) => option.id === selectedPlant.id)
-      ? [...plantOptions, selectedPlant]
-      : plantOptions,
-    [plantOptions, selectedPlant],
+  // The STP picker only lists STPs the user's role grants access to.
+  const accessiblePlantOptions = useMemo(
+    () => plantOptions.filter((option) => hasStpAccess(option.plantCode)),
+    [plantOptions, hasStpAccess],
   )
+  const pickerOptions = useMemo(() => {
+    if (!selectedPlant || accessiblePlantOptions.some((option) => option.id === selectedPlant.id)) {
+      return accessiblePlantOptions
+    }
+    return hasStpAccess(selectedPlant.plantCode)
+      ? [...accessiblePlantOptions, selectedPlant]
+      : accessiblePlantOptions
+  }, [accessiblePlantOptions, selectedPlant, hasStpAccess])
+
+  // Without a deep link, fall back to the first allowed STP instead of a denied default.
+  useEffect(() => {
+    if (plantParam || accessiblePlantOptions.length === 0) return
+    if (accessiblePlantOptions.some((option) => option.id === plantCode)) return
+    setPlantCode(accessiblePlantOptions[0].id)
+  }, [accessiblePlantOptions, plantCode, plantParam])
   const stp = resolveStpDetail(selectedPlant)
   const TabBody = TAB_BODY[tab]
   const refreshTick = useSharedRefreshTick(Boolean(selectedPlant?.plantCode))

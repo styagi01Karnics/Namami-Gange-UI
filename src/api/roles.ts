@@ -25,6 +25,7 @@ export type Catalog = {
   permissionPresets: LabeledValue[]
   modules: ModuleCatalogItem[]
   presetGrants: Record<string, Record<string, string[]>>
+  stps: LabeledValue[]
 }
 
 export type RoleCardItem = {
@@ -38,6 +39,7 @@ export type RoleCardItem = {
   createdOn: string
   permissionPreset?: string
   permissionLabel?: string
+  stps?: string[]
   // Aliases for UI compatibility
   users: number
   permissions: number
@@ -55,6 +57,7 @@ export type RoleDetail = {
   userCount: number
   createdOn: string
   granted: Record<string, string[]>
+  stps?: string[]
 }
 
 export type RoleUser = {
@@ -77,6 +80,7 @@ export type RoleRequest = {
   status: string
   permissionPreset?: string
   granted?: Record<string, string[]>
+  stps?: string[]
 }
 
 type ApiResponseEnvelope<T> = {

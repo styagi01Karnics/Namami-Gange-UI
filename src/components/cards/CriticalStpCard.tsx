@@ -4,6 +4,7 @@ import { TrendingUp } from 'lucide-react'
 import Card from '../ui/Card'
 import { criticalStps } from '../../data/mockData'
 import { stpCompliancePath } from '../../routes'
+import StpAccessLink from '../stp/StpAccessLink'
 import { formatParameterName } from '../../lib/parameters'
 
 type CriticalTab = (typeof criticalStps.tabs)[number]
@@ -70,12 +71,13 @@ export default function CriticalStpCard() {
                 className="border-b border-[#D8EDFF] bg-white odd:bg-white even:bg-[rgba(248,248,248,0.9)] last:border-0"
               >
                 <td className="px-[12px] py-[16px]">
-                  <Link
+                  <StpAccessLink
+                    plantCode={row.plantCode}
                     to={stpCompliancePath(row.plantCode)}
                     className="block truncate text-[13px] font-medium leading-[20px] text-[#0768D2] hover:underline"
                   >
                     {row.name}
-                  </Link>
+                  </StpAccessLink>
                 </td>
                 <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.capacityMld}</td>
                 <td className="px-[12px] py-[16px] text-[13px] font-medium text-[#07121E]">{row.district}</td>
