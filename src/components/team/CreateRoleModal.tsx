@@ -237,8 +237,6 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   const total = useMemo(() => Object.values(granted).reduce((n, list) => n + (list?.length || 0), 0), [granted])
 
   const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
-  const canSubmit = form.role.trim() && form.description.trim()
-
   const stpList = catalog?.stps || []
   // Stored STPs come back as real labels; normalise them to catalog ids for the checkboxes and payload.
   const selectedStpIds = useMemo(() => {
@@ -248,6 +246,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       .filter((value): value is string => Boolean(value))
     return Array.from(new Set(ids))
   }, [stps, stpList])
+  // At least one STP is mandatory.
+  const canSubmit = Boolean(form.role.trim() && form.description.trim() && selectedStpIds.length > 0)
   const allStpsSelected = stpList.length > 0 && stpList.every((s) => selectedStpIds.includes(s.id))
   const stpLabel = (() => {
     if (selectedStpIds.length === 0) return 'Select STPs'
@@ -459,7 +459,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               </div>
 
               <div>
-                <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">STP Selection</span>
+                <span className="mb-[10px] block text-[12.5px] font-semibold leading-4 text-ink-soft">STP Selection *</span>
                 <div className="relative">
                   <button
                     type="button"
