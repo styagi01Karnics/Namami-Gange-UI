@@ -1,3 +1,4 @@
+
 pipeline {
 
     agent any
@@ -7,80 +8,48 @@ pipeline {
     }
 
     options {
-        buildDiscarder(
-            logRotator(
-                numToKeepStr: '3'
-            )
-        )
-
         timestamps()
-
+        buildDiscarder(logRotator(numToKeepStr: '3'))
         skipDefaultCheckout(false)
+        disableConcurrentBuilds()
     }
 
     environment {
 
-        // ==========================================================
         // APPLICATION SERVER
-        // ==========================================================
-
         APP_SERVER = '45.195.229.15'
         DEPLOY_PATH = '/opt/namami-gange-ui'
         APP_PORT = '18085'
 
-        // ==========================================================
         // PROJECT
-        // ==========================================================
-
         PROJECT_NAME = 'namami-gange-ui'
         DOCKER_ORG = 'sunardock'
 
-        // ==========================================================
         // CREDENTIALS
-        // ==========================================================
-
         DOCKER_CREDENTIALS = 'dockerhub-creds'
         SSH_CREDENTIALS = 'new-server-ssh'
 
-        // ==========================================================
         // SONAR
-        // ==========================================================
-
         SONAR_HOME = tool 'SonarScanner'
     }
 
     stages {
 
         // ==========================================================
-        // CHECKOUT
+        // 1. CHECKOUT
         // ==========================================================
 
         stage('Checkout') {
-
             steps {
-
                 checkout scm
 
                 script {
-
                     def shortCommit = sh(
                         script: 'git rev-parse --short=7 HEAD',
                         returnStdout: true
                     ).trim()
 
                     def branchName = env.BRANCH_NAME ?: 'unknown'
-
-                    /*
-                     * Convert branch name to Docker-safe value.
-                     *
-                     * Example:
-                     *
-                     * feat/ui-changes-typescript-18-sep
-                     *
-                     * becomes:
-                     *
-                     * feat-ui-changes-typescript-18-sep
-                     */
 
                     def branchNameSafe = branchName
                         .replaceAll('[^a-zA-Z0-9_.-]', '-')
@@ -93,25 +62,10 @@ pipeline {
                         branchNameSafe = 'unknown'
                     }
 
-                    /*
-                     * Docker image tag:
-                     *
-                     * branch-build
-                     *
-                     * Example:
-                     *
-                     * feat-ui-changes-typescript-18-sep-9
-                     */
-
                     def imageTag = "${branchNameSafe}-${env.BUILD_NUMBER}"
 
-                    /*
-                     * Deployment epoch.
-                     *
-                     * Prevents an older build from overwriting
-                     * a newer deployment.
-                     */
-
+                    // Deployment epoch prevents an older build
+                    // from overwriting a newer deployment.
                     def deployEpoch = "${System.currentTimeMillis()}"
 
                     env.SHORT_COMMIT = shortCommit
@@ -120,33 +74,31 @@ pipeline {
                     env.DEPLOY_EPOCH = deployEpoch
 
                     echo """
-                    ==========================================
-                    BUILD INFORMATION
-                    ==========================================
+==========================================
+BUILD INFORMATION
+==========================================
 
-                    Project : ${env.PROJECT_NAME}
-                    Branch  : ${branchName}
-                    Safe    : ${env.BRANCH_NAME_SAFE}
-                    Build   : ${env.BUILD_NUMBER}
-                    Commit  : ${env.SHORT_COMMIT}
-                    Image   : ${env.DOCKER_ORG}/${env.PROJECT_NAME}:${env.IMAGE_TAG}
+Project : ${env.PROJECT_NAME}
+Branch  : ${branchName}
+Safe    : ${env.BRANCH_NAME_SAFE}
+Build   : ${env.BUILD_NUMBER}
+Commit  : ${env.SHORT_COMMIT}
+Image   : ${env.DOCKER_ORG}/${env.PROJECT_NAME}:${env.IMAGE_TAG}
 
-                    ==========================================
-                    """
+==========================================
+"""
                 }
             }
         }
 
         // ==========================================================
-        // FRONTEND BUILD
+        // 2. FRONTEND BUILD
         // ==========================================================
 
         stage('Build Frontend') {
-
             steps {
-
                 sh '''
-                    set -e
+                    set -eu
 
                     echo "Installing dependencies..."
 
@@ -169,16 +121,15 @@ pipeline {
         }
 
         // ==========================================================
-        // SONARQUBE
+        // 3. SONARQUBE ANALYSIS
         // ==========================================================
 
         stage('SonarQube Analysis') {
-
             steps {
-
                 withSonarQubeEnv('SonarQube') {
-
                     sh '''
+                        set -eu
+
                         "${SONAR_HOME}/bin/sonar-scanner" \
                             -Dsonar.projectKey=namami-gange-ui \
                             -Dsonar.projectName=namami-gange-ui \
@@ -191,13 +142,11 @@ pipeline {
         }
 
         // ==========================================================
-        // DOCKER LOGIN
+        // 4. DOCKER LOGIN
         // ==========================================================
 
         stage('Docker Login') {
-
             steps {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS}",
@@ -205,35 +154,30 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
                     sh '''
-                        set -e
+                        set -eu
+                        set +x
 
                         echo "Logging in to Docker Hub..."
 
-                        echo "$DOCKER_PASSWORD" | docker login \
+                        printf '%s' "$DOCKER_PASSWORD" | docker login \
                             --username "$DOCKER_USER" \
                             --password-stdin
 
                         echo "Docker Hub login successful."
-
-                        echo "Authenticated Docker user:"
-                        docker info 2>/dev/null | grep -i '^ Username:' || true
                     '''
                 }
             }
         }
 
         // ==========================================================
-        // BUILD DOCKER IMAGE
+        // 5. BUILD DOCKER IMAGE
         // ==========================================================
 
         stage('Build Docker Image') {
-
             steps {
-
                 sh '''
-                    set -e
+                    set -eu
 
                     IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
 
@@ -245,11 +189,9 @@ pipeline {
                         -t "$IMAGE" \
                         .
 
-                    echo "Docker image built successfully."
-
                     docker image inspect "$IMAGE" >/dev/null
 
-                    echo "Image verified:"
+                    echo "Docker image built and verified successfully."
 
                     docker images "$DOCKER_ORG/$PROJECT_NAME" \
                         --format 'table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}'
@@ -258,13 +200,11 @@ pipeline {
         }
 
         // ==========================================================
-        // PUSH DOCKER IMAGE
+        // 6. PUSH DOCKER IMAGE
         // ==========================================================
 
         stage('Push Docker Image') {
-
             steps {
-
                 withCredentials([
                     usernamePassword(
                         credentialsId: "${DOCKER_CREDENTIALS}",
@@ -272,32 +212,26 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
                     sh '''
-                        set -e
+                        set -eu
+                        set +x
 
                         IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
 
                         echo "=========================================="
                         echo "DOCKER PUSH"
                         echo "=========================================="
-                        echo "Docker user : ${DOCKER_USERNAME}"
-                        echo "Repository  : ${DOCKER_ORG}/${PROJECT_NAME}"
-                        echo "Image       : ${IMAGE}"
+                        echo "Repository : ${DOCKER_ORG}/${PROJECT_NAME}"
+                        echo "Image      : ${IMAGE}"
                         echo "=========================================="
 
-                        echo "${DOCKER_PASSWORD}" | docker login \
-                            --username "${DOCKER_USERNAME}" \
+                        printf '%s' "$DOCKER_PASSWORD" | docker login \
+                            --username "$DOCKER_USERNAME" \
                             --password-stdin
 
-                        docker push "${IMAGE}"
+                        docker push "$IMAGE"
 
                         echo "Docker image pushed successfully."
-
-                        docker image inspect "${IMAGE}" >/dev/null
-
-                        echo "Push verification successful."
-
                         echo "=========================================="
                     '''
                 }
@@ -305,20 +239,17 @@ pipeline {
         }
 
         // ==========================================================
-        // PREPARE REMOTE DEPLOYMENT SCRIPT
+        // 7. PREPARE REMOTE DEPLOYMENT SCRIPT
         // ==========================================================
 
         stage('Prepare Deployment Script') {
-
             steps {
-
                 script {
-
                     writeFile(
                         file: 'remote-deploy.sh',
                         text: '''#!/bin/bash
 
-set -e
+set -euo pipefail
 
 IMAGE="$1"
 IMAGE_TAG="$2"
@@ -339,19 +270,18 @@ mkdir -p "$DEPLOY_PATH"
 echo "=========================================="
 echo "REMOTE DEPLOYMENT"
 echo "=========================================="
-echo "Image       : $IMAGE"
-echo "Image Tag   : $IMAGE_TAG"
-echo "Branch      : $DEPLOY_BRANCH"
-echo "Commit      : $DEPLOY_COMMIT"
-echo "Build       : $DEPLOY_BUILD"
-echo "Port        : $APP_PORT"
-echo "Deploy Epoch: $DEPLOY_EPOCH"
+echo "Image        : $IMAGE"
+echo "Image Tag    : $IMAGE_TAG"
+echo "Branch       : $DEPLOY_BRANCH"
+echo "Commit       : $DEPLOY_COMMIT"
+echo "Build        : $DEPLOY_BUILD"
+echo "Port         : $APP_PORT"
+echo "Deploy Epoch : $DEPLOY_EPOCH"
 echo "=========================================="
 
 exec 200>"$LOCK_FILE"
 
 echo "Waiting for deployment lock..."
-
 flock -x 200
 
 echo "Deployment lock acquired."
@@ -366,14 +296,9 @@ echo "Current deployed epoch: $CURRENT_EPOCH"
 echo "Incoming deployment epoch: $DEPLOY_EPOCH"
 
 if [ "$DEPLOY_EPOCH" -lt "$CURRENT_EPOCH" ]; then
-
-    echo "=========================================="
-    echo "OLDER BUILD DETECTED"
-    echo "=========================================="
-    echo "Current deployment is newer."
+    echo "OLDER BUILD DETECTED."
+    echo "A newer deployment already exists."
     echo "Skipping this deployment."
-    echo "=========================================="
-
     exit 0
 fi
 
@@ -419,13 +344,12 @@ services:
       com.karnics.deploy-epoch: "${DEPLOY_EPOCH}"
 EOF
 
-echo "Generated docker-compose.yml:"
-
+echo "Generated Compose file:"
 cat "${DEPLOY_PATH}/docker-compose.yml"
 
-echo "Validating Compose configuration..."
-
 cd "$DEPLOY_PATH"
+
+echo "Validating Compose configuration..."
 
 docker compose config >/dev/null
 
@@ -444,14 +368,11 @@ echo "Starting new container..."
 
 docker compose up -d --force-recreate
 
-echo "Container created."
-
-echo "Waiting for container to become healthy/running..."
+echo "Waiting for container to start..."
 
 CONTAINER_RUNNING="false"
 
-for i in $(seq 1 12)
-do
+for i in $(seq 1 12); do
 
     STATUS=$(docker inspect \
         --format '{{.State.Status}}' \
@@ -474,44 +395,32 @@ do
     fi
 
     sleep 5
-
 done
 
 if [ "$CONTAINER_RUNNING" != "true" ]; then
 
-    echo "=========================================="
     echo "ERROR: CONTAINER FAILED TO START"
-    echo "=========================================="
-
-    echo ""
-    echo "Container status:"
 
     docker ps -a \
         --filter "name=$CONTAINER_NAME" \
         --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'
 
-    echo ""
     echo "Container ExtraHosts:"
 
     docker inspect "$CONTAINER_NAME" \
         --format '{{json .HostConfig.ExtraHosts}}' \
         2>/dev/null || true
 
-    echo ""
     echo "Container logs:"
 
     docker logs "$CONTAINER_NAME" --tail 100 \
         2>/dev/null || true
-
-    echo ""
-    echo "=========================================="
 
     exit 1
 fi
 
 echo "Container is running."
 
-echo ""
 echo "Verifying host.docker.internal mapping..."
 
 EXTRA_HOSTS=$(docker inspect "$CONTAINER_NAME" \
@@ -533,43 +442,35 @@ fi
 echo "host.docker.internal mapping verified."
 
 echo ""
-echo "Verifying container process..."
+echo "Container status:"
 
 docker ps \
     --filter "name=$CONTAINER_NAME" \
     --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'
 
-echo ""
-
-echo "Writing deployment epoch..."
-
+# Record deployment epoch only after successful container startup.
 echo "$DEPLOY_EPOCH" > "$EPOCH_FILE"
 
 echo "=========================================="
 echo "DEPLOYMENT SUCCESSFUL"
 echo "=========================================="
 
-echo ""
 echo "Branch:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{index .Config.Labels "com.karnics.branch"}}'
 
-echo ""
 echo "Commit:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{index .Config.Labels "com.karnics.commit"}}'
 
-echo ""
 echo "Build:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{index .Config.Labels "com.karnics.build"}}'
 
-echo ""
 echo "Image:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{.Config.Image}}'
 
-echo ""
 echo "ExtraHosts:"
 docker inspect "$CONTAINER_NAME" \
     --format '{{json .HostConfig.ExtraHosts}}'
@@ -584,35 +485,42 @@ echo "=========================================="
         }
 
         // ==========================================================
-        // DEPLOY APPLICATION
+        // 8. DEPLOY APPLICATION
         // ==========================================================
 
         stage('Deploy Application') {
-
             steps {
-
                 withCredentials([
-                    usernamePassword(
+                    sshUserPrivateKey(
                         credentialsId: "${SSH_CREDENTIALS}",
-                        usernameVariable: 'SSH_USER',
-                        passwordVariable: 'SSH_PASSWORD'
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
                     )
                 ]) {
-
                     sh '''
-                        set -e
+                        set -eu
+
+                        SSH_OPTIONS="-i $SSH_KEY -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
 
                         echo "Copying deployment script..."
 
-                        sshpass -p "$SSH_PASSWORD" scp \
-                            -o StrictHostKeyChecking=no \
+                        scp \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
+                            -o ConnectTimeout=15 \
                             remote-deploy.sh \
                             "$SSH_USER@$APP_SERVER:/tmp/namami-gange-ui-deploy.sh"
 
                         echo "Executing deployment..."
 
-                        sshpass -p "$SSH_PASSWORD" ssh \
-                            -o StrictHostKeyChecking=no \
+                        ssh \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
+                            -o ConnectTimeout=15 \
                             "$SSH_USER@$APP_SERVER" \
                             "bash /tmp/namami-gange-ui-deploy.sh \
                             '$DOCKER_ORG/$PROJECT_NAME:$IMAGE_TAG' \
@@ -624,49 +532,55 @@ echo "=========================================="
                             '$DEPLOY_PATH' \
                             '$APP_PORT'"
 
-                        sshpass -p "$SSH_PASSWORD" ssh \
-                            -o StrictHostKeyChecking=no \
+                        echo "Removing temporary deployment script..."
+
+                        ssh \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
                             "$SSH_USER@$APP_SERVER" \
                             "rm -f /tmp/namami-gange-ui-deploy.sh"
+
+                        echo "Deployment command completed."
                     '''
                 }
             }
         }
 
         // ==========================================================
-        // HEALTH CHECK
+        // 9. HEALTH CHECK
         // ==========================================================
 
         stage('Health Check') {
-
             steps {
-
                 withCredentials([
-                    usernamePassword(
+                    sshUserPrivateKey(
                         credentialsId: "${SSH_CREDENTIALS}",
-                        usernameVariable: 'SSH_USER',
-                        passwordVariable: 'SSH_PASSWORD'
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
                     )
                 ]) {
-
                     sh '''
-                        set -e
+                        set -eu
 
                         echo "Waiting for application..."
-
                         sleep 5
 
-                        echo "Checking application container on app server..."
+                        echo "Checking application container on App Server..."
 
-                        sshpass -p "$SSH_PASSWORD" ssh \
-                            -o StrictHostKeyChecking=no \
+                        ssh \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
                             "$SSH_USER@$APP_SERVER" \
                             "docker ps \
                             --filter 'name=namami-gange-ui' \
                             --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'"
 
                         echo ""
-                        echo "Checking application..."
+                        echo "Checking application URL..."
 
                         curl \
                             --fail \
@@ -683,16 +597,14 @@ echo "=========================================="
         }
 
         // ==========================================================
-        // JENKINS DOCKER CLEANUP
+        // 10. JENKINS DOCKER CLEANUP
         // KEEP ONLY CURRENT IMAGE
         // ==========================================================
 
         stage('Jenkins Docker Cleanup') {
-
             steps {
-
                 sh '''
-                    set +e
+                    set -eu
 
                     CURRENT_IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
 
@@ -706,28 +618,24 @@ echo "=========================================="
                         --format 'table {{.Repository}}\\t{{.Tag}}\\t{{.CreatedAt}}'
 
                     echo ""
-                    echo "Removing old images..."
+                    echo "Removing older local FunRide/Namami UI images..."
 
                     docker images "$DOCKER_ORG/$PROJECT_NAME" \
                         --format '{{.Repository}}:{{.Tag}}' |
-                    while read IMAGE
-                    do
+                    while IFS= read -r IMAGE; do
+
+                        [ -z "$IMAGE" ] && continue
 
                         if [ "$IMAGE" = "$CURRENT_IMAGE" ]; then
-
                             echo "KEEP: $IMAGE"
-
                         else
-
                             echo "REMOVE: $IMAGE"
-
-                            docker rmi -f "$IMAGE" 2>/dev/null || true
-
+                            docker rmi "$IMAGE" || {
+                                echo "WARNING: Could not remove $IMAGE"
+                            }
                         fi
 
                     done
-
-                    docker image prune -f
 
                     echo ""
                     echo "Images after cleanup:"
@@ -739,94 +647,146 @@ echo "=========================================="
         }
 
         // ==========================================================
-        // PREPARE APP SERVER CLEANUP SCRIPT
-        // KEEP LATEST 3 IMAGES
+        // 11. PREPARE APP SERVER CLEANUP SCRIPT
+        // KEEP CURRENT + PREVIOUS 2 IMAGES
         // ==========================================================
 
         stage('Prepare Cleanup Script') {
-
             steps {
-
                 script {
-
                     writeFile(
                         file: 'remote-cleanup.sh',
                         text: '''#!/bin/bash
 
-set +e
+set -euo pipefail
 
 REPOSITORY="$1"
+CONTAINER_NAME="namami-gange-ui"
 
 echo "=========================================="
 echo "APPLICATION SERVER IMAGE CLEANUP"
 echo "=========================================="
 
-echo "Repository:"
-echo "$REPOSITORY"
+echo "Repository: $REPOSITORY"
+
+RUNNING_IMAGE=$(docker inspect "$CONTAINER_NAME" \
+    --format '{{.Config.Image}}' 2>/dev/null || true)
+
+if [ -z "$RUNNING_IMAGE" ]; then
+    echo "ERROR: Running application container not found."
+    exit 1
+fi
+
+echo "Running image: $RUNNING_IMAGE"
+
+# Collect repository tags with their actual creation timestamps.
+mapfile -t IMAGE_RECORDS < <(
+    while IFS= read -r TAG; do
+
+        [ -z "$TAG" ] && continue
+        [ "$TAG" = "<none>" ] && continue
+
+        IMAGE="${REPOSITORY}:${TAG}"
+
+        CREATED=$(docker image inspect \
+            --format '{{.Created}}' "$IMAGE" 2>/dev/null) || continue
+
+        CREATED_EPOCH=$(date -d "$CREATED" +%s 2>/dev/null) || continue
+
+        printf '%s|%s\n' "$CREATED_EPOCH" "$IMAGE"
+
+    done < <(
+        docker image ls "$REPOSITORY" \
+            --format '{{.Tag}}' | sort -u
+    )
+)
+
+# Newest images first.
+mapfile -t IMAGE_RECORDS < <(
+    printf '%s\n' "${IMAGE_RECORDS[@]}" |
+        sort -t '|' -k1,1nr
+)
+
+KEEP_FILE=$(mktemp)
+
+cleanup_temp() {
+    rm -f "$KEEP_FILE"
+}
+
+trap cleanup_temp EXIT
+
+# Always retain the running image.
+echo "$RUNNING_IMAGE" >> "$KEEP_FILE"
 
 echo ""
-echo "Current running image:"
+echo "Selecting the newest images..."
 
-RUNNING_IMAGE=$(docker inspect namami-gange-ui \
-    --format '{{.Config.Image}}' 2>/dev/null)
+KEPT_COUNT=1
 
-echo "$RUNNING_IMAGE"
+for RECORD in "${IMAGE_RECORDS[@]}"; do
 
-echo ""
-echo "Available repository images:"
+    IMAGE="${RECORD#*|}"
 
-docker images "$REPOSITORY" \
-    --format '{{.Repository}}:{{.Tag}}|{{.CreatedAt}}' |
-sort -t'|' -k2,2r
+    if grep -Fxq "$IMAGE" "$KEEP_FILE"; then
+        continue
+    fi
 
-echo ""
-echo "Keeping latest 3 images..."
-
-KEEP_IMAGES=$(docker images "$REPOSITORY" \
-    --format '{{.Repository}}:{{.Tag}}|{{.CreatedAt}}' |
-sort -t'|' -k2,2r |
-head -n 3 |
-cut -d'|' -f1)
-
-echo ""
-echo "Images to keep:"
-
-echo "$KEEP_IMAGES"
-
-echo ""
-echo "Checking old images..."
-
-docker images "$REPOSITORY" \
-    --format '{{.Repository}}:{{.Tag}}' |
-while read IMAGE
-do
-
-    if echo "$KEEP_IMAGES" | grep -Fxq "$IMAGE"; then
-
-        echo "KEEP: $IMAGE"
-
-    elif [ "$IMAGE" = "$RUNNING_IMAGE" ]; then
-
-        echo "KEEP RUNNING IMAGE: $IMAGE"
-
-    else
-
-        echo "REMOVE: $IMAGE"
-
-        docker rmi "$IMAGE" 2>/dev/null || true
-
+    if [ "$KEPT_COUNT" -lt 3 ]; then
+        echo "$IMAGE" >> "$KEEP_FILE"
+        KEPT_COUNT=$((KEPT_COUNT + 1))
     fi
 
 done
 
 echo ""
-echo "Removing dangling images..."
+echo "Images to keep:"
+cat "$KEEP_FILE"
 
-docker image prune -f
+echo ""
+echo "Checking older images..."
+
+CONTAINER_IMAGE_IDS=$(
+    docker ps -aq |
+    xargs -r docker inspect --format '{{.Image}}' 2>/dev/null ||
+    true
+)
+
+while IFS= read -r TAG; do
+
+    [ -z "$TAG" ] && continue
+    [ "$TAG" = "<none>" ] && continue
+
+    IMAGE="${REPOSITORY}:${TAG}"
+
+    if grep -Fxq "$IMAGE" "$KEEP_FILE"; then
+        echo "KEEP: $IMAGE"
+        continue
+    fi
+
+    IMAGE_ID=$(docker image inspect \
+        --format '{{.Id}}' "$IMAGE" 2>/dev/null || true)
+
+    [ -z "$IMAGE_ID" ] && continue
+
+    if printf '%s\n' "$CONTAINER_IMAGE_IDS" | grep -Fxq "$IMAGE_ID"; then
+        echo "SKIP: Image is referenced by a container: $IMAGE"
+        continue
+    fi
+
+    echo "REMOVE: $IMAGE"
+
+    docker rmi "$IMAGE" || {
+        echo "WARNING: Could not remove $IMAGE"
+    }
+
+done < <(
+    docker image ls "$REPOSITORY" \
+        --format '{{.Tag}}' | sort -u
+)
 
 echo ""
 echo "=========================================="
-echo "CLEANUP COMPLETE"
+echo "APPLICATION SERVER CLEANUP COMPLETED"
 echo "=========================================="
 
 docker images "$REPOSITORY" \
@@ -840,43 +800,53 @@ docker images "$REPOSITORY" \
         }
 
         // ==========================================================
-        // APPLICATION SERVER DOCKER CLEANUP
+        // 12. APPLICATION SERVER DOCKER CLEANUP
         // ==========================================================
 
         stage('Application Server Docker Cleanup') {
-
             steps {
-
                 withCredentials([
-                    usernamePassword(
+                    sshUserPrivateKey(
                         credentialsId: "${SSH_CREDENTIALS}",
-                        usernameVariable: 'SSH_USER',
-                        passwordVariable: 'SSH_PASSWORD'
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
                     )
                 ]) {
-
                     sh '''
-                        set -e
+                        set -eu
 
                         echo "Copying cleanup script..."
 
-                        sshpass -p "$SSH_PASSWORD" scp \
-                            -o StrictHostKeyChecking=no \
+                        scp \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
+                            -o ConnectTimeout=15 \
                             remote-cleanup.sh \
                             "$SSH_USER@$APP_SERVER:/tmp/namami-gange-ui-cleanup.sh"
 
                         echo "Executing cleanup..."
 
-                        sshpass -p "$SSH_PASSWORD" ssh \
-                            -o StrictHostKeyChecking=no \
+                        ssh \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
                             "$SSH_USER@$APP_SERVER" \
-                            "bash /tmp/namami-gange-ui-cleanup.sh \
-                            '$DOCKER_ORG/$PROJECT_NAME'"
+                            "bash /tmp/namami-gange-ui-cleanup.sh '$DOCKER_ORG/$PROJECT_NAME'"
 
-                        sshpass -p "$SSH_PASSWORD" ssh \
-                            -o StrictHostKeyChecking=no \
+                        echo "Removing temporary cleanup script..."
+
+                        ssh \
+                            -i "$SSH_KEY" \
+                            -o IdentitiesOnly=yes \
+                            -o BatchMode=yes \
+                            -o StrictHostKeyChecking=yes \
                             "$SSH_USER@$APP_SERVER" \
                             "rm -f /tmp/namami-gange-ui-cleanup.sh"
+
+                        echo "Application Server cleanup completed."
                     '''
                 }
             }
@@ -890,51 +860,48 @@ docker images "$REPOSITORY" \
     post {
 
         always {
-
             sh '''
-                docker logout || true
+                docker logout >/dev/null 2>&1 || true
             '''
 
             cleanWs()
         }
 
         success {
-
             echo """
-            ==========================================
-            DEPLOYMENT SUCCESSFUL
-            ==========================================
+==========================================
+DEPLOYMENT SUCCESSFUL
+==========================================
 
-            Project : ${PROJECT_NAME}
-            Branch  : ${BRANCH_NAME}
-            Build   : ${BUILD_NUMBER}
-            Commit  : ${SHORT_COMMIT}
-            Image   : ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
+Project : ${PROJECT_NAME}
+Branch  : ${BRANCH_NAME}
+Build   : ${BUILD_NUMBER}
+Commit  : ${SHORT_COMMIT}
+Image   : ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
 
-            Application:
-            http://${APP_SERVER}:${APP_PORT}
+Application:
+http://${APP_SERVER}:${APP_PORT}
 
-            ==========================================
-            """
+==========================================
+"""
         }
 
         failure {
-
             echo """
-            ==========================================
-            DEPLOYMENT FAILED
-            ==========================================
+==========================================
+DEPLOYMENT FAILED
+==========================================
 
-            Project : ${PROJECT_NAME}
-            Branch  : ${BRANCH_NAME}
-            Build   : ${BUILD_NUMBER}
-            Commit  : ${SHORT_COMMIT}
-            Image   : ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
+Project : ${PROJECT_NAME}
+Branch  : ${BRANCH_NAME}
+Build   : ${BUILD_NUMBER}
+Commit  : ${SHORT_COMMIT}
+Image   : ${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}
 
-            Please check the Jenkins console log.
+Please check the Jenkins console log.
 
-            ==========================================
-            """
+==========================================
+"""
         }
     }
 }
