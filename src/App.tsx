@@ -1,35 +1,41 @@
-import { useState, type ReactNode } from 'react'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import Sidebar from './layout/Sidebar'
 import Topbar from './layout/Topbar'
-import Dashboard from './pages/Dashboard'
-import StpManagement from './pages/StpManagement'
-import Contracts from './pages/Contracts'
-import Compliance from './pages/Compliance'
-import Manpower from './pages/Manpower'
-import CctvMonitoring from './pages/CctvMonitoring'
-import SupportTickets from './pages/SupportTickets'
-import SupportTicketsAdmin from './pages/SupportTicketsAdmin'
-import LiveDelayOffline from './pages/LiveDelayOffline'
-import Inventory from './pages/Inventory'
-import StpParameterReport from './pages/reports/StpParameterReport'
-import ContractsReport from './pages/reports/ContractsReport'
-import ComplianceReport from './pages/reports/ComplianceReport'
-import ManpowerReport from './pages/reports/ManpowerReport'
-import CctvReport from './pages/reports/CctvReport'
-import InventoryReport from './pages/reports/InventoryReport'
-import TeamManagement from './pages/TeamManagement'
-import RemoteCalibration from './pages/RemoteCalibration'
-import TransactionLogs from './pages/TransactionLogs'
-import Settings from './pages/Settings'
-import Login from './pages/Login'
-import ViolationReport from './pages/ViolationReport'
-import ContractReport from './pages/ContractReport'
-import ManpowerStaffReport from './pages/ManpowerStaffReport'
-import TableReport from './pages/TableReport'
 import ComingSoon from './pages/ComingSoon'
 import FloatingCctvButton from './components/cctv/FloatingCctvButton'
+
+// Page modules are loaded on demand so the initial bundle stays small.
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const StpManagement = lazy(() => import('./pages/StpManagement'))
+const Contracts = lazy(() => import('./pages/Contracts'))
+const Compliance = lazy(() => import('./pages/Compliance'))
+const Manpower = lazy(() => import('./pages/Manpower'))
+const CctvMonitoring = lazy(() => import('./pages/CctvMonitoring'))
+const SupportTickets = lazy(() => import('./pages/SupportTickets'))
+const SupportTicketsAdmin = lazy(() => import('./pages/SupportTicketsAdmin'))
+const LiveDelayOffline = lazy(() => import('./pages/LiveDelayOffline'))
+const Inventory = lazy(() => import('./pages/Inventory'))
+const StpParameterReport = lazy(() => import('./pages/reports/StpParameterReport'))
+const ContractsReport = lazy(() => import('./pages/reports/ContractsReport'))
+const ComplianceReport = lazy(() => import('./pages/reports/ComplianceReport'))
+const ManpowerReport = lazy(() => import('./pages/reports/ManpowerReport'))
+const CctvReport = lazy(() => import('./pages/reports/CctvReport'))
+const InventoryReport = lazy(() => import('./pages/reports/InventoryReport'))
+const TeamManagement = lazy(() => import('./pages/TeamManagement'))
+const RemoteCalibration = lazy(() => import('./pages/RemoteCalibration'))
+const TransactionLogs = lazy(() => import('./pages/TransactionLogs'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Login = lazy(() => import('./pages/Login'))
+const ViolationReport = lazy(() => import('./pages/ViolationReport'))
+const ContractReport = lazy(() => import('./pages/ContractReport'))
+const ManpowerStaffReport = lazy(() => import('./pages/ManpowerStaffReport'))
+const TableReport = lazy(() => import('./pages/TableReport'))
+
+function PageFallback() {
+  return <div className="p-6 text-[15px] text-ink-soft">Loading…</div>
+}
 import { PAGE_TITLES, STP_TAB_PATHS, canAccess, firstAllowedPath, pageTitle, requiredAccessFor, stpTabPath } from './routes'
 
 const BUILT_PATHS = [
@@ -86,6 +92,10 @@ function LoginRoute() {
   const { isAuthenticated } = useAuth()
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
   return <Login />
+}
+
+function Lazy({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>
 }
 
 function AppRoutesInner() {
@@ -159,7 +169,9 @@ function Shell() {
             variant="dashboard"
           />
           <main className="scroll-thin relative min-w-0 flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[2px]">
-            <AppRoutesInner />
+            <Lazy>
+              <AppRoutesInner />
+            </Lazy>
           </main>
         </div>
       </div>
@@ -193,7 +205,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Lazy>
+          <AppRoutes />
+        </Lazy>
       </AuthProvider>
     </BrowserRouter>
   )

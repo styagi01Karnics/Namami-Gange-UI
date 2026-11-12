@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
-import Hls from 'hls.js'
+import Hls from 'hls.js/light'
 import {
   Camera,
   ExternalLink,

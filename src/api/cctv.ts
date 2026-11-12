@@ -474,6 +474,28 @@ export async function fetchCctvSiteInfo(): Promise<Record<string, CctvSiteInfo>>
   return info
 }
 
+/** STP records from /stp-details. Unlike the other helpers, this throws on failure so the UI can show the error. */
+export async function fetchStpDetailRecords(): Promise<StpDetail[]> {
+  const response = await authFetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
+  if (!response.ok) throw new Error(`Unable to load STP details (HTTP ${response.status})`)
+
+  const data = await parseJsonSafely<StpDetail[] | { data?: StpDetail[] }>(response)
+  const details = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : null
+  if (!details) throw new Error('Unable to load STP details: invalid response from /stp-details')
+  return details
+}
+
+/** STP names keyed by plantCode, built from /stp-details records. */
+export function toStpNames(details: StpDetail[]): Record<string, string> {
+  const names: Record<string, string> = {}
+  for (const detail of details) {
+    const plantCode = STP_DETAIL_PLANT_CODES[detail.id]
+    const name = formatStpName(detail)
+    if (plantCode && name) names[plantCode] = name
+  }
+  return names
+}
+
 /** CCTV site names keyed by plantCode. */
 export async function fetchCctvSiteNames(): Promise<Record<string, string>> {
   const info = await fetchCctvSiteInfo()

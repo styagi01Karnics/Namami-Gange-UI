@@ -263,7 +263,6 @@ export const capacityUtilization = {
 export const liveStpData = [
   {
     id: 'map-sarai-14',
-    name: '14 MLD STP, Sarai, Haridwar',
     plantCode: '14mldsarai',
     operator: 'UKPJN',
     image: '/dashboard/stp-sarai.png',
@@ -273,7 +272,6 @@ export const liveStpData = [
   },
   {
     id: 'map-jagjeetpur-68',
-    name: '68 MLD STP, Jagjeetpur, Haridwar',
     plantCode: '68mldjag',
     operator: 'UKPJN',
     image: '/dashboard/stp-jagjeetpur.png',
@@ -283,8 +281,7 @@ export const liveStpData = [
   },
   {
     id: 'map-jagjeetpur-upgrade-27',
-    name: '27 MLD STP, Jagjeetpur',
-    plantCode: 'map-jagjeetpur-upgrade-27',
+    plantCode: '27mldjag_upg',
     operator: 'UJS',
     image: '/dashboard/stp-jagjeetpur.png',
     status: 'Active' as const,
@@ -293,8 +290,7 @@ export const liveStpData = [
   },
   {
     id: 'map-sarai-upgrade-18',
-    name: '18 MLD STP, Sarai',
-    plantCode: 'map-sarai-upgrade-18',
+    plantCode: '18mldsarai_upg',
     operator: 'UJS',
     image: '/dashboard/stp-sarai.png',
     status: 'Active' as const,
@@ -303,8 +299,7 @@ export const liveStpData = [
   },
   {
     id: 'map-jagjeetpur-18',
-    name: '18 MLD STP, Jagjeetpur, Haridwar',
-    plantCode: 'map-jagjeetpur-18',
+    plantCode: '18mldjag',
     operator: 'UJS',
     image: '/dashboard/stp-jagjeetpur.png',
     status: 'Active' as const,
@@ -313,7 +308,6 @@ export const liveStpData = [
   },
   {
     id: 'map-lakkarghat-26',
-    name: '26 MLD STP, Lakkarghat, Rishikesh',
     plantCode: '26mldlkgt2',
     operator: 'UKPJN',
     image: '/dashboard/stp-sarai.png',
@@ -323,8 +317,7 @@ export const liveStpData = [
   },
   {
     id: 'map-haldwani-28',
-    name: '28 MLD STP, Indira Nagar, Haldwani',
-    plantCode: 'map-haldwani-28',
+    plantCode: '28mldindira',
     operator: 'UKPJN',
     image: '/dashboard/stp-saliyar.png',
     status: 'Active' as const,
@@ -333,7 +326,6 @@ export const liveStpData = [
   },
   {
     id: 'map-mothorowala-1-20',
-    name: '20 MLD STP, Mothorowala-1, Dehradun',
     plantCode: '20mldmothorowala',
     operator: 'UJS',
     image: '/dashboard/stp-sarai.png',
@@ -343,7 +335,6 @@ export const liveStpData = [
   },
   {
     id: 'map-kargi-68',
-    name: '68 MLD STP, Kargi Chowk, Dehradun',
     plantCode: '68mldkargi',
     operator: 'UJS',
     image: '/dashboard/stp-jagjeetpur.png',
@@ -353,7 +344,6 @@ export const liveStpData = [
   },
   {
     id: 'map-mothorowala-2-20',
-    name: '20 MLD STP, Mothorowala-2, Dehradun',
     plantCode: '20mldmoth_2',
     operator: 'UJS',
     image: '/dashboard/stp-sarai.png',
@@ -363,7 +353,6 @@ export const liveStpData = [
   },
   {
     id: 'map-saliyar-33',
-    name: '33 MLD STP, Saliyar, Roorkee',
     plantCode: '33mldsali',
     operator: 'UJS',
     image: '/dashboard/stp-saliyar.png',
@@ -373,8 +362,7 @@ export const liveStpData = [
   },
   {
     id: 'map-bazpur-10',
-    name: '10 MLD STP, Bazpur',
-    plantCode: 'map-bazpur-10',
+    plantCode: '10mldbazpur',
     operator: 'UKPJN',
     image: '/dashboard/stp-saliyar.png',
     status: 'Active' as const,
@@ -383,8 +371,7 @@ export const liveStpData = [
   },
   {
     id: 'map-kashipur-10',
-    name: '10 MLD STP, Kashipur',
-    plantCode: 'map-kashipur-10',
+    plantCode: '10mldkashipur',
     operator: 'UKPJN',
     image: '/dashboard/stp-saliyar.png',
     status: 'Active' as const,
@@ -395,16 +382,16 @@ export const liveStpData = [
 
 /** Weekly compliance ranking (dashboard Top 10 card). */
 export const topPerformingStps = [
-  { rank: 1, name: '18 MLD STP, Jagjeetpur, Haridwar', plantCode: '18mldjag', score: 99 },
-  { rank: 2, name: '68 MLD STP, Jagjeetpur, Haridwar', plantCode: '68mldjag', score: 98 },
-  { rank: 3, name: '14 MLD STP, Sarai, Haridwar', plantCode: '14mldsarai', score: 96 },
-  { rank: 4, name: '33 MLD STP, Saliyar, Roorkee', plantCode: '33mldsali', score: 94 },
-  { rank: 5, name: '26 MLD STP, Lakkarghat, Rishikesh', plantCode: '26mldlkgt2', score: 92 },
-  { rank: 6, name: '68 MLD STP, Kargi Chowk, Dehradun', plantCode: '68mldkargi', score: 90 },
-  { rank: 7, name: '20 MLD STP, Mothorowala-1, Dehradun', plantCode: '20mldmothorowala', score: 88 },
-  { rank: 8, name: '27 MLD STP, Jagjeetpur', plantCode: 'map-jagjeetpur-upgrade-27', score: 86 },
-  { rank: 9, name: '20 MLD STP, Mothorowala-2, Dehradun', plantCode: '20mldmoth_2', score: 84 },
-  { rank: 10, name: '28 MLD STP, Indira Nagar, Haldwani', plantCode: 'map-haldwani-28', score: 82 },
+  { rank: 1, plantCode: '18mldjag', score: 99 },
+  { rank: 2, plantCode: '68mldjag', score: 98 },
+  { rank: 3, plantCode: '14mldsarai', score: 96 },
+  { rank: 4, plantCode: '33mldsali', score: 94 },
+  { rank: 5, plantCode: '26mldlkgt2', score: 92 },
+  { rank: 6, plantCode: '68mldkargi', score: 90 },
+  { rank: 7, plantCode: '20mldmothorowala', score: 88 },
+  { rank: 8, plantCode: '27mldjag_upg', score: 86 },
+  { rank: 9, plantCode: '20mldmoth_2', score: 84 },
+  { rank: 10, plantCode: '28mldindira', score: 82 },
 ]
 
 /** Risk palette used by the STP Locations Leaflet map. */

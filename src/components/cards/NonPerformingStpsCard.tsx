@@ -4,6 +4,7 @@ import { Download } from 'lucide-react'
 import Card from '../ui/Card'
 import PrintDocument from '../export/PrintDocument'
 import { criticalStps } from '../../data/mockData'
+import { useStpDetails } from '../../context/StpDetailsContext'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
 import StpAccessLink from '../stp/StpAccessLink'
@@ -69,7 +70,14 @@ function getParams(row) {
 }
 
 export default function NonPerformingStpsCard() {
-  const rows = criticalStps['Parameter Breach']
+  const { status, names, error } = useStpDetails()
+  const rows = useMemo(
+    () =>
+      status === 'ready'
+        ? criticalStps['Parameter Breach'].map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
+        : [],
+    [status, names],
+  )
   const todayIso = toIsoDate(new Date())
   const [selectedDate, setSelectedDate] = useState(() => (todayIso < PICKER_MIN ? PICKER_MIN : todayIso))
   const [printId, setPrintId] = useState<number | null>(null)
@@ -214,7 +222,23 @@ export default function NonPerformingStpsCard() {
               )
             })}
 
-            {rows.length === 0 && (
+            {status === 'loading' && (
+              <tr>
+                <td colSpan={COLUMNS.length} className="px-[8px] py-[36px] text-center text-[12px] text-[#565656]">
+                  Loading STP names…
+                </td>
+              </tr>
+            )}
+
+            {status === 'error' && (
+              <tr>
+                <td colSpan={COLUMNS.length} role="alert" className="px-[8px] py-[36px] text-center text-[12px] font-medium text-[#B42318]">
+                  Failed to load STP names from /api/stp-details: {error}
+                </td>
+              </tr>
+            )}
+
+            {status === 'ready' && rows.length === 0 && (
               <tr>
                 <td colSpan={COLUMNS.length} className="px-[8px] py-[36px] text-center text-[12px] text-[#646464]">
                   No non-performing STP&rsquo;s in this category

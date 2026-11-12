@@ -18,6 +18,21 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      rolldownOptions: {
+        output: {
+          // Keep heavy third-party libraries in their own cacheable chunks.
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return undefined
+            if (id.includes('/hls.js/')) return 'vendor-hls'
+            if (id.includes('/leaflet/') || id.includes('/react-leaflet/')) return 'vendor-leaflet'
+            if (id.includes('/recharts/') || id.includes('/d3-') || id.includes('/victory-vendor/')) return 'vendor-charts'
+            if (id.includes('/pdfjs-dist/')) return 'vendor-pdf'
+            return undefined
+          },
+        },
+      },
+    },
     server: {
       proxy: {
         '/cctv-api': {
@@ -47,6 +62,11 @@ export default defineConfig(({ mode }) => {
         '/stp-cctv': {
           target: env.VITE_STP_CCTV_BASE_URL || 'http://45.195.229.15:18085',
           changeOrigin: true,
+        },
+        '/stp-data-query-api': {
+          target: env.VITE_STP_DATA_QUERY_API_BASE_URL || 'http://45.195.229.15:8901',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/stp-data-query-api/, '/catalog/stp-data-query/api'),
         },
         '/stp-details-api': {
           target: env.VITE_STP_DETAILS_API_BASE_URL || 'http://45.195.229.15:8907',

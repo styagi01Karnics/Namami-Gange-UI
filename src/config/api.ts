@@ -14,6 +14,8 @@ export const API_BASE_URL = {
   auth: import.meta.env.VITE_AUTH_API_URL ?? '/auth-api',
   // Served through the dev/nginx proxy because the upstream does not send CORS headers.
   stpDetails: import.meta.env.VITE_STP_DETAILS_API_URL ?? '/stp-details-api',
+  // STP count source (catalog/stp-data-query). Proxied to avoid mixed-content blocks.
+  stpDataQuery: import.meta.env.VITE_STP_DATA_QUERY_API_URL ?? '/stp-data-query-api',
   // STP monitoring data service (8909) exposing snapshots per site enum
   stpMonitoring: import.meta.env.VITE_STP_MONITORING_API_URL ?? '/stp-monitoring-api',
 } as const
@@ -26,6 +28,9 @@ export const ENDPOINTS = {
     readings: (site: string) => `/stp/${encodeURIComponent(site)}/readings`,
   },
   stpDetails: {
+    list: '/stp-details',
+  },
+  stpDataQuery: {
     list: '/stp-details',
   },
   manpower: {

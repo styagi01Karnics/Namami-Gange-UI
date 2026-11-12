@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { liveStpData } from '../../data/mockData'
 import { stpRealtimePath } from '../../routes'
+import { useStpDetails } from '../../context/StpDetailsContext'
 import Card from '../ui/Card'
 import StpAccessLink from '../stp/StpAccessLink'
 
@@ -42,6 +43,7 @@ export default function LiveStpDataCard() {
   const [page, setPage] = useState(0)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
   const autoScrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const { status, names, error } = useStpDetails()
   const pages = liveStpData.length
 
   const scrollTo = (index: number) => {
@@ -80,6 +82,26 @@ export default function LiveStpDataCard() {
     }
   }, [isAutoScrolling, pages])
 
+  if (status !== 'ready') {
+    return (
+      <Card className="rounded-[12px] px-[14px] py-[12px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
+        <div className="flex items-center justify-between">
+          <p className="text-[16px] font-semibold leading-5 text-[#07121E]">Live Data from STPs</p>
+          <Link to="/stp-management" className="text-[14px] font-semibold text-[#0768D2] underline">
+            View all
+          </Link>
+        </div>
+        {status === 'loading' ? (
+          <p className="mt-[10px] text-[13px] text-[#565656]">Loading STP names…</p>
+        ) : (
+          <p role="alert" className="mt-[10px] text-[13px] font-medium text-[#B42318]">
+            Failed to load STP names from /api/stp-details: {error}
+          </p>
+        )}
+      </Card>
+    )
+  }
+
   return (
     <Card className="rounded-[12px] px-[14px] py-[12px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
       <div className="flex items-center justify-between">
@@ -109,8 +131,9 @@ export default function LiveStpDataCard() {
       >
         {liveStpData.map((stp) => {
           const isActive = stp.status === 'Active'
-          const inletValue = stp.inlet === '\u2014' ? getRandomMld(stp.id, stp.name, 'inlet') : stp.inlet
-          const outletValue = stp.outlet === '\u2014' ? getRandomMld(stp.id, stp.name, 'outlet') : stp.outlet
+          const stpName = names[stp.plantCode] ?? '\u2014'
+          const inletValue = stp.inlet === '\u2014' ? getRandomMld(stp.id, stpName, 'inlet') : stp.inlet
+          const outletValue = stp.outlet === '\u2014' ? getRandomMld(stp.id, stpName, 'outlet') : stp.outlet
 
           return (
             <div
@@ -127,11 +150,11 @@ export default function LiveStpDataCard() {
                 <div className="flex items-start justify-between gap-[8px]">
                   <StpAccessLink
                     plantCode={stp.plantCode}
-                    to={`${stpRealtimePath(stp.plantCode)}&name=${encodeURIComponent(stp.name)}`}
+                    to={`${stpRealtimePath(stp.plantCode)}&name=${encodeURIComponent(stpName)}`}
                     className="truncate text-[14px] font-bold leading-5 text-[#0768D2] underline"
-                    title={`${stp.name} \u00b7 ${stp.operator}`}
+                    title={`${stpName} \u00b7 ${stp.operator}`}
                   >
-                    {stp.name}
+                    {stpName}
                   </StpAccessLink>
                   <span
                     title={stp.operator}

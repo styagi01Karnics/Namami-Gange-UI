@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, Trophy } from 'lucide-react'
 import { topPerformingStps } from '../../data/mockData'
+import { useStpDetails } from '../../context/StpDetailsContext'
 import { stpCompliancePath } from '../../routes'
 import Card from '../ui/Card'
 import StpAccessLink from '../stp/StpAccessLink'
@@ -11,7 +12,10 @@ const TOP_COUNT = 10
 export default function TopPerformingStpsCard() {
   const [range, setRange] = useState<(typeof RANGES)[number]>('Weekly')
   const [open, setOpen] = useState(false)
-  const rows = topPerformingStps.slice(0, TOP_COUNT)
+  const { status, names, error } = useStpDetails()
+  const rows = status === 'ready'
+    ? topPerformingStps.slice(0, TOP_COUNT).map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
+    : []
 
   return (
     <Card className="flex h-[400px] flex-col overflow-hidden rounded-[14px] px-[12px] py-[12px] shadow-[0px_0px_3px_3px_rgba(7,104,210,0.1)]">
@@ -61,9 +65,16 @@ export default function TopPerformingStpsCard() {
         <span className="text-right">Compliance</span>
       </div>
 
+      {status === 'loading' && <p className="mt-2 px-2 text-[12px] text-[#565656]">Loading STP names…</p>}
+      {status === 'error' && (
+        <p role="alert" className="mt-2 px-2 text-[12px] font-medium text-[#B42318]">
+          Failed to load STP names from /api/stp-details: {error}
+        </p>
+      )}
+
       <ol className="mt-1 flex-1 divide-y divide-[#E8F0F8] overflow-y-auto scroll-thin max-h-[calc(7*42px)] pr-1">
         {rows.map((row) => (
-          <li key={`${row.rank}-${row.name}`} className="grid h-[42px] shrink-0 grid-cols-[30px_minmax(0,1fr)_90px] items-center gap-x-2 px-2">
+          <li key={row.rank} className="grid h-[42px] shrink-0 grid-cols-[30px_minmax(0,1fr)_90px] items-center gap-x-2 px-2">
             <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-[#0768D2] text-[11px] font-bold text-white">
               {row.rank}
             </span>

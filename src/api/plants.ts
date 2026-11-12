@@ -4,6 +4,7 @@ import { API_BASE_URL, ENDPOINTS } from '../config/api'
 import { fetchCctvSiteNames } from './cctv'
 
 const DASHBOARD_API = API_BASE_URL.dashboard
+const STP_DATA_QUERY_API = API_BASE_URL.stpDataQuery
 
 export type DashboardPlant = {
   plantName: string
@@ -218,6 +219,31 @@ export async function fetchStpActiveStatus(hours = 4): Promise<StpActiveStatusDa
     if (!response.ok) throw new Error('Failed to load active status')
     const payload = await response.json()
     return payload?.data ?? null
+  } catch {
+    return null
+  }
+}
+
+export type StpCountSummary = {
+  totalCount: number
+  activeCount: number
+}
+
+// Counts come only from the stp-data-query endpoint. Records carry no status field,
+// so active falls back to the total unless a record explicitly marks itself inactive.
+export async function fetchStpCountSummary(): Promise<StpCountSummary | null> {
+  try {
+    const response = await authFetch(`${STP_DATA_QUERY_API}${ENDPOINTS.stpDataQuery.list}`)
+    if (!response.ok) throw new Error('Failed to load STP details')
+    const payload = await response.json()
+    const records: Record<string, unknown>[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : []
+    const totalCount = records.length
+    const activeCount = records.filter((r) => r.active !== false && r.isActive !== false).length
+    return { totalCount, activeCount }
   } catch {
     return null
   }

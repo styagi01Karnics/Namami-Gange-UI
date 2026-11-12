@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import StpAccessLink from '../stp/StpAccessLink'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
-import { fetchStpActiveStatus, type StpActiveStatusData, type StpActiveStatusItem } from '../../api/plants'
+import { fetchStpActiveStatus, fetchStpCountSummary, type StpActiveStatusData, type StpActiveStatusItem, type StpCountSummary } from '../../api/plants'
 import NonActiveStpModal from './NonActiveStpModal'
 
 const TONE = {
@@ -46,6 +46,7 @@ export default function DashboardKpiRow() {
   const [totalDropdownOpen, setTotalDropdownOpen] = useState(false)
   const [activeDropdownOpen, setActiveDropdownOpen] = useState(false)
   const [statusData, setStatusData] = useState<StpActiveStatusData | null>(null)
+  const [stpCounts, setStpCounts] = useState<StpCountSummary | null>(null)
 
   const totalDropdownRef = useRef<HTMLDivElement>(null)
   const totalTriggerRef = useRef<HTMLButtonElement>(null)
@@ -66,6 +67,16 @@ export default function DashboardKpiRow() {
     return () => {
       cancelled = true
       clearInterval(interval)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchStpCountSummary().then((data) => {
+      if (!cancelled && data) setStpCounts(data)
+    })
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -152,16 +163,17 @@ export default function DashboardKpiRow() {
                   ? String(statusData.nonActiveCount)
                   : kpi.value
 
-          // Display value: 12 Active and 1 Non-Active (or dynamic DB value when flag is false)
-          const displayValue = HARDCODE_12_ACTIVE_1_NON_ACTIVE
-            ? kpi.key === 'total'
-              ? '13'
-              : kpi.key === 'active'
-                ? '12'
-                : kpi.key === 'nonActive'
-                  ? '1'
-                  : kpi.value
-            : dynamicDisplayValue
+          // Total and Active come from the stp-data-query endpoint; Non-Active keeps the existing source.
+          const displayValue =
+            kpi.key === 'total' && stpCounts
+              ? String(stpCounts.totalCount)
+              : kpi.key === 'active' && stpCounts
+                ? String(stpCounts.activeCount)
+                : HARDCODE_12_ACTIVE_1_NON_ACTIVE
+                  ? kpi.key === 'nonActive'
+                    ? '1'
+                    : kpi.value
+                  : dynamicDisplayValue
 
           return (
             <div

@@ -9,7 +9,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { liveStpData } from '../../data/mockData'
+import { liveStpData as mockStpData } from '../../data/mockData'
+import { useStpDetails } from '../../context/StpDetailsContext'
 import Card from '../ui/Card'
 
 type ParameterKey = 'BOD' | 'pH' | 'TSS' | 'COD'
@@ -52,9 +53,13 @@ export default function RealtimeStpTrendsCard() {
   const [parameter, setParameter] = useState<ParameterKey>('COD')
   const [view, setView] = useState<'graph' | 'list'>('graph')
   const [search, setSearch] = useState('')
+  const { status, names, error } = useStpDetails()
+  const liveStpData = useMemo(
+    () => mockStpData.map((stp) => ({ ...stp, name: names[stp.plantCode] ?? '\u2014' })),
+    [names],
+  )
   const [selected, setSelected] = useState(() => new Set(liveStpData.map((stp) => stp.id)))
   const config = PARAMS[parameter]
-
   const rows = useMemo(() => {
     const labels = timeLabels()
     return labels.map((time, pointIndex) => {
@@ -64,7 +69,7 @@ export default function RealtimeStpTrendsCard() {
       })
       return row
     })
-  }, [parameter])
+  }, [parameter, liveStpData])
 
   const filteredPlants = liveStpData.filter((stp) => stp.name.toLowerCase().includes(search.toLowerCase()))
   const allPlantsSelected = liveStpData.every((stp) => selected.has(stp.id))
@@ -112,6 +117,24 @@ export default function RealtimeStpTrendsCard() {
     anchor.download = `stp-${parameter.toLowerCase()}-24h-preview.csv`
     anchor.click()
     URL.revokeObjectURL(url)
+  }
+
+  if (status !== 'ready') {
+    return (
+      <Card className="overflow-hidden rounded-[14px] border-[#DDECFB] p-3 shadow-[0_5px_20px_rgba(7,104,210,0.10)] sm:p-4">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-9 place-items-center rounded-[10px] bg-[#EAF4FF] text-[#1268E8]"><Activity size={21} /></span>
+          <h2 className="text-[15px] font-bold leading-5 text-[#102653] sm:text-[17px]">Real-Time Parameter Trends - All STPs</h2>
+        </div>
+        {status === 'loading' ? (
+          <p className="mt-3 text-[13px] text-[#565656]">Loading STP names…</p>
+        ) : (
+          <p role="alert" className="mt-3 text-[13px] font-medium text-[#B42318]">
+            Failed to load STP names from /api/stp-details: {error}
+          </p>
+        )}
+      </Card>
+    )
   }
 
   return (
