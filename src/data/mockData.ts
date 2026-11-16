@@ -3005,8 +3005,8 @@ export const equipmentInventory = {
       requiredQty: '10',
       status: 'Adequate',
       receipts: [
-        { date: '2026-09-01', qty: 8 },
-        { date: '2026-10-05', qty: 4 },
+        { date: '2026-11-01', qty: 8 },
+        { date: '2026-11-05', qty: 4 },
       ],
     },
     {
@@ -3015,7 +3015,7 @@ export const equipmentInventory = {
       currentQty: '4',
       requiredQty: '6',
       status: 'Low Stock',
-      receipts: [{ date: '2026-09-05', qty: 4 }],
+      receipts: [{ date: '2026-11-01', qty: 4 }],
     },
     {
       name: 'Polymer Mixer',
@@ -3023,7 +3023,7 @@ export const equipmentInventory = {
       currentQty: '1',
       requiredQty: '2',
       status: 'Low Stock',
-      receipts: [{ date: '2026-09-05', qty: 1 }],
+      receipts: [{ date: '2026-11-01', qty: 1 }],
     },
     {
       name: 'pH Sensor Probe',
@@ -3032,9 +3032,9 @@ export const equipmentInventory = {
       requiredQty: '12',
       status: 'Adequate',
       receipts: [
-        { date: '2026-09-01', qty: 10 },
-        { date: '2026-09-05', qty: 5 },
-        { date: '2026-10-05', qty: 3 },
+        { date: '2026-11-01', qty: 10 },
+        { date: '2026-11-05', qty: 5 },
+        { date: '2026-11-10', qty: 3 },
       ],
     },
     {
@@ -3043,7 +3043,7 @@ export const equipmentInventory = {
       currentQty: '3',
       requiredQty: '8',
       status: 'Low Stock',
-      receipts: [{ date: '2026-10-05', qty: 3 }],
+      receipts: [{ date: '2026-11-01', qty: 3 }],
     },
     {
       name: 'Sludge Pump Seal',
@@ -3051,7 +3051,7 @@ export const equipmentInventory = {
       currentQty: '2',
       requiredQty: '4',
       status: 'Low Stock',
-      receipts: [{ date: '2026-10-05', qty: 2 }],
+      receipts: [{ date: '2026-11-01', qty: 2 }],
     },
     {
       name: 'Flow Meter Kit',
@@ -3060,8 +3060,8 @@ export const equipmentInventory = {
       requiredQty: '6',
       status: 'Adequate',
       receipts: [
-        { date: '2026-09-01', qty: 6 },
-        { date: '2026-10-05', qty: 3 },
+        { date: '2026-11-01', qty: 6 },
+        { date: '2026-11-05', qty: 3 },
       ],
     },
   ],

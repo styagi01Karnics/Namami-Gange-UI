@@ -19,7 +19,7 @@ export type ChemicalInventoryItem = {
 }
 
 /** Default date the current stock was received (YYYY-MM-DD). */
-export const STOCK_RECEIVED_ON = '2026-09-01'
+export const STOCK_RECEIVED_ON = '2026-11-01'
 
 const LOW_STOCK_RATIO = 0.2
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -185,9 +185,9 @@ export const BAZPUR_CHEMICAL_INVENTORY: ChemicalInventoryItem[] = [
     daysLeft: 68,
     status: 'Adequate',
     receipts: [
-      { date: '2026-09-01', qty: '500 g' },
-      { date: '2026-09-05', qty: '200 g' },
-      { date: '2026-10-05', qty: '300 g' },
+      { date: '2026-11-01', qty: '500 g' },
+      { date: '2026-11-05', qty: '200 g' },
+      { date: '2026-11-10', qty: '300 g' },
     ],
   },
   {
