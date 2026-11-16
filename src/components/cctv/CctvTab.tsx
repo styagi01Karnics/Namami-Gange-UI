@@ -4,13 +4,14 @@ import {
   fetchCctvCameras,
   fetchCctvSiteNames,
   fetchCctvSites,
+  canPlayStpRecordings,
   getCamerasForStp,
-  hasCpvRecordings,
   isCameraOnline,
   toSiteCameras,
   type LiveSiteCamera,
 } from '../../api/cctv'
 import { cctvSites, stpDetails } from '../../data/mockData'
+import { useAuth } from '../../auth/AuthContext'
 
 function CameraStatCard({
   label,
@@ -64,6 +65,7 @@ function normalizeLocation(loc?: string) {
 export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCode?: string }) {
   const [cameras, setCameras] = useState<LiveSiteCamera[]>([])
   const [loading, setLoading] = useState(true)
+  const { email } = useAuth()
 
   async function loadCameras() {
     setCameras([])
@@ -148,11 +150,11 @@ export default function CctvTab({ stpId, plantCode }: { stpId?: string; plantCod
 
   const stats = useMemo(() => {
     const total = cameras.length
-    const canRecord = hasCpvRecordings(stpId, plantCode)
+    const canRecord = canPlayStpRecordings(email, stpId, plantCode)
     const online = cameras.filter((c) => c.status === 'Live' || isCameraOnline(c as any) || canRecord).length
     const offline = total - online
     return { total, online, offline }
-  }, [cameras, stpId, plantCode])
+  }, [cameras, stpId, plantCode, email])
 
   const [apiSiteName, setApiSiteName] = useState<string>()
 

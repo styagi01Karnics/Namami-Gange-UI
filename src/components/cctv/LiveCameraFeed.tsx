@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react'
 import CameraTile from './CameraTile'
 import CameraLightbox from './CameraLightbox'
 import {
+  canPlayStpRecordings,
   getMothorowala2RecordingChannel,
-  hasCpvRecordings,
   isCameraOnline,
   type LiveSiteCamera,
 } from '../../api/cctv'
+import { useAuth } from '../../auth/AuthContext'
 
 export default function LiveCameraFeed({
   cameras = [],
@@ -22,7 +23,8 @@ export default function LiveCameraFeed({
   siteName?: string
 }) {
   const [expandedCamera, setExpandedCamera] = useState<LiveSiteCamera | null>(null)
-  const canRecord = hasCpvRecordings(stpId, plantCode)
+  const { email } = useAuth()
+  const canRecord = canPlayStpRecordings(email, stpId, plantCode)
 
   const sortedCameras = useMemo(() => {
     return [...cameras].sort((a, b) => {

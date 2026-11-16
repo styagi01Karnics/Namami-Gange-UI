@@ -1043,6 +1043,18 @@ export function hasCpvRecordings(stpId?: string, plantCode?: string) {
   })
 }
 
+const ALL_STP_RECORDINGS_EMAIL = 'admin@namami.com'
+
+/** Only this user gets recording playback for every STP, not just the CPV plant list. */
+export function canPlayAllStpRecordings(email?: string | null) {
+  return String(email ?? '').trim().toLowerCase() === ALL_STP_RECORDINGS_EMAIL
+}
+
+/** Recording fallback is available for CPV STPs to everyone, and for all STPs to the admin user. */
+export function canPlayStpRecordings(email?: string | null, stpId?: string, plantCode?: string) {
+  return canPlayAllStpRecordings(email) || hasCpvRecordings(stpId, plantCode)
+}
+
 export function toPlaybackCameras(cameras: LiveSiteCamera[]): CctvCamera[] {
   return cameras.map((camera) => {
     const location = camera.location || camera.id
