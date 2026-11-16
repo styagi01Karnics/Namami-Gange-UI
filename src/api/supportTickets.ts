@@ -1,7 +1,14 @@
-import { authFetch } from '../auth/session'
+import { authFetch, getSession } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
+import { DUMMY_SUPPORT_TICKETS } from '../data/supportTicketDummy'
 
 const SUPPORT_API = API_BASE_URL.supportTicket
+const DUMMY_DATA_EMAIL = 'admin@namami.com'
+
+/** Sample tickets are served only to the admin@namami.com login; everyone else uses the API. */
+function usesDummyTickets(): boolean {
+  return getSession()?.email?.toLowerCase() === DUMMY_DATA_EMAIL
+}
 
 export type ApiCategory = {
   id: number
@@ -295,6 +302,14 @@ export async function fetchTicketRows(filters: {
   search?: string
   size?: number
 }): Promise<SupportTicketRow[]> {
+  if (usesDummyTickets()) {
+    const term = filters.search?.trim().toLowerCase()
+    return DUMMY_SUPPORT_TICKETS.filter(
+      (t) => !term || t.ticketNo.toLowerCase().includes(term) || t.subject.toLowerCase().includes(term),
+    )
+      .slice(0, filters.size ?? 100)
+      .map(toRow)
+  }
   const params = new URLSearchParams({ from: filters.from, to: filters.to, size: String(filters.size ?? 100) })
   if (filters.search?.trim()) params.set('search', filters.search.trim())
   const page = await request<ApiPage<ApiTicketListItem>>(`${ENDPOINTS.supportTickets.tickets}?${params}`)
@@ -302,11 +317,21 @@ export async function fetchTicketRows(filters: {
 }
 
 export function fetchTicketSummary(from: string, to: string): Promise<ApiSummary> {
+  if (usesDummyTickets()) {
+    const byStatus: Record<string, number> = {}
+    for (const t of DUMMY_SUPPORT_TICKETS) byStatus[t.status] = (byStatus[t.status] ?? 0) + 1
+    return Promise.resolve({ total: DUMMY_SUPPORT_TICKETS.length, byStatus })
+  }
   const params = new URLSearchParams({ from, to })
   return request<ApiSummary>(`${ENDPOINTS.supportTickets.summary}?${params}`)
 }
 
 export async function fetchTicketView(ticketNo: string, categories: ApiCategory[]): Promise<SupportTicketDetail> {
+  const dummy = usesDummyTickets() ? DUMMY_SUPPORT_TICKETS.find((t) => t.ticketNo === ticketNo) : undefined
+  if (dummy) {
+    const { messages, timeline, ...detail } = dummy
+    return toTicketDetail(detail, categories, messages, timeline)
+  }
   const path = ENDPOINTS.supportTickets
   const [detail, messages, timeline] = await Promise.all([
     request<ApiTicketDetail>(path.byNo(ticketNo)),
