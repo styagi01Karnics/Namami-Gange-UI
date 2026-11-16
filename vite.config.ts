@@ -77,6 +77,23 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_STP_DETAILS_API_BASE_URL || 'http://45.195.229.15:8907',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/stp-details-api/, '/api'),
+          // Upstream only accepts "Authorization: Bearer"; derive it from the HttpOnly JWT cookie (mirrors nginx.conf).
+          configure: (proxy: {
+            on: (
+              event: 'proxyReq',
+              listener: (
+                proxyReq: { setHeader: (name: string, value: string) => void },
+                req: { headers: Record<string, string | string[] | undefined> },
+              ) => void,
+            ) => void
+          }) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              if (req.headers.authorization) return
+              const cookie = String(req.headers.cookie ?? '')
+              const match = /(?:^|;\s*)[^=;\s]+=(eyJ[\w-]+\.[\w-]+\.[\w-]+)/.exec(cookie)
+              if (match) proxyReq.setHeader('Authorization', `Bearer ${match[1]}`)
+            })
+          },
         },
         '/penalty-api': {
           target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:8902',
