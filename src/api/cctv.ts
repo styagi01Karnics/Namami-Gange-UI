@@ -477,6 +477,7 @@ export async function fetchCctvSiteInfo(): Promise<Record<string, CctvSiteInfo>>
 /** STP records from /stp-details. Unlike the other helpers, this throws on failure so the UI can show the error. */
 export async function fetchStpDetailRecords(): Promise<StpDetail[]> {
   const response = await authFetch(`${STP_DETAILS_API}${ENDPOINTS.stpDetails.list}`)
+  if (response.status === 401) throw new Error('Your session has expired. Please log in again to load STP details.')
   if (!response.ok) throw new Error(`Unable to load STP details (HTTP ${response.status})`)
 
   const data = await parseJsonSafely<StpDetail[] | { data?: StpDetail[] }>(response)

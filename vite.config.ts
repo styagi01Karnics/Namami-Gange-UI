@@ -28,7 +28,7 @@ function withBearerFromCookie(proxy: BearerProxy) {
   proxy.on('proxyReq', (proxyReq, req) => {
     if (req.headers.authorization) return
     const cookie = String(req.headers.cookie ?? '')
-    const match = /(?:^|;\s*)[^=;\s]+=(eyJ[\w-]+\.[\w-]+\.[\w-]+)/.exec(cookie)
+    const match = /(?:^|;\s*)[^=;\s]+="?(eyJ[\w-]+\.[\w-]+\.[\w-]+)/.exec(cookie)
     if (match) proxyReq.setHeader('Authorization', `Bearer ${match[1]}`)
   })
 }
