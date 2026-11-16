@@ -7,7 +7,6 @@ export const LAST_LOGIN_KEY = 'ng-last-login'
 export const SESSION_EXPIRED_EVENT = 'ng-session-expired'
 
 export type AuthSession = {
-  token: string
   expiresAt: number
   userCode: string
   name: string
@@ -19,24 +18,32 @@ export type AuthSession = {
   stps: string[]
 }
 
-function readRaw(store: Storage): AuthSession | null {
+/**
+ * Profile persisted in web storage. The JWT is never readable from JS: the auth service
+ * sets it as an HttpOnly cookie and the browser attaches it to every API request.
+ */
+type StoredProfile = AuthSession
+
+function readProfile(store: Storage): StoredProfile | null {
   const raw = store.getItem(SESSION_STORAGE_KEY)
   if (!raw) return null
   try {
-    return JSON.parse(raw) as AuthSession
+    // Drop any token left in storage by older builds.
+    const { token: _legacyToken, ...profile } = JSON.parse(raw) as Partial<AuthSession> & { token?: string }
+    return profile as StoredProfile
   } catch {
     return null
   }
 }
 
 export function getSession(): AuthSession | null {
-  const session = readRaw(localStorage) ?? readRaw(sessionStorage)
-  if (!session) return null
-  if (session.expiresAt && Date.now() >= session.expiresAt) {
+  const profile = readProfile(localStorage) ?? readProfile(sessionStorage)
+  if (!profile) return null
+  if (profile.expiresAt && Date.now() >= profile.expiresAt) {
     clearSession()
     return null
   }
-  return session
+  return profile
 }
 
 export function saveSession(session: AuthSession, remember: boolean) {
@@ -51,31 +58,11 @@ export function clearSession() {
   sessionStorage.removeItem(LAST_LOGIN_KEY)
   localStorage.removeItem(LAST_LOGIN_KEY)
 }
-
-export function getAccessToken() {
-  return getSession()?.token ?? null
-}
-
-/**
- * Appends the token as a query param for media elements (`<video>`, `<img>`) that cannot send headers.
- * Only backend CCTV URLs get it, so the token never goes to third-party stream hosts.
- */
-export function withAccessToken(url: string) {
-  const token = getAccessToken()
-  const isBackendUrl = url.startsWith(API_BASE_URL.cctv) || url.startsWith('/cctv-api') || url.startsWith('/api/')
-  if (!token || !isBackendUrl) return url
-  const sep = url.includes('?') ? '&' : '?'
-  return `${url}${sep}access_token=${encodeURIComponent(token)}`
-}
-
-/** fetch wrapper that attaches the JWT and signals session expiry on 401. */
+/** fetch wrapper that sends the HttpOnly auth cookie and signals session expiry on 401. */
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  const headers = new Headers(init.headers || {})
-  const token = getAccessToken()
-  if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`)
-
-  const response = await fetch(input, { ...init, headers })
-  if (response.status === 401 && token) {
+  const hadSession = getSession() !== null
+  const response = await fetch(input, { ...init, credentials: 'include' })
+  if (response.status === 401 && hadSession) {
     clearSession()
     window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
   }

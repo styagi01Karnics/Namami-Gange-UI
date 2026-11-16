@@ -1,5 +1,4 @@
 import { useEffect, useRef, type VideoHTMLAttributes } from 'react'
-import { withAccessToken } from '../../auth/session'
 
 /**
  * Plays a converted CPV clip while cropping the NVR OSD timestamp
@@ -11,9 +10,8 @@ export default function RecordingVideo({
   ...props
 }: VideoHTMLAttributes<HTMLVideoElement>) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  // <video> cannot send an Authorization header, so backend clips get the token in the query.
-  const playSrc = src ? withAccessToken(src) : src
-
+  // The auth cookie is HttpOnly and sent with same-origin media requests, so src is used as-is.
+  const playSrc = src
   useEffect(() => {
     const el = videoRef.current
     if (!el) return

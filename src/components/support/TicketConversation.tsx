@@ -6,7 +6,7 @@ const SendIcon = ico('fluent:send-24-filled')
 const SmileIcon = ico('fluent:emoji-24-filled')
 const PlusIcon = ico('fluent:add-24-filled')
 
-function Bubble({ message, onRemoveAttachment }) {
+function Bubble({ message, onDownloadAttachment }) {
   const mine = message.side === 'left'
 
   return (
@@ -34,9 +34,9 @@ function Bubble({ message, onRemoveAttachment }) {
               <div className="mt-[7px] space-y-[8px]">
                 {message.attachments.map((file) => (
                   <AttachmentRow
-                    key={file.name}
+                    key={file.id ?? file.name}
                     file={file}
-                    onRemove={() => onRemoveAttachment?.(message.id, file.name)}
+                    onDownload={onDownloadAttachment ? () => onDownloadAttachment(file) : undefined}
                   />
                 ))}
               </div>
@@ -48,45 +48,40 @@ function Bubble({ message, onRemoveAttachment }) {
   )
 }
 
-/** Chat thread plus composer. Replies are kept locally — there is no API yet. */
-export default function TicketConversation({ violationId, messages }) {
-  const [thread, setThread] = useState(messages)
+/** Chat thread plus composer. Messages and sending are owned by the parent. */
+export default function TicketConversation({
+  violationId,
+  messages,
+  onSend,
+  onDownloadAttachment,
+}: {
+  violationId: string
+  messages: any[]
+  onSend?: (text: string) => unknown
+  onDownloadAttachment?: (attachment: any) => void
+}) {
   const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
   const listRef = useRef(null)
 
   useEffect(() => {
     const node = listRef.current
     if (node) node.scrollTop = node.scrollHeight
-  }, [thread])
+  }, [messages])
 
-  const send = () => {
+  const send = async () => {
     const text = draft.trim()
-    if (!text) return
-    setThread((prev) => [
-      ...prev,
-      {
-        id: `m-${Date.now()}`,
-        author: 'You',
-        side: 'left',
-        time: new Date().toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        text,
-      },
-    ])
-    setDraft('')
+    if (!text || sending || !onSend) return
+    setSending(true)
+    try {
+      await onSend(text)
+      setDraft('')
+    } catch {
+      // Keep the draft so the user can retry; the parent reports the error.
+    } finally {
+      setSending(false)
+    }
   }
-
-  const removeAttachment = (messageId, fileName) =>
-    setThread((prev) =>
-      prev.map((m) =>
-        m.id === messageId ? { ...m, attachments: m.attachments.filter((f) => f.name !== fileName) } : m,
-      ),
-    )
 
   return (
     <div className="flex h-[560px] min-h-0 flex-col overflow-hidden rounded-[12px] border border-line bg-white p-[16px] shadow-card">
@@ -96,8 +91,8 @@ export default function TicketConversation({ violationId, messages }) {
       </p>
 
       <ul ref={listRef} className="scroll-thin mt-[16px] min-h-0 flex-1 space-y-[18px] overflow-y-auto pr-[4px]">
-        {thread.map((message) => (
-          <Bubble key={message.id} message={message} onRemoveAttachment={removeAttachment} />
+        {messages.map((message) => (
+          <Bubble key={message.id} message={message} onDownloadAttachment={onDownloadAttachment} />
         ))}
       </ul>
 
@@ -120,6 +115,7 @@ export default function TicketConversation({ violationId, messages }) {
           <button
             type="button"
             onClick={send}
+            disabled={sending || !draft.trim()}
             aria-label="Send message"
             className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-[#4A5A6D] text-white transition-colors hover:bg-ink"
           >

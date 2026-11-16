@@ -68,6 +68,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/stp-data-query-api/, '/catalog/stp-data-query/api'),
         },
+        '/support-api': {
+          target: env.VITE_SUPPORT_TICKET_API_BASE_URL || 'http://45.195.229.15:8901',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/support-api/, '/catalog/stp-support-ticket/api'),
+        },
         '/stp-details-api': {
           target: env.VITE_STP_DETAILS_API_BASE_URL || 'http://45.195.229.15:8907',
           changeOrigin: true,

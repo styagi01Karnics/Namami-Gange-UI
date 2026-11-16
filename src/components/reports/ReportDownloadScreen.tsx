@@ -7,12 +7,7 @@ import DateRangeField from '../ui/DateRangeField'
 import Ico from '../ui/Ico'
 import ReportQrModal from '../export/ReportQrModal'
 import { useExportMeta } from '../export/exportMeta'
-import {
-  buildTableReportLinkUrl,
-  buildTableReportUrl,
-  type TableReportLink,
-  type TableReportTone,
-} from '../../lib/tableReportQr'
+import { buildTableReportUrl, type TableReportTone } from '../../lib/tableReportQr'
 
 type ReportDownloadScreenProps = {
   moduleKey: 'parameters' | 'cctv' | 'manpower' | 'inventory' | 'contracts' | 'violation'
@@ -28,8 +23,6 @@ type ReportDownloadScreenProps = {
   withTimeRange?: boolean
   /** Shows a QR button that opens this table (as in the PDF) on a public page. */
   qrEnabled?: boolean
-  /** Optional API link parameters so the QR page can fetch records directly from the backend API. */
-  qrReportLink?: Omit<TableReportLink, 'title' | 'meta'>
   /** Colours cells the way renderCell does (red/green/amber), so the QR page matches the PDF. */
   cellTone?: (row: any, col: any) => TableReportTone | null
   /**
@@ -62,7 +55,6 @@ export default function ReportDownloadScreen({
   categoryFilter,
   withTimeRange = false,
   qrEnabled = false,
-  qrReportLink,
   cellTone,
   loadRows,
   loading = false,
@@ -78,29 +70,20 @@ export default function ReportDownloadScreen({
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [fetching, setFetching] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [fetchedRows, setFetchedRows] = useState<any[] | null>(null)
-
-  const categoryValue = categoryFilter?.value
+  // Rows the current action works on; follows `rows` except while an action holds freshly fetched rows.
+  const activeRowsRef = useRef<any[]>(rows)
+  const actionRunningRef = useRef(false)
   useEffect(() => {
-    setFetchedRows(null)
-    setActionError(null)
-  }, [stpId, range, categoryValue])
-
-  const displayRows = fetchedRows ?? rows
-  const activeRowsRef = useRef<any[]>(displayRows)
-  useEffect(() => {
-    activeRowsRef.current = displayRows
-  }, [displayRows])
+    if (!actionRunningRef.current) {
+      activeRowsRef.current = rows
+    }
+  }, [rows])
 
   const effectiveTitle = exportTitle || `${title} - ${plantLabel || 'STP'}`
-  const effectiveFileName =
-    exportFileName ||
-    `${title.toLowerCase().replace(/\s+/g, '-')}-${plantLabel?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'stp'}`
+  const effectiveFileName = exportFileName || `${title.toLowerCase().replace(/\s+/g, '-')}-${plantLabel?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'stp'}`
 
-  const resolveValue = (row: any, col: any, index?: number) => {
+  const resolveValue = (row: any, col: any) => {
     if (col.key === 'sn') {
-      if (typeof index === 'number' && index >= 0) return index + 1
-      if (typeof row?.sn === 'number') return row.sn
       const idx = activeRowsRef.current.indexOf(row)
       return idx >= 0 ? idx + 1 : 1
     }
@@ -133,8 +116,8 @@ export default function ReportDownloadScreen({
     fileName: effectiveFileName,
     columns,
     getValue: resolveValue,
-    renderPdfCell: (row, col, index) => {
-      const idx = typeof index === 'number' ? index : activeRowsRef.current.indexOf(row)
+    renderPdfCell: (row, col) => {
+      const idx = activeRowsRef.current.indexOf(row)
       return resolveCell(row, col, idx >= 0 ? idx : 0)
     },
     rangeLabel: range,
@@ -144,12 +127,12 @@ export default function ReportDownloadScreen({
   const withFreshRows = async (action: (freshRows: any[]) => void | Promise<void>) => {
     setActionError(null)
     if (!loadRows) {
-      activeRowsRef.current = displayRows
-      await action(displayRows)
+      await action(rows)
       return
     }
 
     setFetching(true)
+    actionRunningRef.current = true
     try {
       const fresh = await loadRows()
       if (!fresh) {
@@ -157,14 +140,13 @@ export default function ReportDownloadScreen({
         return
       }
       if (fresh.length === 0) {
-        setFetchedRows([])
         setActionError('No records found for the selected STP and date range.')
         return
       }
       activeRowsRef.current = fresh
-      setFetchedRows(fresh)
       await action(fresh)
     } finally {
+      actionRunningRef.current = false
       setFetching(false)
     }
   }
@@ -173,16 +155,10 @@ export default function ReportDownloadScreen({
     withFreshRows((freshRows) => {
       if (format === 'pdf') {
         exportPdf(freshRows)
-        triggerDownloadNotice(
-          `PDF report generated with ${freshRows.length} records. Please check print/download dialog.`,
-        )
+        triggerDownloadNotice(`PDF report generated with ${freshRows.length} records. Please check print/download dialog.`)
       } else {
-        downloadCsv(effectiveFileName, columns, freshRows, (row, col) =>
-          resolveValue(row, col, freshRows.indexOf(row)),
-        )
-        triggerDownloadNotice(
-          `Excel spreadsheet (.csv) with ${freshRows.length} records downloaded successfully.`,
-        )
+        downloadCsv(effectiveFileName, columns, freshRows, resolveValue)
+        triggerDownloadNotice(`Excel spreadsheet (.csv) with ${freshRows.length} records downloaded successfully.`)
       }
     })
 
@@ -192,30 +168,11 @@ export default function ReportDownloadScreen({
 
   const handleQr = () =>
     withFreshRows(async (freshRows) => {
-      const meta = {
-        stpName: exportMeta.stpName,
-        rangeLabel: exportMeta.rangeLabel,
-        address: exportMeta.address,
-        badge: exportMeta.badge,
-        badgeTone: exportMeta.badgeTone,
-      }
-
-      if (qrReportLink) {
-        const linkUrl = buildTableReportLinkUrl({
-          ...qrReportLink,
-          title: effectiveTitle,
-          meta,
-        })
-        setQrUrl(linkUrl)
-        return
-      }
-
       const payloadColumns = columns.map((col) => ({ key: col.key, label: col.label, align: col.align }))
       const payloadRows = freshRows.map((row, index) => {
         const cells: Record<string, string> = {}
         columns.forEach((col) => {
-          cells[col.key] =
-            col.key === 'sn' ? String(index + 1) : String(resolveValue(row, col, index) ?? '—')
+          cells[col.key] = col.key === 'sn' ? String(index + 1) : String(resolveValue(row, col) ?? '—')
         })
         const tones: Record<string, TableReportTone> = {}
         columns.forEach((col) => {
@@ -226,7 +183,7 @@ export default function ReportDownloadScreen({
       })
       const url = await buildTableReportUrl({
         title: effectiveTitle,
-        meta,
+        meta: { stpName: exportMeta.stpName, rangeLabel: exportMeta.rangeLabel, address: exportMeta.address, badge: exportMeta.badge, badgeTone: exportMeta.badgeTone },
         columns: payloadColumns,
         rows: payloadRows,
       })
@@ -286,7 +243,7 @@ export default function ReportDownloadScreen({
           </div>
           <div className="flex items-center gap-[10px]">
             <span className="inline-flex items-center rounded-full bg-[#EBF5FF] px-[12px] py-[5px] text-[12.5px] font-semibold text-[#0768D2]">
-              {loading || fetching ? 'Fetching records…' : `${displayRows.length} Records Found`}
+              {loading || fetching ? 'Fetching records…' : `${rows.length} Records Found`}
             </span>
           </div>
         </div>
@@ -325,11 +282,7 @@ export default function ReportDownloadScreen({
         )}
 
         {/* Scope Dropdowns Row: Target STP, Category Filter (optional), Date Range, Selected Format */}
-        <div
-          className={`my-[24px] grid gap-[16px] ${
-            categoryFilter ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'
-          }`}
-        >
+        <div className={`my-[24px] grid gap-[16px] ${categoryFilter ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
           {/* Box 1: Target STP Dropdown */}
           <div className="flex flex-col justify-between rounded-[12px] border border-[#E5E7EB] bg-[#F9FAFB] p-[16px]">
             <span className="text-[11.5px] font-semibold uppercase tracking-wider text-[#6B7280]">
@@ -477,7 +430,7 @@ export default function ReportDownloadScreen({
                   Preview: {title}
                 </h3>
                 <p className="mt-[2px] text-[13px] text-[#6B7280]">
-                  {plantLabel || 'STP'} • {range} • {displayRows.length} Records
+                  {plantLabel || '68 MLD Jagjeetpur'} • {range} • {rows.length} Records
                 </p>
               </div>
               <button
@@ -506,12 +459,11 @@ export default function ReportDownloadScreen({
                     </tr>
                   </thead>
                   <tbody>
-                    {displayRows.map((r, i) => (
+                    {rows.map((r, i) => (
                       <tr
                         key={r.id || i}
-                        className={`border-b border-[#F3F4F6] transition-colors hover:bg-[#F9FAFB] ${
-                          i % 2 === 1 ? 'bg-[#FAFAFA]' : 'bg-white'
-                        }`}
+                        className={`border-b border-[#F3F4F6] transition-colors hover:bg-[#F9FAFB] ${i % 2 === 1 ? 'bg-[#FAFAFA]' : 'bg-white'
+                          }`}
                       >
                         {columns.map((c) => (
                           <td key={c.key} className="px-[14px] py-[12px] text-[#1F2937]">
@@ -528,16 +480,15 @@ export default function ReportDownloadScreen({
             {/* Modal Footer */}
             <div className="flex items-center justify-between border-t border-[#E5E7EB] bg-[#F9FAFB] px-[24px] py-[16px] rounded-b-[16px]">
               <div className="text-[13px] text-[#6B7280]">
-                Viewing live preview of {displayRows.length} records
+                Viewing live preview of {rows.length} records
               </div>
               <div className="flex items-center gap-[10px]">
                 <button
                   type="button"
                   onClick={() => {
-                    activeRowsRef.current = displayRows
-                    exportPdf(displayRows)
+                    exportPdf(rows)
                     setShowPreview(false)
-                    triggerDownloadNotice(`PDF report generated with ${displayRows.length} records.`)
+                    triggerDownloadNotice('PDF downloaded.')
                   }}
                   className="rounded-[8px] border border-[#DC2626] bg-white px-[14px] py-[8px] text-[13px] font-bold text-[#DC2626] transition hover:bg-[#FEF2F2]"
                 >
@@ -546,11 +497,9 @@ export default function ReportDownloadScreen({
                 <button
                   type="button"
                   onClick={() => {
-                    downloadCsv(effectiveFileName, columns, displayRows, (row, col) =>
-                      resolveValue(row, col, displayRows.indexOf(row)),
-                    )
+                    downloadCsv(effectiveFileName, columns, rows, resolveValue)
                     setShowPreview(false)
-                    triggerDownloadNotice(`Excel spreadsheet (.csv) with ${displayRows.length} records downloaded.`)
+                    triggerDownloadNotice('Excel downloaded.')
                   }}
                   className="rounded-[8px] border border-[#16A34A] bg-white px-[14px] py-[8px] text-[13px] font-bold text-[#16A34A] transition hover:bg-[#F0FDF4]"
                 >
@@ -601,10 +550,10 @@ export default function ReportDownloadScreen({
 
               <div className="rounded-[8px] bg-[#F9FAFB] p-[12px] text-[12.5px] text-[#6B7280]">
                 <div><strong>Report:</strong> {title}</div>
-                <div><strong>STP:</strong> {plantLabel || 'STP'}</div>
+                <div><strong>STP:</strong> {plantLabel || '68 MLD Jagjeetpur'}</div>
                 <div><strong>Period:</strong> {range}</div>
                 <div><strong>Format:</strong> {format.toUpperCase()}</div>
-                <div><strong>Records:</strong> {displayRows.length}</div>
+                <div><strong>Records:</strong> {rows.length}</div>
               </div>
 
               <div className="mt-[6px] flex items-center justify-end gap-[10px]">

@@ -7,9 +7,21 @@ import { LastUpdatedCard, PersonCard, TicketIdentity } from './parts'
 
 /**
  * Ticket detail as the support desk sees it — who raised it, who owns it and
- * the two controls that move it along.
+ * the two controls that move it along. Data and actions come from the page.
  */
-export default function AdminTicketDetailPanel({ ticket, onMarkPending, onClose }) {
+export default function AdminTicketDetailPanel({
+  ticket,
+  onMarkPending,
+  onClose,
+  onSend,
+  onDownloadAttachment,
+}: {
+  ticket: any
+  onMarkPending: () => void
+  onClose: () => void
+  onSend: (text: string) => Promise<void>
+  onDownloadAttachment: (attachment: any) => void
+}) {
   const closed = ticket.status === 'Closed'
 
   return (
@@ -40,7 +52,12 @@ export default function AdminTicketDetailPanel({ ticket, onMarkPending, onClose 
       </div>
 
       <div className="grid grid-cols-[1.9fr_1fr] items-stretch gap-[16px]">
-        <TicketConversation violationId={ticket.violationId} messages={ticket.conversation} />
+        <TicketConversation
+          violationId={ticket.violationId}
+          messages={ticket.conversation}
+          onSend={onSend}
+          onDownloadAttachment={onDownloadAttachment}
+        />
         <TicketTimeline steps={ticket.timeline} />
       </div>
     </div>

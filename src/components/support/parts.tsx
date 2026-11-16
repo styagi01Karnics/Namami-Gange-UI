@@ -4,6 +4,7 @@ import StatusPill, { statusTone } from '../ui/StatusPill'
 
 const CalendarIcon = ico('fluent:calendar-32-filled')
 const WarningIcon = ico('clarity:warning-standard-solid')
+const DownloadIcon = ico('fluent:arrow-download-24-filled')
 
 /** Sub-heading used throughout both ticket detail pages. */
 export function SectionLabel({ children, tone = 'brand', className = '' }) {
@@ -87,7 +88,17 @@ export function LastUpdatedCard({ update }) {
 const fileKind = (name) => (name.toLowerCase().endsWith('.csv') ? 'csv' : 'pdf')
 
 /** Attachment row — in the issue card it is read-only, in chat it can be cleared. */
-export function AttachmentRow({ file, onRemove, className = '' }: { file: any; onRemove?: () => void; className?: string }) {
+export function AttachmentRow({
+  file,
+  onRemove,
+  onDownload,
+  className = '',
+}: {
+  file: any
+  onRemove?: () => void
+  onDownload?: () => void
+  className?: string
+}) {
   return (
     <div
       className={`flex items-center gap-[10px] rounded-[9px] px-[12px] py-[10px] ${className || 'border border-line bg-white'}`}
@@ -97,6 +108,16 @@ export function AttachmentRow({ file, onRemove, className = '' }: { file: any; o
         <span className="block truncate text-[13px] font-medium leading-[18px] text-brand-link">{file.name}</span>
         <span className="block text-[11.5px] leading-4 text-ink-muted">{file.size}</span>
       </span>
+      {onDownload && (
+        <button
+          type="button"
+          onClick={onDownload}
+          aria-label={`Download ${file.name}`}
+          className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[6px] text-ink-soft transition-colors hover:text-brand"
+        >
+          <DownloadIcon size={15} />
+        </button>
+      )}
       {onRemove && (
         <button
           type="button"

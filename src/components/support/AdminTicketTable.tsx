@@ -9,15 +9,6 @@ export default function AdminTicketTable({ onOpen, ...props }: any) {
   const renderCell = (row, col) => {
     if (col.key === 'id') return <TicketIdLink id={row.id} onClick={() => onOpen?.(row)} />
 
-    if (col.key === 'createdOn') {
-      return (
-        <span className="block">
-          <span className="block text-[14px] font-medium leading-[22px] text-[#07121E]">{row.createdOn}</span>
-          <span className="mt-[3px] block text-[12px] font-medium leading-4 text-[#ED7831]">{row.dueOn}</span>
-        </span>
-      )
-    }
-
     if (col.key === 'status') {
       return (
         <StatusPill

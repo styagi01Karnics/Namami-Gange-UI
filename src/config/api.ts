@@ -18,6 +18,8 @@ export const API_BASE_URL = {
   stpDataQuery: import.meta.env.VITE_STP_DATA_QUERY_API_URL ?? '/stp-data-query-api',
   // STP monitoring data service (8909) exposing snapshots per site enum
   stpMonitoring: import.meta.env.VITE_STP_MONITORING_API_URL ?? '/stp-monitoring-api',
+  // Support ticket service (catalog/stp-support-ticket). Proxied to keep the https site free of mixed content.
+  supportTicket: import.meta.env.VITE_SUPPORT_TICKET_API_URL ?? '/support-api',
 } as const
 
 export const STREAM_BASE_URL = import.meta.env.VITE_STREAM_BASE ?? 'https://stream.karnics.com'
@@ -62,6 +64,27 @@ export const ENDPOINTS = {
     catalog: '/roles/catalog',
     byId: (id: string | number) => `/roles/${encodeURIComponent(id)}`,
     users: (id: string | number) => `/roles/${encodeURIComponent(id)}/users`,
+  },
+  supportTickets: {
+    categories: '/v1/ticket-categories',
+    tickets: '/v1/tickets',
+    summary: '/v1/tickets/summary',
+    byNo: (ticketNo: string) => `/v1/tickets/${encodeURIComponent(ticketNo)}`,
+    messages: (ticketNo: string) => `/v1/tickets/${encodeURIComponent(ticketNo)}/messages`,
+    timeline: (ticketNo: string) => `/v1/tickets/${encodeURIComponent(ticketNo)}/timeline`,
+    attachment: (ticketNo: string, attachmentId: string | number) =>
+      `/v1/tickets/${encodeURIComponent(ticketNo)}/attachments/${encodeURIComponent(attachmentId)}`,
+    confirmResolution: (ticketNo: string) => `/v1/tickets/${encodeURIComponent(ticketNo)}/confirm-resolution`,
+    admin: {
+      tickets: '/v1/admin/tickets',
+      assign: (ticketNo: string) => `/v1/admin/tickets/${encodeURIComponent(ticketNo)}/assign`,
+      status: (ticketNo: string) => `/v1/admin/tickets/${encodeURIComponent(ticketNo)}/status`,
+      byNo: (ticketNo: string) => `/v1/admin/tickets/${encodeURIComponent(ticketNo)}`,
+      messages: (ticketNo: string) => `/v1/admin/tickets/${encodeURIComponent(ticketNo)}/messages`,
+      timeline: (ticketNo: string) => `/v1/admin/tickets/${encodeURIComponent(ticketNo)}/timeline`,
+      attachment: (ticketNo: string, attachmentId: string | number) =>
+        `/v1/admin/tickets/${encodeURIComponent(ticketNo)}/attachments/${encodeURIComponent(attachmentId)}`,
+    },
   },
   users: {
     list: '/users',

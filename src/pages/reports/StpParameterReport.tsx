@@ -54,17 +54,18 @@ function toReadingsRangeParams(rangeLabel: string): { from: string; to: string }
 }
 
 function buildRows(readings: StpReadingResponse[], streamFilter: StreamFilter) {
-  const mapped =
-    streamFilter === 'Influent'
-      ? readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'inlet', idx))
-      : streamFilter === 'Both'
-        ? readings.flatMap((item, idx) => [
-            mapStpReadingToParameterReportRow(item, 'inlet', idx),
-            mapStpReadingToParameterReportRow(item, 'outlet', idx),
-          ])
-        : readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'outlet', idx))
+  if (streamFilter === 'Influent') {
+    return readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'inlet', idx))
+  }
 
-  return mapped.map((row, idx) => ({ ...row, sn: idx + 1 }))
+  if (streamFilter === 'Both') {
+    return readings.flatMap((item, idx) => [
+      mapStpReadingToParameterReportRow(item, 'inlet', idx),
+      mapStpReadingToParameterReportRow(item, 'outlet', idx),
+    ])
+  }
+
+  return readings.map((item, idx) => mapStpReadingToParameterReportRow(item, 'outlet', idx))
 }
 
 const FETCH_ERROR = 'Unable to fetch STP parameter records from the API. Please try again later.'
@@ -173,24 +174,13 @@ function StpParameterReportBody() {
       loadRows={loadRows}
       loading={loading}
       error={loadError}
-      qrReportLink={
-        resolvedSite
-          ? {
-              site: resolvedSite,
-              from,
-              to,
-              stream: streamFilter,
-            }
-          : undefined
-      }
       renderCell={(r, col) => {
         if (col.key === 'stream') {
           const isInfluent = r.stream === 'Influent'
           return (
             <span
-              className={`inline-flex rounded-full px-[10px] py-[2px] text-[12px] font-semibold ${
-                isInfluent ? 'bg-[#EBF5FF] text-[#0768D2]' : 'bg-[#DCFCE7] text-[#15803D]'
-              }`}
+              className={`inline-flex rounded-full px-[10px] py-[2px] text-[12px] font-semibold ${isInfluent ? 'bg-[#EBF5FF] text-[#0768D2]' : 'bg-[#DCFCE7] text-[#15803D]'
+                }`}
             >
               {r.stream}
             </span>

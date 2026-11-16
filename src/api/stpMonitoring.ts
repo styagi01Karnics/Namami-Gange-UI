@@ -539,7 +539,6 @@ export interface FetchStpReadingsParams {
 
 export interface StpParameterReportRow {
   id: string
-  sn?: number
   stream: 'Influent' | 'Effluent'
   date: string
   time: string
@@ -620,7 +619,6 @@ export function mapStpReadingToParameterReportRow(
 
   return {
     id: `${reading.id ?? index}-${side}`,
-    sn: index + 1,
     stream: isInlet ? 'Influent' : 'Effluent',
     date,
     time,
@@ -685,11 +683,11 @@ function normalizePagedReadingsResponse(
   }
 }
 
-/** Fetches pages of readings for the site and range; null if any page fails. */
+/** Fetches every page of readings for the site and range; null if any page fails. */
 export async function fetchAllStpReadings(
   params: Omit<FetchStpReadingsParams, 'page' | 'size'>,
   pageSize = 200,
-  maxPages = 3,
+  maxPages = 50,
 ): Promise<StpReadingResponse[] | null> {
   const all: StpReadingResponse[] = []
   for (let page = 0; page < maxPages; page += 1) {
@@ -749,3 +747,4 @@ export async function fetchStpReadings({
 
   return null
 }
+

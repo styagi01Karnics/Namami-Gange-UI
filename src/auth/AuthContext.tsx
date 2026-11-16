@@ -14,7 +14,7 @@ type LoginEnvelope = {
   success?: boolean
   message?: string
   data?: {
-    token: string
+    token?: string
     expiresInSeconds: number
     user: { userCode: string; name: string; email: string }
     role: string
@@ -78,7 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await fetch(`${AUTH_API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+      body: JSON.stringify({ email, password, remember }),
     })
 
     let payload: LoginEnvelope | null = null
@@ -88,13 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Non-JSON error body; handled below
     }
 
-    if (!response.ok || !payload?.data?.token) {
+    if (!response.ok || !payload?.data) {
       throw new Error(payload?.message || 'Invalid email or password.')
     }
 
     const data = payload.data
     const next: AuthSession = {
-      token: data.token,
       expiresAt: Date.now() + data.expiresInSeconds * 1000,
       userCode: data.user.userCode,
       name: data.user.name,
@@ -105,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       stps: data.stps ?? [],
     }
 
-    clearSession()
     saveSession(next, remember)
     const stamp = formatLoginStamp(new Date())
     const store = remember ? localStorage : sessionStorage
@@ -115,12 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    const token = session?.token
-    if (token) {
+    if (session) {
       // Best-effort server revoke; local state is cleared regardless.
       fetch(`${AUTH_API_URL}/auth/logout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       }).catch(() => undefined)
     }
     clearLocal()

@@ -1,69 +1,205 @@
-import { useMemo, useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ico } from '../components/ui/Ico'
 import Button from '../components/ui/Button'
-import DateRangeField from '../components/ui/DateRangeField'
+import DateRangeField, { parseDateRangeLabel } from '../components/ui/DateRangeField'
 import SoftStatCardsRow from '../components/ui/SoftStatCard'
 import RaiseTicketModal from '../components/support/RaiseTicketModal'
 import SupportTicketTable from '../components/support/SupportTicketTable'
 import TicketDetailPanel from '../components/support/TicketDetailPanel'
 import {
-  buildSupportTicketStats,
-  buildTicketDetail,
-  defaultDateRange,
-  supportTicketColumns,
-  supportTicketRows,
-} from '../data/mockData'
+  type ApiCategory,
+  type ApiSummary,
+  type CreateTicketInput,
+  type SupportTicketDetail,
+  type SupportTicketRow,
+  confirmTicketResolution,
+  createTicket,
+  downloadTicketAttachment,
+  fetchTicketCategories,
+  fetchTicketRows,
+  fetchTicketSummary,
+  fetchTicketView,
+  postTicketMessage,
+  toIsoDate,
+} from '../api/supportTickets'
+import { defaultDateRange } from '../data/mockData'
 
 const PlusIcon = ico('fluent:add-24-filled')
 
-function nextTicketId(rows) {
-  const max = rows.reduce((n, r) => {
-    const num = Number(String(r.id).replace(/\D/g, ''))
-    return Number.isFinite(num) ? Math.max(n, num) : n
-  }, 10200)
-  return `TKT-${max + 1}`
+const supportTicketColumns = [
+  { key: 'id', label: 'Ticket ID', width: '12%', sortable: true },
+  { key: 'issue', label: 'Issue Raised', width: '24%' },
+  { key: 'stpName', label: 'STP Name', width: '22%' },
+  { key: 'date', label: 'Date', width: '13%', sortable: true },
+  { key: 'status', label: 'Status', width: '14%' },
+  { key: 'updatedOn', label: 'Last Updated On', width: '15%' },
+]
+
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof Error && err.message ? err.message : fallback
 }
 
-function todayLabel() {
-  return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+function buildStats(summary: ApiSummary | null) {
+  const byStatus = summary?.byStatus ?? {}
+  const count = (key: string) => byStatus[key] ?? 0
+
+  return [
+    { key: 'total', label: 'Total Tickets', value: summary?.total ?? 0, tone: 'brand' as const },
+    { key: 'open', label: 'Open Tickets', value: count('OPEN'), tone: 'ok' as const },
+    { key: 'progress', label: 'In Progress', value: count('IN_PROGRESS'), tone: 'warn' as const },
+    { key: 'closed', label: 'Closed Tickets', value: count('CLOSED'), tone: 'danger' as const },
+    { key: 'action', label: 'Action Required', value: count('ACTION_REQUIRED'), tone: 'violet' as const },
+  ]
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <p role="alert" className="rounded-[10px] border border-danger-soft bg-white px-[14px] py-[10px] text-[13px] leading-5 text-danger">
+      {message}
+    </p>
+  )
 }
 
 export default function SupportTickets() {
   const { ticketId } = useParams()
   const navigate = useNavigate()
   const [range, setRange] = useState(defaultDateRange)
-  const [rows, setRows] = useState(supportTicketRows)
+  const [categories, setCategories] = useState<ApiCategory[]>([])
+  const [rows, setRows] = useState<SupportTicketRow[]>([])
+  const [summary, setSummary] = useState<ApiSummary | null>(null)
+  const [listKey, setListKey] = useState(0)
+  const [listLoading, setListLoading] = useState(false)
+  const [listError, setListError] = useState('')
+  const [detail, setDetail] = useState<SupportTicketDetail | null>(null)
+  const [detailKey, setDetailKey] = useState(0)
+  const [detailError, setDetailError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
 
-  const stats = useMemo(() => buildSupportTicketStats(rows), [rows])
-  const selected = ticketId ? rows.find((r) => r.id === ticketId) : null
-  const detail = useMemo(() => (selected ? buildTicketDetail(selected) : null), [selected])
+  useEffect(() => {
+    fetchTicketCategories()
+      .then(setCategories)
+      .catch((err) => setListError(errorMessage(err, 'Could not load ticket categories.')))
+  }, [])
 
-  const handleSubmit = (ticket) => {
-    const today = todayLabel()
-    setRows((prev) => [
-      {
-        id: nextTicketId(prev),
-        category: ticket.category,
-        issue: ticket.issue,
-        stpName: '68 MLD STP, Jagjeetpur, Haridwar',
-        date: today,
-        priority: ticket.priority,
-        status: 'Open',
-        updatedOn: today,
-        description: ticket.description,
-        attachments: ticket.attachments,
-      },
-      ...prev,
-    ])
+  useEffect(() => {
+    const parsed = parseDateRangeLabel(range)
+    if (!parsed) return
+
+    let cancelled = false
+    const from = toIsoDate(parsed.from)
+    const to = toIsoDate(parsed.to)
+    setListLoading(true)
+    setListError('')
+    Promise.all([fetchTicketRows({ from, to }), fetchTicketSummary(from, to)])
+      .then(([nextRows, nextSummary]) => {
+        if (cancelled) return
+        setRows(nextRows)
+        setSummary(nextSummary)
+      })
+      .catch((err) => {
+        if (!cancelled) setListError(errorMessage(err, 'Could not load tickets.'))
+      })
+      .finally(() => {
+        if (!cancelled) setListLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [range, listKey])
+
+  useEffect(() => {
+    if (!ticketId) return
+
+    let cancelled = false
+    setDetailError('')
+    setActionError('')
+    fetchTicketView(ticketId, categories)
+      .then((next) => {
+        if (!cancelled) setDetail(next)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setDetail(null)
+          setDetailError(errorMessage(err, 'Could not load this ticket.'))
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ticketId, categories, detailKey])
+
+  const stats = buildStats(summary)
+  const currentDetail = detail && detail.id === ticketId ? detail : null
+
+  const handleCreate = async (input: CreateTicketInput) => {
+    await createTicket(input)
+    setListKey((k) => k + 1)
   }
 
-  if (ticketId && !selected) return <Navigate to="/support-tickets" replace />
-  if (detail) return <TicketDetailPanel ticket={detail} />
+  const handleSendMessage = async (text: string) => {
+    if (!ticketId) return
+    try {
+      await postTicketMessage(ticketId, text)
+      setDetailKey((k) => k + 1)
+    } catch (err) {
+      setActionError(errorMessage(err, 'Could not send your message.'))
+      throw err
+    }
+  }
+
+  const handleConfirmResolution = async () => {
+    if (!ticketId) return
+    try {
+      await confirmTicketResolution(ticketId)
+      setListKey((k) => k + 1)
+      setDetailKey((k) => k + 1)
+    } catch (err) {
+      setActionError(errorMessage(err, 'Could not confirm the resolution.'))
+    }
+  }
+
+  const handleDownloadAttachment = (attachment: { id: number; name: string }) => {
+    if (!ticketId) return
+    downloadTicketAttachment(ticketId, attachment).catch((err) =>
+      setActionError(errorMessage(err, 'Could not download the attachment.')),
+    )
+  }
+
+  if (ticketId) {
+    if (currentDetail) {
+      return (
+        <div className="flex flex-col gap-[16px] pb-[22px]">
+          {actionError && <ErrorBanner message={actionError} />}
+          <TicketDetailPanel
+            ticket={currentDetail}
+            onSendMessage={handleSendMessage}
+            onConfirmResolution={handleConfirmResolution}
+            onDownloadAttachment={handleDownloadAttachment}
+          />
+        </div>
+      )
+    }
+
+    if (detailError) {
+      return (
+        <div className="flex flex-col items-start gap-[12px] pb-[22px]">
+          <ErrorBanner message={detailError} />
+          <Button variant="ghost" onClick={() => navigate('/support-tickets')}>
+            Back to tickets
+          </Button>
+        </div>
+      )
+    }
+
+    return <p className="text-[13px] leading-5 text-ink-soft">Loading ticket…</p>
+  }
 
   return (
     <div className="flex flex-col gap-[16px] pb-[22px]">
+      {listError && <ErrorBanner message={listError} />}
+
       <div className="flex flex-wrap items-center justify-end gap-[14px]">
         <DateRangeField value={range} onChange={setRange} className="w-[280px]" />
         <Button onClick={() => setModalOpen(true)}>
@@ -79,10 +215,15 @@ export default function SupportTickets() {
         rows={rows}
         searchKeys={['id', 'issue', 'category', 'status']}
         onOpen={(row) => navigate(`/support-tickets/${row.id}`)}
-        emptyMessage="No tickets match your search."
+        emptyMessage={listLoading ? 'Loading tickets…' : 'No tickets match your search.'}
       />
 
-      <RaiseTicketModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleSubmit} />
+      <RaiseTicketModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleCreate}
+        categories={categories}
+      />
     </div>
   )
 }

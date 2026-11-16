@@ -12,6 +12,7 @@ type SelectProps = {
   align?: 'left' | 'right'
   chevronSize?: number
   dropUp?: boolean
+  disabled?: boolean
 }
 
 export default function Select({
@@ -24,6 +25,7 @@ export default function Select({
   align = 'left',
   chevronSize = 17,
   dropUp = false,
+  disabled = false,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -50,11 +52,12 @@ export default function Select({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         className={`flex h-[38px] w-full items-center justify-between gap-2 rounded-[9px] border bg-white pl-[14px] pr-[11px] text-left text-[13px] font-medium text-ink outline-none transition-colors ${
           open ? 'border-brand' : 'border-line'
-        } ${buttonClassName}`}
+        } ${disabled ? 'cursor-not-allowed bg-[#F4F7FB] opacity-70' : ''} ${buttonClassName}`}
       >
         <span className={`truncate whitespace-nowrap ${selected ? '' : 'text-ink-muted'}`}>{selected?.label ?? placeholder}</span>
         <ChevronDown

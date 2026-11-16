@@ -3,7 +3,7 @@ import { ico } from '../ui/Ico'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
 import FileUploadArea from './FileUploadArea'
-import { supportTicketCategories, supportTicketPriorities, supportTicketSubCategories } from '../../data/mockData'
+import { supportTicketPriorities } from '../../api/supportTickets'
 
 const PersonIcon = ico('fluent:person-24-filled')
 const ListIcon = ico('fluent:text-bullet-list-24-filled')
@@ -31,9 +31,11 @@ function FormSection({ icon: Icon, title, children }) {
   )
 }
 
-export default function RaiseTicketModal({ open, onClose, onSubmit }) {
+export default function RaiseTicketModal({ open, onClose, onSubmit, categories = [] }) {
   const [form, setForm] = useState(EMPTY)
   const [files, setFiles] = useState([])
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!open) return undefined
@@ -46,6 +48,7 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
     if (!open) {
       setForm(EMPTY)
       setFiles([])
+      setError('')
     }
   }, [open])
 
@@ -53,19 +56,31 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }))
   const setCategory = (value) => setForm((prev) => ({ ...prev, category: value, issue: '' }))
-  const subOptions = supportTicketSubCategories[form.category] ?? []
-  const canSubmit = form.category && form.issue.trim() && form.description.trim()
+  const selectedCategory = categories.find((c) => c.name === form.category)
+  const categoryNames = categories.map((c) => c.name)
+  const subOptions = selectedCategory?.subCategories.map((s) => s.name) ?? []
+  const canSubmit = form.category && form.issue.trim() && form.description.trim() && !submitting
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return
-    onSubmit({
-      category: form.category,
-      issue: form.issue.trim(),
-      description: form.description.trim(),
-      priority: form.priority,
-      attachments: files.filter((f) => !f.error).map((f) => f.name),
-    })
-    onClose()
+    const subCategory = selectedCategory?.subCategories.find((s) => s.name === form.issue)
+    setSubmitting(true)
+    setError('')
+    try {
+      await onSubmit({
+        categoryId: String(selectedCategory?.id ?? ''),
+        subCategoryId: subCategory ? String(subCategory.id) : undefined,
+        subject: form.issue.trim(),
+        description: form.description.trim(),
+        priority: form.priority,
+        files: files.filter((f) => !f.error).map((f) => f.file),
+      })
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create the ticket. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -79,9 +94,9 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
         aria-modal="true"
         aria-labelledby="raise-ticket-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[560px] rounded-[16px] bg-white p-[22px] shadow-pop"
+        className="flex max-h-[calc(100vh-40px)] w-full max-w-[560px] flex-col rounded-[16px] bg-white shadow-pop"
       >
-        <div className="flex items-center gap-[10px]">
+        <div className="flex shrink-0 items-center gap-[10px] px-[22px] pb-[16px] pt-[22px]">
           <span className="flex h-[36px] w-[36px] items-center justify-center rounded-[10px] bg-brand-soft text-brand">
             <PersonIcon size={18} />
           </span>
@@ -90,12 +105,12 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
           </h2>
         </div>
 
-        <div className="mt-[20px]">
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-[22px]">
           <FormSection icon={ListIcon} title="Issue Details">
             <div>
               <FieldLabel required>Category</FieldLabel>
               <Select
-                options={supportTicketCategories}
+                options={categoryNames}
                 value={form.category}
                 onChange={setCategory}
                 placeholder="Select Category"
@@ -108,7 +123,8 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
                 options={subOptions}
                 value={form.issue}
                 onChange={set('issue')}
-                placeholder="Add Issue"
+                placeholder={form.category ? 'Add Issue' : 'Select a category first'}
+                disabled={!form.category}
               />
             </div>
 
@@ -162,13 +178,20 @@ export default function RaiseTicketModal({ open, onClose, onSubmit }) {
           </FormSection>
         </div>
 
-        <div className="mt-[16px] flex items-center justify-end gap-[10px]">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Create Ticket
-          </Button>
+        <div className="shrink-0 px-[22px] pb-[22px] pt-[16px]">
+          {error && (
+            <p role="alert" className="mb-[12px] text-[12.5px] leading-4 text-danger">
+              {error}
+            </p>
+          )}
+          <div className="flex items-center justify-end gap-[10px]">
+            <Button variant="ghost" onClick={onClose} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
+              {submitting ? 'Creating…' : 'Create Ticket'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
