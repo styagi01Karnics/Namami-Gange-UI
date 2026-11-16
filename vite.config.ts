@@ -13,6 +13,26 @@ type DashboardProxy = {
   ) => void
 }
 
+type BearerProxy = {
+  on: (
+    event: 'proxyReq',
+    listener: (
+      proxyReq: { setHeader: (name: string, value: string) => void },
+      req: { headers: Record<string, string | string[] | undefined> },
+    ) => void,
+  ) => void
+}
+
+/** Upstreams only accept "Authorization: Bearer"; derive it from the HttpOnly JWT cookie (mirrors nginx.conf). */
+function withBearerFromCookie(proxy: BearerProxy) {
+  proxy.on('proxyReq', (proxyReq, req) => {
+    if (req.headers.authorization) return
+    const cookie = String(req.headers.cookie ?? '')
+    const match = /(?:^|;\s*)[^=;\s]+=(eyJ[\w-]+\.[\w-]+\.[\w-]+)/.exec(cookie)
+    if (match) proxyReq.setHeader('Authorization', `Bearer ${match[1]}`)
+  })
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '')
 
@@ -67,6 +87,7 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_STP_DATA_QUERY_API_BASE_URL || 'http://45.195.229.15:8901',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/stp-data-query-api/, '/catalog/stp-data-query/api'),
+          configure: withBearerFromCookie,
         },
         '/support-api': {
           target: env.VITE_SUPPORT_TICKET_API_BASE_URL || 'http://45.195.229.15:8901',
@@ -77,23 +98,7 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_STP_DETAILS_API_BASE_URL || 'http://45.195.229.15:8907',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/stp-details-api/, '/api'),
-          // Upstream only accepts "Authorization: Bearer"; derive it from the HttpOnly JWT cookie (mirrors nginx.conf).
-          configure: (proxy: {
-            on: (
-              event: 'proxyReq',
-              listener: (
-                proxyReq: { setHeader: (name: string, value: string) => void },
-                req: { headers: Record<string, string | string[] | undefined> },
-              ) => void,
-            ) => void
-          }) => {
-            proxy.on('proxyReq', (proxyReq, req) => {
-              if (req.headers.authorization) return
-              const cookie = String(req.headers.cookie ?? '')
-              const match = /(?:^|;\s*)[^=;\s]+=(eyJ[\w-]+\.[\w-]+\.[\w-]+)/.exec(cookie)
-              if (match) proxyReq.setHeader('Authorization', `Bearer ${match[1]}`)
-            })
-          },
+          configure: withBearerFromCookie,
         },
         '/penalty-api': {
           target: env.VITE_PENALTY_API_BASE_URL || 'http://45.195.229.15:8902',
