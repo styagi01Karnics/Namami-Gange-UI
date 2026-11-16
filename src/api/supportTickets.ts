@@ -296,20 +296,20 @@ export function fetchTicketCategories(): Promise<ApiCategory[]> {
   return request<ApiCategory[]>(ENDPOINTS.supportTickets.categories)
 }
 
+function dummyTicketList(search?: string, size = 100): ApiTicketListItem[] {
+  const term = search?.trim().toLowerCase()
+  return DUMMY_SUPPORT_TICKETS.filter(
+    (t) => !term || t.ticketNo.toLowerCase().includes(term) || t.subject.toLowerCase().includes(term),
+  ).slice(0, size)
+}
+
 export async function fetchTicketRows(filters: {
   from: string
   to: string
   search?: string
   size?: number
 }): Promise<SupportTicketRow[]> {
-  if (usesDummyTickets()) {
-    const term = filters.search?.trim().toLowerCase()
-    return DUMMY_SUPPORT_TICKETS.filter(
-      (t) => !term || t.ticketNo.toLowerCase().includes(term) || t.subject.toLowerCase().includes(term),
-    )
-      .slice(0, filters.size ?? 100)
-      .map(toRow)
-  }
+  if (usesDummyTickets()) return dummyTicketList(filters.search, filters.size).map(toRow)
   const params = new URLSearchParams({ from: filters.from, to: filters.to, size: String(filters.size ?? 100) })
   if (filters.search?.trim()) params.set('search', filters.search.trim())
   const page = await request<ApiPage<ApiTicketListItem>>(`${ENDPOINTS.supportTickets.tickets}?${params}`)
@@ -419,11 +419,17 @@ export async function fetchAdminTicketRows(filters: {
   search?: string
   size?: number
 }): Promise<AdminTicketRow[]> {
+  if (usesDummyTickets()) return dummyTicketList(filters.search, filters.size).map(toAdminRow)
   const page = await adminTicketApi.list(filters)
   return page.content.map(toAdminRow)
 }
 
 export async function fetchAdminTicketView(ticketNo: string, categories: ApiCategory[]): Promise<SupportTicketDetail> {
+  const dummy = usesDummyTickets() ? DUMMY_SUPPORT_TICKETS.find((t) => t.ticketNo === ticketNo) : undefined
+  if (dummy) {
+    const { messages, timeline, ...detail } = dummy
+    return toTicketDetail(detail, categories, messages, timeline)
+  }
   const path = ENDPOINTS.supportTickets.admin
   const [detail, messages, timeline] = await Promise.all([
     request<ApiTicketDetail>(path.byNo(ticketNo)),
