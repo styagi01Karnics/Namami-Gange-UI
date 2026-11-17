@@ -34,6 +34,7 @@ export const ENDPOINTS = {
   },
   stpDataQuery: {
     list: '/stp-details',
+    vendors: '/stp-vendor',
   },
   manpower: {
     byStp: (stpId: string | number) => `/manpower/stp/${encodeURIComponent(stpId)}`,

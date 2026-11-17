@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Maximize2, X } from 'lucide-react'
 import { ico } from '../ui/Ico'
 import Card from '../ui/Card'
 import StatusPill, { statusTone } from '../ui/StatusPill'
 import { fetchPenaltyVendors } from '../../api/penalty'
-import { fetchStpDetailsByPlantCode, formatStpName, type StpDetail } from '../../api/cctv'
+import { fetchStpDetailsByPlantCode, fetchStpVendorsByPlantCode, formatStpName, type StpDetail, type StpVendorInfo } from '../../api/cctv'
 import { stpDetails } from '../../data/mockData'
 
 const PinIcon = ico('fluent:location-24-filled')
@@ -95,20 +95,25 @@ function DetailsPanel({
   vendorName,
   omAgency,
   apiDetail,
+  vendorInfo,
 }: {
   stp: StpInfo
   vendorName?: string | null
   omAgency?: string
   apiDetail?: StpDetail
+  vendorInfo?: StpVendorInfo
 }) {
-  // Fields present in /stp-details override the local values; anything the API lacks stays as-is.
+  // Fields present in /stp-details and /stp-vendor override the local values; anything the API lacks stays as-is.
   const api = (value?: string) => value?.trim() || undefined
   const inCharge = {
-    ...stp.inCharge,
-    name: api(apiDetail?.concernPersonName) ?? stp.inCharge.name,
-    phone: api(apiDetail?.contactNo) ?? stp.inCharge.phone,
+    name: api(vendorInfo?.inCharge.name),
+    role: api(vendorInfo?.inCharge.designation),
+    department: api(vendorInfo?.inCharge.department),
+    phone: api(vendorInfo?.inCharge.mobile),
+    email: api(vendorInfo?.inCharge.email),
+    alternateContact: api(vendorInfo?.inCharge.alternateContact),
   }
-  const { vendor } = stp
+  const vendor = vendorInfo?.vendor
   const site = {
     ...stp.site,
     state: api(apiDetail?.state) ?? stp.site.state,
@@ -156,11 +161,14 @@ function DetailsPanel({
         bordered
         title="Contractor Details"
         rows={[
-          ['Vendor Name', vendorName || vendor.name],
-          ['Contact Person', vendor.contactPerson],
-          ['Mobile', vendor.phone],
-          ['Email', vendor.email],
-          ['Address', vendor.address],
+          ['Vendor Name', vendor?.name],
+          ['Contact Person', vendor?.contactPerson],
+          ['Mobile', vendor?.mobile],
+          ['Email', vendor?.email],
+          ['Address', vendor?.address],
+          ['Contract No.', vendor?.contractNumber],
+          ['Contract Start', vendor?.contractStart?.slice(0, 10)],
+          ['Contract End', vendor?.contractEnd?.slice(0, 10)],
         ]}
       />
     </div>
@@ -169,7 +177,7 @@ function DetailsPanel({
 
 export default function StpHeaderCard({
   stp,
-  plantCode,
+  plantCode: plantCodeProp,
 }: {
   stp: StpInfo & {
     status: string
@@ -178,16 +186,29 @@ export default function StpHeaderCard({
   plantCode?: string
 }) {
   const navigate = useNavigate()
+  // Pages without a plant dropdown only pass the mock STP, whose vendor.prefixId is the plant code.
+  const plantCode = plantCodeProp || stp.vendor?.prefixId || undefined
   const [showDetails, setShowDetails] = useState(false)
   const [vendorName, setVendorName] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
   const [apiDetails, setApiDetails] = useState<Record<string, StpDetail>>({})
+  const [vendorInfos, setVendorInfos] = useState<Record<string, StpVendorInfo>>({})
 
   useEffect(() => {
     let cancelled = false
     fetchStpDetailsByPlantCode().then((details) => {
       if (!cancelled) setApiDetails(details)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchStpVendorsByPlantCode().then((vendors) => {
+      if (!cancelled) setVendorInfos(vendors)
     })
     return () => {
       cancelled = true
@@ -295,7 +316,7 @@ export default function StpHeaderCard({
       </div>
 
       {showDetails && (
-        <DetailsPanel stp={stp} vendorName={vendorName} omAgency={omAgency} apiDetail={plantCode ? apiDetails[plantCode] : undefined} />
+        <DetailsPanel stp={stp} vendorName={vendorName} omAgency={omAgency} apiDetail={plantCode ? apiDetails[plantCode] : undefined} vendorInfo={plantCode ? vendorInfos[plantCode] : undefined} />
       )}
 
       {/* Lightbox Preview Modal */}
