@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, LogIn } from 'lucide-react'
 import { ico } from '../components/ui/Ico'
 import SupportIcon from '../components/ui/SupportIcon'
 import Logo from '../components/ui/Logo'
 import { useAuth } from '../auth/AuthContext'
+
+const DASHBOARD_LOGO = '/dashboard/logo-uttarakhand.png'
 
 const PersonIcon = ico('fluent:person-24-regular')
 const LockIcon = ico('fluent:lock-closed-24-regular')
@@ -53,16 +55,9 @@ function AuthField({ icon: Icon, type = 'text', value, onChange, placeholder, tr
   )
 }
 
-const LOGIN_ROLES = [
-  { id: 'user', label: 'User Login' },
-  { id: 'admin', label: 'Admin Login' },
-  { id: 'vendor', label: 'Vendor Login' },
-]
-
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [loginRole, setLoginRole] = useState('user')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
@@ -124,69 +119,66 @@ export default function Login() {
 
         {/* Sign-in card */}
         <section className="flex w-full max-w-[440px] shrink-0 flex-col rounded-[22px] border border-white/70 bg-white px-5 py-4 shadow-[0_20px_60px_rgba(4,25,55,0.22)] sm:px-8 sm:py-5 [@media(min-height:820px)]:px-9 [@media(min-height:820px)]:py-7">
-          <h2 className="bg-gradient-to-r from-[#1668E3] to-[#EE9B2C] bg-clip-text text-center text-[22px] font-bold leading-8 text-transparent sm:text-[26px] [@media(min-height:820px)]:text-[28px] [@media(min-height:820px)]:leading-9">
-            Namami Gange
-          </h2>
-          <p className="mt-1 text-center text-[13px] leading-5 text-ink-soft sm:text-[15px] [@media(min-height:820px)]:text-[16px]">
-            Smart STP Dashboard Monitoring
-          </p>
-
-          <div
-            role="group"
-            aria-label="Login type"
-            className="mt-3 grid grid-cols-3 gap-2 rounded-[12px] bg-[#DFEFFF] p-[5px] [@media(min-height:820px)]:mt-5 [@media(min-height:820px)]:gap-[10px] [@media(min-height:820px)]:p-[6px]"
-          >
-            {LOGIN_ROLES.map((role) => {
-              const selected = loginRole === role.id
-              return (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => setLoginRole(role.id)}
-                  aria-pressed={selected}
-                  className={`h-9 rounded-[9px] text-[13px] font-semibold leading-5 transition-colors sm:text-[14px] [@media(min-height:820px)]:h-[44px] [@media(min-height:820px)]:text-[14.5px] ${selected
-                      ? 'bg-[#003C7A] text-white shadow-sm'
-                      : 'bg-[#DFEFFF] text-[#003C7A] hover:bg-white/70'
-                    }`}
-                >
-                  {role.label}
-                </button>
-              )
-            })}
+          <div className="flex items-center gap-3">
+            <img
+              src={DASHBOARD_LOGO}
+              alt=""
+              aria-hidden="true"
+              className="h-[52px] w-[64px] shrink-0 object-contain [@media(min-height:820px)]:h-[64px] [@media(min-height:820px)]:w-[80px]"
+            />
+            <div className="min-w-0">
+              <h2 className="bg-gradient-to-r from-[#1668E3] to-[#EE9B2C] bg-clip-text text-[22px] font-bold leading-8 text-transparent sm:text-[24px] [@media(min-height:820px)]:text-[26px] [@media(min-height:820px)]:leading-9">
+                Namami Gange
+              </h2>
+              <p className="text-[13px] leading-5 text-ink-soft sm:text-[14px] [@media(min-height:820px)]:text-[15px]">
+                Smart STP Dashboard Monitoring
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-3 space-y-3 [@media(min-height:820px)]:mt-5 [@media(min-height:820px)]:space-y-[18px]">
+          <hr className="mt-3 border-t border-[#DFEFFF] [@media(min-height:820px)]:mt-4" />
+
+          <h3 className="mt-3 text-[20px] font-bold leading-7 text-[#0B2545] [@media(min-height:820px)]:mt-4 [@media(min-height:820px)]:text-[22px]">
+            Welcome Back
+          </h3>
+          <p className="mt-0.5 text-[13px] leading-5 text-ink-soft sm:text-[14px]">
+            Sign in to access the STP Monitoring Dashboard.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-3 space-y-3 [@media(min-height:820px)]:mt-4 [@media(min-height:820px)]:space-y-[16px]">
             <AuthField
               icon={PersonIcon}
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value)
                 setError('')
               }}
-              placeholder="Email"
+              placeholder="Username / Email Address"
             />
 
-            <AuthField
-              icon={LockIcon}
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value)
-                setError('')
-              }}
-              placeholder="Password"
-              trailing={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#98A5B4] transition-colors hover:text-brand"
-                >
-                  {showPassword ? <EyeOff size={19} strokeWidth={1.8} /> : <Eye size={19} strokeWidth={1.8} />}
-                </button>
-              }
-            />
+            <div className="space-y-1">
+              <AuthField
+                icon={LockIcon}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setError('')
+                }}
+                  placeholder="Password"
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#98A5B4] transition-colors hover:text-brand"
+                    >
+                      {showPassword ? <EyeOff size={19} strokeWidth={1.8} /> : <Eye size={19} strokeWidth={1.8} />}
+                    </button>
+                  }
+                />
+            </div>
 
             <div className="flex items-center justify-between pt-0.5">
               <label className="flex cursor-pointer items-center gap-2">
@@ -207,19 +199,25 @@ export default function Login() {
 
             <button
               type="submit"
-              className="flex h-11 w-full items-center justify-center rounded-full text-[15px] font-semibold text-white transition-opacity hover:opacity-95 [@media(min-height:820px)]:mt-2 [@media(min-height:820px)]:h-[56px] [@media(min-height:820px)]:text-[17px]"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold text-white transition-opacity hover:opacity-95 [@media(min-height:820px)]:mt-2 [@media(min-height:820px)]:h-[56px] [@media(min-height:820px)]:text-[17px]"
               style={{ background: 'linear-gradient(90deg, #0668D2 0%, #003C7A 100%)' }}
             >
+                <LogIn size={18} strokeWidth={2} />
               Sign in
             </button>
           </form>
 
-          <p className="my-2 text-center text-[12px] leading-5 text-ink-muted [@media(min-height:820px)]:my-3">Or</p>
+          <div className="my-2 flex items-center gap-3 [@media(min-height:820px)]:my-3">
+            <span className="h-px flex-1 bg-[#DCE3EC]" />
+            <span className="text-[12px] leading-5 text-ink-muted">Or</span>
+            <span className="h-px flex-1 bg-[#DCE3EC]" />
+          </div>
 
           <button
             type="button"
-            className="flex h-11 w-full items-center justify-center rounded-full border border-brand bg-white text-[15px] font-semibold text-brand transition-colors hover:bg-brand-soft [@media(min-height:820px)]:h-[56px] [@media(min-height:820px)]:text-[17px]"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-brand bg-white text-[15px] font-semibold text-brand transition-colors hover:bg-brand-soft [@media(min-height:820px)]:h-[56px] [@media(min-height:820px)]:text-[17px]"
           >
+            <KeyRound size={18} strokeWidth={2} />
             SSO Login
           </button>
 
