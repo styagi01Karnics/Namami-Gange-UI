@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, KeyRound, LogIn } from 'lucide-react'
 import { ico } from '../components/ui/Ico'
 import SupportIcon from '../components/ui/SupportIcon'
+import Logo from '../components/ui/Logo'
 import { useAuth } from '../auth/AuthContext'
 
 const DASHBOARD_LOGO = '/dashboard/logo-uttarakhand.png'
@@ -94,11 +95,7 @@ export default function Login() {
           />
 
           <span className="block">
-            <img
-              src={DASHBOARD_LOGO}
-              alt="Uttarakhand Gange — Real-Time STP Monitoring Platform"
-              className="-ml-[16px] block h-[84px] w-[100px] object-contain object-left [@media(min-height:820px)]:h-[104px] [@media(min-height:820px)]:w-[124px]"
-            />
+            <Logo hero className="-ml-[40px] block max-h-[72px] [@media(min-height:820px)]:max-h-[104px]" />
             <span className="mt-1 block text-[13px] font-bold leading-5 tracking-[0.08em] text-white sm:text-[15px]">
               NAMAMI GANGE
             </span>
