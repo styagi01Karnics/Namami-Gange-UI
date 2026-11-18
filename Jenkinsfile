@@ -96,18 +96,20 @@ timestamps {
 
                 }
 
-                // All other branches: build and SonarQube only
+                // All other branches: build only
                 else {
 
                     echo """
 ================================================
-NON-DEPLOYMENT BRANCH
+BUILD-ONLY BRANCH
 ================================================
 Branch: ${branchName}
 
-Frontend build and SonarQube analysis will run.
-Docker publishing and deployment stages
-will not be created.
+Only Checkout and Frontend Build will run.
+
+SonarQube, Docker publishing, deployment,
+health check and cleanup stages will not
+be created.
 ================================================
 """
                 }
@@ -145,6 +147,7 @@ Image Tag         : ${env.IMAGE_TAG}
 
             // ======================================================
             // 2. FRONTEND BUILD
+            // ALL BRANCHES
             // ======================================================
 
             stage('Build Frontend') {
@@ -172,33 +175,33 @@ Image Tag         : ${env.IMAGE_TAG}
             }
 
             // ======================================================
-            // 3. SONARQUBE ANALYSIS
-            // Separate project for each branch
-            // ======================================================
-
-            stage('SonarQube Analysis') {
-
-                withSonarQubeEnv('SonarQube') {
-
-                    sh '''
-                        set -eu
-
-                        "${SONAR_HOME}/bin/sonar-scanner" \
-                            -Dsonar.projectKey=namami-gange-ui-${BRANCH_NAME_SAFE} \
-                            -Dsonar.projectName=Namami-Gange-UI-${BRANCH_NAME_SAFE} \
-                            -Dsonar.sources=. \
-                            -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
-                            -Dsonar.sourceEncoding=UTF-8
-                    '''
-                }
-            }
-
-            // ======================================================
-            // 4-12. DEPLOYMENT STAGES
-            // These stages are created ONLY for dev and uat.
+            // 3-12. FULL PIPELINE
+            // THESE STAGES ARE CREATED ONLY FOR DEV AND UAT
             // ======================================================
 
             if (env.SHOULD_DEPLOY == 'true') {
+
+                // --------------------------------------------------
+                // 3. SONARQUBE ANALYSIS
+                // Separate project for DEV and UAT
+                // --------------------------------------------------
+
+                stage('SonarQube Analysis') {
+
+                    withSonarQubeEnv('SonarQube') {
+
+                        sh '''
+                            set -eu
+
+                            "${SONAR_HOME}/bin/sonar-scanner" \
+                                -Dsonar.projectKey=namami-gange-ui-${BRANCH_NAME_SAFE} \
+                                -Dsonar.projectName=Namami-Gange-UI-${BRANCH_NAME_SAFE} \
+                                -Dsonar.sources=. \
+                                -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
+                                -Dsonar.sourceEncoding=UTF-8
+                        '''
+                    }
+                }
 
                 // --------------------------------------------------
                 // 4. DOCKER LOGIN
@@ -801,16 +804,14 @@ docker images "$REPOSITORY" \
 
                 echo """
 ================================================
-DEPLOYMENT STAGES NOT CREATED
+BUILD-ONLY BRANCH COMPLETED
 ================================================
 Branch: ${env.BRANCH_NAME}
 
-This branch is not dev or uat.
+Only Checkout and Build Frontend were executed.
 
-Docker login, Docker build, Docker push,
-deployment, health check and cleanup stages
-will not be executed or displayed as skipped.
-
+No SonarQube, Docker publishing,
+deployment or cleanup was performed.
 ================================================
 """
             }
@@ -847,10 +848,10 @@ Branch  : ${env.BRANCH_NAME}
 Build   : ${env.BUILD_NUMBER}
 Commit  : ${env.SHORT_COMMIT}
 
-Frontend build and SonarQube analysis
-completed successfully.
+Frontend build completed successfully.
 
-No Docker publishing or deployment performed.
+No SonarQube, Docker publishing or deployment
+was performed.
 ================================================
 """
             }
