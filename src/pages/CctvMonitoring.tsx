@@ -25,7 +25,7 @@ import { useAuth } from '../auth/AuthContext'
 import CctvSiteCard from '../components/cctv/CctvSiteCard'
 import CameraLightbox from '../components/cctv/CameraLightbox'
 import { CameraStill } from '../components/cctv/CameraTile'
-import { cctvSites } from '../data/mockData'
+import { cctvSites, HIDDEN_DASHBOARD_PLANT_CODES } from '../data/mockData'
 import {
   emptyCameras,
   fetchCctvSiteInfo,
@@ -245,7 +245,9 @@ function pinFilterPlantOptions(
   options: Array<{ id: string; label: string; plantCode?: string; stpId?: string }>,
 ) {
   const allOption = options.find((option) => option.id === ALL_STP_FILTER_OPTION.id)
-  const plants = options.filter((option) => option.id !== ALL_STP_FILTER_OPTION.id)
+  const plants = options.filter(
+    (option) => option.id !== ALL_STP_FILTER_OPTION.id && !HIDDEN_DASHBOARD_PLANT_CODES.has(option.plantCode ?? ''),
+  )
   return [...(allOption ? [allOption] : []), ...pinCctvSiteOrder(plants)]
 }
 

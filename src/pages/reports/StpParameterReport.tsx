@@ -143,6 +143,20 @@ function StpParameterReportBody() {
     [readings, streamFilter],
   )
 
+  // Parameter columns with no value in any row are hidden from the report.
+  const visibleColumns = useMemo(
+    () =>
+      columns.filter(
+        (col) =>
+          !PARAM_KEYS.has(col.key) ||
+          rows.some((r) => {
+            const value = (r as Record<string, unknown>)[col.key]
+            return value !== null && value !== undefined && value !== '' && value !== '—'
+          }),
+      ),
+    [columns, rows],
+  )
+
   const isNonComplyingCell = (
     r: Partial<StpParameterReportRow> & { status?: string },
     key: string,
@@ -169,8 +183,7 @@ function StpParameterReportBody() {
         ],
         onChange: (val) => setStreamFilter(val as StreamFilter),
       }}
-      columns={columns}
-      rows={rows}
+      columns={visibleColumns}
       loadRows={loadRows}
       loading={loading}
       error={loadError}

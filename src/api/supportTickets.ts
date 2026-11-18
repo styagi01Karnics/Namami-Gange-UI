@@ -270,6 +270,7 @@ function toTicketDetail(
     status: STATUS_LABEL[detail.status] ?? detail.status,
     priority: PRIORITY_FROM_API[detail.priority] ?? detail.priority,
     createdOn: formatStamp(detail.createdAt),
+    stpName: detail.stpName ?? '',
     category: {
       title: subCategory?.name ?? category?.name ?? detail.subject,
       group: category?.name ?? '',

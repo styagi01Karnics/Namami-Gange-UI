@@ -36,6 +36,13 @@ export function TicketIdentity({ ticket }) {
         <DateLine label="Created On" value={ticket.createdOn} className="mt-[7px]" />
       </div>
 
+      {ticket.stpName && (
+        <div>
+          <SectionLabel>STP Name</SectionLabel>
+          <p className="mt-[9px] text-[13.5px] font-semibold leading-[18px] text-ink">{ticket.stpName}</p>
+        </div>
+      )}
+
       <div>
         <SectionLabel>Issue Category</SectionLabel>
         <div className="mt-[9px] flex items-start gap-[9px]">
