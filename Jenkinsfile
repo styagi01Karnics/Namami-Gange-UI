@@ -24,15 +24,6 @@ pipeline {
         SSH_CREDENTIALS = 'new-server-ssh'
 
         SONAR_HOME = tool 'SonarScanner'
-
-        DEPLOY_PATH = ''
-        APP_PORT = ''
-        CONTAINER_NAME = ''
-        BRANCH_NAME_SAFE = ''
-        IMAGE_TAG = ''
-        DEPLOY_EPOCH = ''
-        SHORT_COMMIT = ''
-        SHOULD_DEPLOY = 'false'
     }
 
     stages {
@@ -40,137 +31,140 @@ pipeline {
         // ==========================================================
         // 1. CHECKOUT AND BRANCH CONFIGURATION
         // ==========================================================
-        
+
         stage('Checkout') {
             steps {
                 checkout scm
-        
+
                 script {
-                    // Read and normalize the Multibranch Pipeline branch name.
-                    def rawBranchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'unknown'
-        
+
+                    def rawBranchName = env.BRANCH_NAME ?: 'unknown'
+
                     def branchName = rawBranchName
                         .trim()
                         .replaceFirst('(?i)^refs/heads/', '')
                         .replaceFirst('(?i)^origin/', '')
                         .toLowerCase()
-        
+
                     echo "Raw branch name        : '${rawBranchName}'"
                     echo "Normalized branch name : '${branchName}'"
-        
-                    // Get current commit.
+
+                    // Get current Git commit.
                     def shortCommit = sh(
                         script: 'git rev-parse --short=7 HEAD',
                         returnStdout: true
                     ).trim()
-        
+
                     if (!shortCommit) {
                         error('Unable to determine Git commit ID.')
                     }
-        
-                    // Generate a Docker-safe branch name.
+
+                    // Generate Docker-safe branch name.
                     def branchNameSafe = branchName
                         .replaceAll('[^a-zA-Z0-9_.-]', '-')
                         .replaceAll('-+', '-')
                         .replaceAll('^-+', '')
                         .replaceAll('-+$', '')
                         .take(100)
-        
+
                     if (!branchNameSafe) {
                         branchNameSafe = 'unknown'
                     }
-        
-                    // Reset deployment configuration before branch selection.
+
+                    // Initialize dynamic environment variables.
+                    env.SHORT_COMMIT = shortCommit
+                    env.BRANCH_NAME_SAFE = branchNameSafe
+
                     env.SHOULD_DEPLOY = 'false'
                     env.DEPLOY_PATH = ''
                     env.APP_PORT = ''
                     env.CONTAINER_NAME = ''
                     env.IMAGE_TAG = ''
                     env.DEPLOY_EPOCH = ''
-        
-                    env.SHORT_COMMIT = shortCommit
-                    env.BRANCH_NAME_SAFE = branchNameSafe
-        
-                    // Configure DEV deployment.
+
+                    // DEV deployment configuration.
                     if (branchName == 'dev') {
-        
+
                         env.SHOULD_DEPLOY = 'true'
                         env.DEPLOY_PATH = '/opt/namami-gange-ui-dev'
                         env.APP_PORT = '18086'
                         env.CONTAINER_NAME = 'namami-gange-ui-dev'
-        
+
                     }
-                    // Configure UAT deployment.
+
+                    // UAT deployment configuration.
                     else if (branchName == 'uat') {
-        
+
                         env.SHOULD_DEPLOY = 'true'
                         env.DEPLOY_PATH = '/opt/namami-gange-ui'
                         env.APP_PORT = '18085'
                         env.CONTAINER_NAME = 'namami-gange-ui'
-        
+
                     }
+
                     // Other branches: build and SonarQube only.
                     else {
-        
+
                         echo """
-        ==========================================
-        NON-DEPLOYMENT BRANCH
-        ==========================================
-        Branch: ${branchName}
-        
-        Frontend build and SonarQube analysis
-        will run.
-        
-        Docker publishing and deployment
-        will be skipped.
-        ==========================================
-        """
+==========================================
+NON-DEPLOYMENT BRANCH
+==========================================
+
+Branch: ${branchName}
+
+Frontend build and SonarQube analysis
+will run.
+
+Docker publishing and deployment
+will be skipped.
+
+==========================================
+"""
                     }
-        
-                    // Generate deployment details only for DEV and UAT.
+
+                    // Generate deployment image tag and epoch.
                     if (env.SHOULD_DEPLOY == 'true') {
-        
+
                         env.IMAGE_TAG = "${branchNameSafe}-${env.BUILD_NUMBER}"
                         env.DEPLOY_EPOCH = "${System.currentTimeMillis()}"
-        
+
                         if (!env.DEPLOY_PATH ||
                             !env.APP_PORT ||
                             !env.CONTAINER_NAME ||
                             !env.IMAGE_TAG) {
-        
-                            error("Deployment configuration is incomplete for branch: ${branchName}")
+
+                            error("Incomplete deployment configuration for ${branchName}")
                         }
                     }
-        
+
                     echo """
-        ==========================================
-        BUILD INFORMATION
-        ==========================================
-        
-        Project          : ${env.PROJECT_NAME}
-        Raw Branch       : ${rawBranchName}
-        Normalized Branch: ${branchName}
-        Commit           : ${env.SHORT_COMMIT}
-        Build            : ${env.BUILD_NUMBER}
-        Deployment       : ${env.SHOULD_DEPLOY}
-        Deploy Path      : ${env.DEPLOY_PATH}
-        Container        : ${env.CONTAINER_NAME}
-        Port             : ${env.APP_PORT}
-        Image Tag        : ${env.IMAGE_TAG}
-        
-        ==========================================
-        """
-        
-                    // Fail early if a deployment branch was not configured.
+==========================================
+BUILD INFORMATION
+==========================================
+
+Project          : ${env.PROJECT_NAME}
+Raw Branch       : ${rawBranchName}
+Normalized Branch: ${branchName}
+Commit           : ${env.SHORT_COMMIT}
+Build            : ${env.BUILD_NUMBER}
+Deployment       : ${env.SHOULD_DEPLOY}
+Deploy Path      : ${env.DEPLOY_PATH}
+Container        : ${env.CONTAINER_NAME}
+Port             : ${env.APP_PORT}
+Image Tag        : ${env.IMAGE_TAG}
+
+==========================================
+"""
+
+                    // Fail early if DEV or UAT deployment is not enabled.
                     if ((branchName == 'dev' || branchName == 'uat') &&
                         env.SHOULD_DEPLOY != 'true') {
-        
+
                         error("Deployment was not enabled for branch: ${branchName}")
                     }
                 }
             }
         }
-
 
         // ==========================================================
         // 2. FRONTEND BUILD
@@ -546,8 +540,6 @@ echo "=========================================="
                         set -eu
 
                         DEPLOY_SCRIPT="/tmp/${CONTAINER_NAME}-deploy.sh"
-
-                        SSH_OPTIONS="-i $SSH_KEY -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15"
 
                         scp \
                             -i "$SSH_KEY" \
