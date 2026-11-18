@@ -150,7 +150,7 @@ function StpParameterReportBody() {
         (col) =>
           !PARAM_KEYS.has(col.key) ||
           rows.some((r) => {
-            const value = (r as Record<string, unknown>)[col.key]
+            const value = (r as unknown as Record<string, unknown>)[col.key]
             return value !== null && value !== undefined && value !== '' && value !== '—'
           }),
       ),
@@ -184,6 +184,7 @@ function StpParameterReportBody() {
         onChange: (val) => setStreamFilter(val as StreamFilter),
       }}
       columns={visibleColumns}
+      rows={rows}
       loadRows={loadRows}
       loading={loading}
       error={loadError}
