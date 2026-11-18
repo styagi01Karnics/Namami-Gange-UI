@@ -23,6 +23,7 @@ import Toast, { type ToastFeedback } from '../ui/Toast'
 import { useAuth } from '../../auth/AuthContext'
 import { NO_STP_ACCESS_MESSAGE } from '../../lib/stpAccess'
 import {
+  HIDDEN_DASHBOARD_PLANT_CODES,
   stpDetails,
   type StpMapPoint,
   type StpMapRiskId,
@@ -50,7 +51,7 @@ type MappedPlant = StpMapPoint & {
 // The 13 approved plants are the only markers shown on this map. For the
 // newer additions without surveyed GPS in the current dataset, the map uses
 // approximate town coordinates until verified plant coordinates are provided.
-const PLANT_POINTS: MappedPlant[] = [
+const ALL_PLANT_POINTS: MappedPlant[] = [
   { id: 'map-sarai-14', label: '14 MLD STP, Sarai, Haridwar', lat: 29.8952, lng: 78.0893, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '14mldsarai', detailKey: 'sarai-14' },
   { id: 'map-jagjeetpur-68', label: '68 MLD STP, Jagjeetpur, Haridwar', lat: 29.8987, lng: 78.139, risk: 'critical', riskPercent: 93, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UKPJN', detailCode: '68mldjag', detailKey: 'jagjeetpur-68' },
   { id: 'map-jagjeetpur-upgrade-27', label: '27 MLD STP, Jagjeetpur', lat: 29.8998, lng: 78.1377, risk: 'critical', riskPercent: 91, minZoom: 0, city: 'Haridwar', district: 'Haridwar', operator: 'UJS', detailCode: '27mldjag_upg', detailKey: 'jagjeetpur-27-upg' },
@@ -65,6 +66,8 @@ const PLANT_POINTS: MappedPlant[] = [
   { id: 'map-bazpur-10', label: '10 MLD STP, Bazpur', lat: 29.152, lng: 79.11, risk: 'normal', riskPercent: 24, minZoom: 0, city: 'Bazpur', district: 'Udham Singh Nagar', operator: 'UKPJN', detailCode: '10mldbazpur', detailKey: 'bazpur-10' },
   { id: 'map-kashipur-10', label: '10 MLD STP, Kashipur', lat: 29.2104, lng: 78.9619, risk: 'watch', riskPercent: 42, minZoom: 0, city: 'Kashipur', district: 'Udham Singh Nagar', operator: 'UKPJN', detailCode: '10mldkashipur', detailKey: 'kashipur-10' },
 ]
+
+const PLANT_POINTS = ALL_PLANT_POINTS.filter((point) => !HIDDEN_DASHBOARD_PLANT_CODES.has(point.detailCode ?? ''))
 
 const LABEL_LAYOUT: Record<string, { x: number; y: number }> = {
   // Haridwar plants share the left callout lane, each in its own row.

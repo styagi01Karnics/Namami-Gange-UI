@@ -22,7 +22,7 @@ import ContractsTab from '../components/contracts/ContractsTab'
 import ComplianceTab from '../components/compliance/ComplianceTab'
 import BillingTab from '../components/billing/BillingTab'
 import { useAuth } from '../auth/AuthContext'
-import { defaultDateRange, stpDetails, stpSectionTabs } from '../data/mockData'
+import { defaultDateRange, HIDDEN_DASHBOARD_PLANT_CODES, stpDetails, stpSectionTabs } from '../data/mockData'
 import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
 import {
@@ -194,7 +194,7 @@ export default function StpManagement() {
   )
   // The STP picker only lists STPs the user's role grants access to.
   const accessiblePlantOptions = useMemo(
-    () => plantOptions.filter((option) => hasStpAccess(option.plantCode)),
+    () => plantOptions.filter((option) => hasStpAccess(option.plantCode) && !HIDDEN_DASHBOARD_PLANT_CODES.has(option.plantCode)),
     [plantOptions, hasStpAccess],
   )
   const pickerOptions = useMemo(() => {

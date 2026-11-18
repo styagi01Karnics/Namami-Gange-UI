@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { liveStpData } from '../../data/mockData'
+import { HIDDEN_DASHBOARD_PLANT_CODES, liveStpData as allLiveStpData } from '../../data/mockData'
 import { stpRealtimePath } from '../../routes'
 import { useStpDetails } from '../../context/StpDetailsContext'
 import Card from '../ui/Card'
@@ -44,6 +44,7 @@ export default function LiveStpDataCard() {
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
   const autoScrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { status, names, error } = useStpDetails()
+  const liveStpData = allLiveStpData.filter((stp) => !HIDDEN_DASHBOARD_PLANT_CODES.has(stp.plantCode))
   const pages = liveStpData.length
 
   const scrollTo = (index: number) => {
