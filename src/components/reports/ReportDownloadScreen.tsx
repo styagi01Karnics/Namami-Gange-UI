@@ -14,6 +14,7 @@ type ReportDownloadScreenProps = {
   title: string
   description: string
   columns: { key: string; label: string; width?: string; align?: string; range?: string; min?: number; max?: number }[]
+  rows: any[]
   renderCell?: (row: any, col: any, index?: number) => any
   getValue?: (row: any, col: any) => any
   exportTitle?: string
