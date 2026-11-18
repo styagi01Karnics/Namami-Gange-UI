@@ -1,186 +1,161 @@
 
-pipeline {
+properties([
+    buildDiscarder(logRotator(numToKeepStr: '3')),
+    disableConcurrentBuilds()
+])
 
-    agent any
-
-    tools {
-        nodejs 'node-22'
-    }
-
-    options {
-        timestamps()
-        buildDiscarder(logRotator(numToKeepStr: '3'))
-        skipDefaultCheckout(false)
-        disableConcurrentBuilds()
-    }
-
-    environment {
-        APP_SERVER = '45.195.229.15'
-
-        PROJECT_NAME = 'namami-gange-ui'
-        DOCKER_ORG = 'sunardock'
-
-        DOCKER_CREDENTIALS = 'dockerhub-creds'
-        SSH_CREDENTIALS = 'new-server-ssh'
-
-        SONAR_HOME = tool 'SonarScanner'
-    }
-
-    stages {
+timestamps {
+    node {
 
         // ==========================================================
-        // 1. CHECKOUT AND BRANCH CONFIGURATION
+        // COMMON CONFIGURATION
         // ==========================================================
 
-        stage('Checkout') {
-            steps {
+        env.APP_SERVER = '45.195.229.15'
+        env.PROJECT_NAME = 'namami-gange-ui'
+        env.DOCKER_ORG = 'sunardock'
+
+        env.DOCKER_CREDENTIALS = 'dockerhub-creds'
+        env.SSH_CREDENTIALS = 'new-server-ssh'
+
+        env.SONAR_HOME = tool 'SonarScanner'
+
+        def nodeHome = tool 'node-22'
+        env.PATH = "${nodeHome}/bin:${env.PATH}"
+
+        env.SHOULD_DEPLOY = 'false'
+        env.DEPLOY_PATH = ''
+        env.APP_PORT = ''
+        env.CONTAINER_NAME = ''
+        env.IMAGE_TAG = ''
+        env.DEPLOY_EPOCH = ''
+        env.SHORT_COMMIT = ''
+        env.BRANCH_NAME_SAFE = ''
+
+        try {
+
+            // ======================================================
+            // 1. CHECKOUT AND BRANCH CONFIGURATION
+            // ======================================================
+
+            stage('Checkout') {
+
                 checkout scm
 
-                script {
+                def rawBranchName = env.BRANCH_NAME ?: 'unknown'
 
-                    def rawBranchName = env.BRANCH_NAME ?: 'unknown'
+                def branchName = rawBranchName
+                    .trim()
+                    .replaceFirst('(?i)^refs/heads/', '')
+                    .replaceFirst('(?i)^origin/', '')
+                    .toLowerCase()
 
-                    def branchName = rawBranchName
-                        .trim()
-                        .replaceFirst('(?i)^refs/heads/', '')
-                        .replaceFirst('(?i)^origin/', '')
-                        .toLowerCase()
+                echo "Raw branch name        : ${rawBranchName}"
+                echo "Normalized branch name : ${branchName}"
 
-                    echo "Raw branch name        : '${rawBranchName}'"
-                    echo "Normalized branch name : '${branchName}'"
+                def shortCommit = sh(
+                    script: 'git rev-parse --short=7 HEAD',
+                    returnStdout: true
+                ).trim()
 
-                    // Get current Git commit.
-                    def shortCommit = sh(
-                        script: 'git rev-parse --short=7 HEAD',
-                        returnStdout: true
-                    ).trim()
+                if (!shortCommit) {
+                    error('Unable to determine Git commit ID.')
+                }
 
-                    if (!shortCommit) {
-                        error('Unable to determine Git commit ID.')
-                    }
+                def branchNameSafe = branchName
+                    .replaceAll('[^a-zA-Z0-9_.-]', '-')
+                    .replaceAll('-+', '-')
+                    .replaceAll('^[.-]+', '')
+                    .replaceAll('[.-]+$', '')
+                    .take(100)
 
-                    // Generate Docker-safe branch name.
-                    def branchNameSafe = branchName
-                        .replaceAll('[^a-zA-Z0-9_.-]', '-')
-                        .replaceAll('-+', '-')
-                        .replaceAll('^-+', '')
-                        .replaceAll('-+$', '')
-                        .take(100)
+                if (!branchNameSafe) {
+                    branchNameSafe = 'unknown'
+                }
 
-                    if (!branchNameSafe) {
-                        branchNameSafe = 'unknown'
-                    }
+                env.SHORT_COMMIT = shortCommit
+                env.BRANCH_NAME_SAFE = branchNameSafe
 
-                    // Initialize dynamic environment variables.
-                    env.SHORT_COMMIT = shortCommit
-                    env.BRANCH_NAME_SAFE = branchNameSafe
+                // DEV deployment configuration
+                if (branchName == 'dev') {
 
-                    env.SHOULD_DEPLOY = 'false'
-                    env.DEPLOY_PATH = ''
-                    env.APP_PORT = ''
-                    env.CONTAINER_NAME = ''
-                    env.IMAGE_TAG = ''
-                    env.DEPLOY_EPOCH = ''
+                    env.SHOULD_DEPLOY = 'true'
+                    env.DEPLOY_PATH = '/opt/namami-gange-ui-dev'
+                    env.APP_PORT = '18086'
+                    env.CONTAINER_NAME = 'namami-gange-ui-dev'
 
-                    // DEV deployment configuration.
-                    if (branchName == 'dev') {
+                }
 
-                        env.SHOULD_DEPLOY = 'true'
-                        env.DEPLOY_PATH = '/opt/namami-gange-ui-dev'
-                        env.APP_PORT = '18086'
-                        env.CONTAINER_NAME = 'namami-gange-ui-dev'
+                // UAT deployment configuration
+                else if (branchName == 'uat') {
 
-                    }
+                    env.SHOULD_DEPLOY = 'true'
+                    env.DEPLOY_PATH = '/opt/namami-gange-ui'
+                    env.APP_PORT = '18085'
+                    env.CONTAINER_NAME = 'namami-gange-ui'
 
-                    // UAT deployment configuration.
-                    else if (branchName == 'uat') {
+                }
 
-                        env.SHOULD_DEPLOY = 'true'
-                        env.DEPLOY_PATH = '/opt/namami-gange-ui'
-                        env.APP_PORT = '18085'
-                        env.CONTAINER_NAME = 'namami-gange-ui'
-
-                    }
-
-                    // Other branches: build and SonarQube only.
-                    else {
-
-                        echo """
-==========================================
-NON-DEPLOYMENT BRANCH
-==========================================
-
-Branch: ${branchName}
-
-Frontend build and SonarQube analysis
-will run.
-
-Docker publishing and deployment
-will be skipped.
-
-==========================================
-"""
-                    }
-
-                    // Generate deployment image tag and epoch.
-                    if (env.SHOULD_DEPLOY == 'true') {
-
-                        env.IMAGE_TAG = "${branchNameSafe}-${env.BUILD_NUMBER}"
-                        env.DEPLOY_EPOCH = "${System.currentTimeMillis()}"
-
-                        if (!env.DEPLOY_PATH ||
-                            !env.APP_PORT ||
-                            !env.CONTAINER_NAME ||
-                            !env.IMAGE_TAG) {
-
-                            error("Incomplete deployment configuration for ${branchName}")
-                        }
-                    }
+                // All other branches: build and SonarQube only
+                else {
 
                     echo """
-==========================================
-BUILD INFORMATION
-==========================================
+================================================
+NON-DEPLOYMENT BRANCH
+================================================
+Branch: ${branchName}
 
-Project          : ${env.PROJECT_NAME}
-Raw Branch       : ${rawBranchName}
-Normalized Branch: ${branchName}
-Commit           : ${env.SHORT_COMMIT}
-Build            : ${env.BUILD_NUMBER}
-Deployment       : ${env.SHOULD_DEPLOY}
-Deploy Path      : ${env.DEPLOY_PATH}
-Container        : ${env.CONTAINER_NAME}
-Port             : ${env.APP_PORT}
-Image Tag        : ${env.IMAGE_TAG}
-
-==========================================
+Frontend build and SonarQube analysis will run.
+Docker publishing and deployment stages
+will not be created.
+================================================
 """
+                }
 
-                    // Fail early if DEV or UAT deployment is not enabled.
-                    if ((branchName == 'dev' || branchName == 'uat') &&
-                        env.SHOULD_DEPLOY != 'true') {
+                if (env.SHOULD_DEPLOY == 'true') {
 
-                        error("Deployment was not enabled for branch: ${branchName}")
+                    env.IMAGE_TAG = "${branchNameSafe}-${env.BUILD_NUMBER}"
+                    env.DEPLOY_EPOCH = "${System.currentTimeMillis()}"
+
+                    if (!env.DEPLOY_PATH ||
+                        !env.APP_PORT ||
+                        !env.CONTAINER_NAME ||
+                        !env.IMAGE_TAG) {
+
+                        error("Incomplete deployment configuration for ${branchName}")
                     }
                 }
+
+                echo """
+================================================
+BUILD INFORMATION
+================================================
+Project           : ${env.PROJECT_NAME}
+Branch            : ${branchName}
+Commit            : ${env.SHORT_COMMIT}
+Build             : ${env.BUILD_NUMBER}
+Deployment        : ${env.SHOULD_DEPLOY}
+Deploy Path       : ${env.DEPLOY_PATH}
+Container         : ${env.CONTAINER_NAME}
+Port              : ${env.APP_PORT}
+Image Tag         : ${env.IMAGE_TAG}
+================================================
+"""
             }
-        }
 
-        // ==========================================================
-        // 2. FRONTEND BUILD
-        // ==========================================================
+            // ======================================================
+            // 2. FRONTEND BUILD
+            // ======================================================
 
-        stage('Build Frontend') {
-            steps {
+            stage('Build Frontend') {
+
                 sh '''
                     set -eu
 
                     echo "Installing dependencies..."
-
                     npm ci
 
                     echo "Building frontend..."
-
                     npm run build
 
                     if [ -d "build" ]; then
@@ -195,151 +170,123 @@ Image Tag        : ${env.IMAGE_TAG}
                     echo "Frontend build successful."
                 '''
             }
-        }
 
-        // ==========================================================
-        // 3. SONARQUBE ANALYSIS
-        // ==========================================================
+            // ======================================================
+            // 3. SONARQUBE ANALYSIS
+            // Separate project for each branch
+            // ======================================================
 
-        stage('SonarQube Analysis') {
-            steps {
+            stage('SonarQube Analysis') {
+
                 withSonarQubeEnv('SonarQube') {
+
                     sh '''
                         set -eu
 
                         "${SONAR_HOME}/bin/sonar-scanner" \
-                            -Dsonar.projectKey=namami-gange-ui \
-                            -Dsonar.projectName=namami-gange-ui \
+                            -Dsonar.projectKey=namami-gange-ui-${BRANCH_NAME_SAFE} \
+                            -Dsonar.projectName=Namami-Gange-UI-${BRANCH_NAME_SAFE} \
                             -Dsonar.sources=. \
                             -Dsonar.exclusions=node_modules/**,build/**,dist/**,coverage/** \
                             -Dsonar.sourceEncoding=UTF-8
                     '''
                 }
             }
-        }
 
-        // ==========================================================
-        // 4. DOCKER LOGIN
-        // Only DEV and UAT
-        // ==========================================================
+            // ======================================================
+            // 4-12. DEPLOYMENT STAGES
+            // These stages are created ONLY for dev and uat.
+            // ======================================================
 
-        stage('Docker Login') {
+            if (env.SHOULD_DEPLOY == 'true') {
 
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
+                // --------------------------------------------------
+                // 4. DOCKER LOGIN
+                // --------------------------------------------------
+
+                stage('Docker Login') {
+
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: env.DOCKER_CREDENTIALS,
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASSWORD'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -eu
+                            set +x
+
+                            printf '%s' "$DOCKER_PASSWORD" | docker login \
+                                --username "$DOCKER_USER" \
+                                --password-stdin
+
+                            echo "Docker Hub login successful."
+                        '''
+                    }
                 }
-            }
 
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: "${DOCKER_CREDENTIALS}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
+                // --------------------------------------------------
+                // 5. BUILD DOCKER IMAGE
+                // --------------------------------------------------
+
+                stage('Build Docker Image') {
+
                     sh '''
                         set -eu
-                        set +x
-
-                        printf '%s' "$DOCKER_PASSWORD" | docker login \
-                            --username "$DOCKER_USER" \
-                            --password-stdin
-
-                        echo "Docker Hub login successful."
-                    '''
-                }
-            }
-        }
-
-        // ==========================================================
-        // 5. BUILD DOCKER IMAGE
-        // ==========================================================
-
-        stage('Build Docker Image') {
-
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
-                }
-            }
-
-            steps {
-                sh '''
-                    set -eu
-
-                    IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
-
-                    echo "Building image: $IMAGE"
-
-                    docker build \
-                        --pull \
-                        -t "$IMAGE" \
-                        .
-
-                    docker image inspect "$IMAGE" >/dev/null
-
-                    echo "Docker image built successfully."
-
-                    docker images "$DOCKER_ORG/$PROJECT_NAME" \
-                        --format 'table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}'
-                '''
-            }
-        }
-
-        // ==========================================================
-        // 6. PUSH DOCKER IMAGE
-        // ==========================================================
-
-        stage('Push Docker Image') {
-
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
-                }
-            }
-
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: "${DOCKER_CREDENTIALS}",
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
-                    sh '''
-                        set -eu
-                        set +x
 
                         IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
 
-                        printf '%s' "$DOCKER_PASSWORD" | docker login \
-                            --username "$DOCKER_USERNAME" \
-                            --password-stdin
+                        echo "Building image: $IMAGE"
 
-                        docker push "$IMAGE"
+                        docker build --pull -t "$IMAGE" .
 
-                        echo "Docker image pushed successfully."
+                        docker image inspect "$IMAGE" >/dev/null
+
+                        echo "Docker image built successfully."
+
+                        docker images "$DOCKER_ORG/$PROJECT_NAME" \
+                            --format 'table {{.Repository}}\\t{{.Tag}}\\t{{.ID}}\\t{{.Size}}'
                     '''
                 }
-            }
-        }
 
-        // ==========================================================
-        // 7. PREPARE REMOTE DEPLOYMENT SCRIPT
-        // ==========================================================
+                // --------------------------------------------------
+                // 6. PUSH DOCKER IMAGE
+                // --------------------------------------------------
 
-        stage('Prepare Deployment Script') {
+                stage('Push Docker Image') {
 
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: env.DOCKER_CREDENTIALS,
+                            usernameVariable: 'DOCKER_USERNAME',
+                            passwordVariable: 'DOCKER_PASSWORD'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -eu
+                            set +x
+
+                            IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
+
+                            printf '%s' "$DOCKER_PASSWORD" | docker login \
+                                --username "$DOCKER_USERNAME" \
+                                --password-stdin
+
+                            docker push "$IMAGE"
+
+                            echo "Docker image pushed successfully."
+                        '''
+                    }
                 }
-            }
 
-            steps {
-                script {
+                // --------------------------------------------------
+                // 7. PREPARE REMOTE DEPLOYMENT SCRIPT
+                // --------------------------------------------------
+
+                stage('Prepare Deployment Script') {
 
                     writeFile(
                         file: 'remote-deploy.sh',
@@ -374,7 +321,6 @@ echo "Port         : $APP_PORT"
 echo "=========================================="
 
 exec 200>"$LOCK_FILE"
-
 flock -x 200
 
 CURRENT_EPOCH=0
@@ -389,33 +335,22 @@ if [ "$DEPLOY_EPOCH" -lt "$CURRENT_EPOCH" ]; then
 fi
 
 echo "Pulling Docker image..."
-
 docker pull "$IMAGE"
 
 echo "Stopping existing container..."
-
 docker stop "$CONTAINER_NAME" 2>/dev/null || true
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-echo "Creating Compose configuration..."
-
 cat > "${DEPLOY_PATH}/docker-compose.yml" <<EOF
 services:
-
   web:
-
     image: ${IMAGE}
-
     container_name: ${CONTAINER_NAME}
-
     restart: unless-stopped
-
     ports:
       - "${APP_PORT}:80"
-
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
     labels:
       com.karnics.project: "namami-gange-ui"
       com.karnics.environment: "${DEPLOY_BRANCH}"
@@ -440,7 +375,6 @@ DEPLOY_EPOCH=${DEPLOY_EPOCH}
 EOF
 
 echo "Starting application..."
-
 docker compose up -d --force-recreate web
 
 CONTAINER_RUNNING="false"
@@ -470,13 +404,9 @@ for i in $(seq 1 12); do
 done
 
 if [ "$CONTAINER_RUNNING" != "true" ]; then
-
     echo "ERROR: Container failed to start."
-
     docker ps -a --filter "name=$CONTAINER_NAME"
-
     docker logs "$CONTAINER_NAME" --tail 100 2>/dev/null || true
-
     exit 1
 fi
 
@@ -513,194 +443,160 @@ echo "=========================================="
 
                     sh 'chmod +x remote-deploy.sh'
                 }
-            }
-        }
 
-        // ==========================================================
-        // 8. DEPLOY APPLICATION
-        // ==========================================================
+                // --------------------------------------------------
+                // 8. DEPLOY APPLICATION
+                // --------------------------------------------------
 
-        stage('Deploy Application') {
+                stage('Deploy Application') {
 
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
+                    withCredentials([
+                        sshUserPrivateKey(
+                            credentialsId: env.SSH_CREDENTIALS,
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -eu
+
+                            DEPLOY_SCRIPT="/tmp/${CONTAINER_NAME}-deploy.sh"
+
+                            scp \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                -o ConnectTimeout=15 \
+                                remote-deploy.sh \
+                                "$SSH_USER@$APP_SERVER:$DEPLOY_SCRIPT"
+
+                            ssh \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                -o ConnectTimeout=15 \
+                                "$SSH_USER@$APP_SERVER" \
+                                "bash '$DEPLOY_SCRIPT' \
+                                '$DOCKER_ORG/$PROJECT_NAME:$IMAGE_TAG' \
+                                '$IMAGE_TAG' \
+                                '$DEPLOY_EPOCH' \
+                                '$BRANCH_NAME_SAFE' \
+                                '$SHORT_COMMIT' \
+                                '$BUILD_NUMBER' \
+                                '$DEPLOY_PATH' \
+                                '$APP_PORT' \
+                                '$CONTAINER_NAME'"
+
+                            ssh \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                "$SSH_USER@$APP_SERVER" \
+                                "rm -f '$DEPLOY_SCRIPT'"
+
+                            echo "Deployment command completed."
+                        '''
+                    }
                 }
-            }
 
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: "${SSH_CREDENTIALS}",
-                        keyFileVariable: 'SSH_KEY',
-                        usernameVariable: 'SSH_USER'
-                    )
-                ]) {
+                // --------------------------------------------------
+                // 9. HEALTH CHECK
+                // --------------------------------------------------
+
+                stage('Health Check') {
+
+                    withCredentials([
+                        sshUserPrivateKey(
+                            credentialsId: env.SSH_CREDENTIALS,
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -eu
+
+                            sleep 5
+
+                            echo "Checking container..."
+
+                            ssh \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                "$SSH_USER@$APP_SERVER" \
+                                "docker ps --filter 'name=^/${CONTAINER_NAME}$' \
+                                --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'"
+
+                            echo "Checking application URL..."
+
+                            curl \
+                                --fail \
+                                --max-time 15 \
+                                "http://${APP_SERVER}:${APP_PORT}/"
+
+                            echo ""
+                            echo "APPLICATION HEALTH CHECK PASSED"
+                        '''
+                    }
+                }
+
+                // --------------------------------------------------
+                // 10. JENKINS DOCKER CLEANUP
+                // Keep current branch's current image only.
+                // --------------------------------------------------
+
+                stage('Jenkins Docker Cleanup') {
+
                     sh '''
                         set -eu
 
-                        DEPLOY_SCRIPT="/tmp/${CONTAINER_NAME}-deploy.sh"
+                        CURRENT_IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
+                        BRANCH_PREFIX="${BRANCH_NAME_SAFE}-"
 
-                        scp \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            -o ConnectTimeout=15 \
-                            remote-deploy.sh \
-                            "$SSH_USER@$APP_SERVER:$DEPLOY_SCRIPT"
+                        echo "Current image: $CURRENT_IMAGE"
+                        echo "Branch prefix: $BRANCH_PREFIX"
 
-                        ssh \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            -o ConnectTimeout=15 \
-                            "$SSH_USER@$APP_SERVER" \
-                            "bash '$DEPLOY_SCRIPT' \
-                            '$DOCKER_ORG/$PROJECT_NAME:$IMAGE_TAG' \
-                            '$IMAGE_TAG' \
-                            '$DEPLOY_EPOCH' \
-                            '$BRANCH_NAME_SAFE' \
-                            '$SHORT_COMMIT' \
-                            '$BUILD_NUMBER' \
-                            '$DEPLOY_PATH' \
-                            '$APP_PORT' \
-                            '$CONTAINER_NAME'"
+                        docker images "$DOCKER_ORG/$PROJECT_NAME" \
+                            --format '{{.Tag}}' |
+                        while IFS= read -r TAG; do
 
-                        ssh \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            "$SSH_USER@$APP_SERVER" \
-                            "rm -f '$DEPLOY_SCRIPT'"
+                            [ -z "$TAG" ] && continue
+                            [ "$TAG" = "<none>" ] && continue
 
-                        echo "Deployment command completed."
+                            case "$TAG" in
+                                "$BRANCH_PREFIX"*)
+                                    IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${TAG}"
+
+                                    if [ "$IMAGE" = "$CURRENT_IMAGE" ]; then
+                                        echo "KEEP: $IMAGE"
+                                    else
+                                        echo "REMOVE: $IMAGE"
+                                        docker rmi "$IMAGE" || \
+                                            echo "WARNING: Could not remove $IMAGE"
+                                    fi
+                                    ;;
+                                *)
+                                    echo "SKIP OTHER BRANCH IMAGE: $TAG"
+                                    ;;
+                            esac
+
+                        done
+
+                        echo "Jenkins Docker cleanup completed."
                     '''
                 }
-            }
-        }
 
-        // ==========================================================
-        // 9. HEALTH CHECK
-        // ==========================================================
+                // --------------------------------------------------
+                // 11. PREPARE APPLICATION SERVER CLEANUP SCRIPT
+                // --------------------------------------------------
 
-        stage('Health Check') {
-
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
-                }
-            }
-
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: "${SSH_CREDENTIALS}",
-                        keyFileVariable: 'SSH_KEY',
-                        usernameVariable: 'SSH_USER'
-                    )
-                ]) {
-                    sh '''
-                        set -eu
-
-                        sleep 5
-
-                        echo "Checking container..."
-
-                        ssh \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            "$SSH_USER@$APP_SERVER" \
-                            "docker ps --filter 'name=^/${CONTAINER_NAME}$' \
-                            --format 'table {{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}'"
-
-                        echo "Checking application URL..."
-
-                        curl \
-                            --fail \
-                            --max-time 15 \
-                            "http://${APP_SERVER}:${APP_PORT}/"
-
-                        echo ""
-                        echo "APPLICATION HEALTH CHECK PASSED"
-                    '''
-                }
-            }
-        }
-
-        // ==========================================================
-        // 10. JENKINS DOCKER CLEANUP
-        // Remove only current branch images.
-        // ==========================================================
-
-        stage('Jenkins Docker Cleanup') {
-
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
-                }
-            }
-
-            steps {
-                sh '''
-                    set -eu
-
-                    CURRENT_IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${IMAGE_TAG}"
-                    BRANCH_PREFIX="${BRANCH_NAME_SAFE}-"
-
-                    echo "Current image: $CURRENT_IMAGE"
-                    echo "Branch prefix: $BRANCH_PREFIX"
-
-                    docker images "$DOCKER_ORG/$PROJECT_NAME" \
-                        --format '{{.Tag}}' |
-                    while IFS= read -r TAG; do
-
-                        [ -z "$TAG" ] && continue
-                        [ "$TAG" = "<none>" ] && continue
-
-                        case "$TAG" in
-                            "$BRANCH_PREFIX"*)
-                                IMAGE="${DOCKER_ORG}/${PROJECT_NAME}:${TAG}"
-
-                                if [ "$IMAGE" = "$CURRENT_IMAGE" ]; then
-                                    echo "KEEP: $IMAGE"
-                                else
-                                    echo "REMOVE: $IMAGE"
-                                    docker rmi "$IMAGE" || \
-                                        echo "WARNING: Could not remove $IMAGE"
-                                fi
-                                ;;
-                            *)
-                                echo "SKIP OTHER BRANCH IMAGE: $TAG"
-                                ;;
-                        esac
-
-                    done
-
-                    echo "Jenkins Docker cleanup completed."
-                '''
-            }
-        }
-
-        // ==========================================================
-        // 11. PREPARE APPLICATION SERVER CLEANUP SCRIPT
-        // Keep running image + newest two for this environment.
-        // ==========================================================
-
-        stage('Prepare Cleanup Script') {
-
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
-                }
-            }
-
-            steps {
-                script {
+                stage('Prepare Cleanup Script') {
 
                     writeFile(
                         file: 'remote-cleanup.sh',
@@ -848,110 +744,104 @@ docker images "$REPOSITORY" \
 
                     sh 'chmod +x remote-cleanup.sh'
                 }
-            }
-        }
 
-        // ==========================================================
-        // 12. APPLICATION SERVER DOCKER CLEANUP
-        // ==========================================================
+                // --------------------------------------------------
+                // 12. APPLICATION SERVER DOCKER CLEANUP
+                // --------------------------------------------------
 
-        stage('Application Server Docker Cleanup') {
+                stage('Application Server Docker Cleanup') {
 
-            when {
-                expression {
-                    env.SHOULD_DEPLOY == 'true'
+                    withCredentials([
+                        sshUserPrivateKey(
+                            credentialsId: env.SSH_CREDENTIALS,
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'
+                        )
+                    ]) {
+
+                        sh '''
+                            set -eu
+
+                            CLEANUP_SCRIPT="/tmp/${CONTAINER_NAME}-cleanup.sh"
+
+                            scp \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                -o ConnectTimeout=15 \
+                                remote-cleanup.sh \
+                                "$SSH_USER@$APP_SERVER:$CLEANUP_SCRIPT"
+
+                            ssh \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                "$SSH_USER@$APP_SERVER" \
+                                "bash '$CLEANUP_SCRIPT' \
+                                '$DOCKER_ORG/$PROJECT_NAME' \
+                                '$CONTAINER_NAME' \
+                                '${BRANCH_NAME_SAFE}-'"
+
+                            ssh \
+                                -i "$SSH_KEY" \
+                                -o IdentitiesOnly=yes \
+                                -o BatchMode=yes \
+                                -o StrictHostKeyChecking=yes \
+                                "$SSH_USER@$APP_SERVER" \
+                                "rm -f '$CLEANUP_SCRIPT'"
+
+                            echo "Application server cleanup completed."
+                        '''
+                    }
                 }
+
+            } else {
+
+                echo """
+================================================
+DEPLOYMENT STAGES NOT CREATED
+================================================
+Branch: ${env.BRANCH_NAME}
+
+This branch is not dev or uat.
+
+Docker login, Docker build, Docker push,
+deployment, health check and cleanup stages
+will not be executed or displayed as skipped.
+
+================================================
+"""
             }
 
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: "${SSH_CREDENTIALS}",
-                        keyFileVariable: 'SSH_KEY',
-                        usernameVariable: 'SSH_USER'
-                    )
-                ]) {
-                    sh '''
-                        set -eu
+            // ======================================================
+            // SUCCESS MESSAGE
+            // ======================================================
 
-                        CLEANUP_SCRIPT="/tmp/${CONTAINER_NAME}-cleanup.sh"
+            currentBuild.result = 'SUCCESS'
 
-                        scp \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            -o ConnectTimeout=15 \
-                            remote-cleanup.sh \
-                            "$SSH_USER@$APP_SERVER:$CLEANUP_SCRIPT"
+            if (env.SHOULD_DEPLOY == 'true') {
 
-                        ssh \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            "$SSH_USER@$APP_SERVER" \
-                            "bash '$CLEANUP_SCRIPT' \
-                            '$DOCKER_ORG/$PROJECT_NAME' \
-                            '$CONTAINER_NAME' \
-                            '${BRANCH_NAME_SAFE}-'"
-
-                        ssh \
-                            -i "$SSH_KEY" \
-                            -o IdentitiesOnly=yes \
-                            -o BatchMode=yes \
-                            -o StrictHostKeyChecking=yes \
-                            "$SSH_USER@$APP_SERVER" \
-                            "rm -f '$CLEANUP_SCRIPT'"
-
-                        echo "Application server cleanup completed."
-                    '''
-                }
-            }
-        }
-    }
-
-    // ==============================================================
-    // POST ACTIONS
-    // ==============================================================
-
-    post {
-
-        always {
-            sh '''
-                docker logout >/dev/null 2>&1 || true
-            '''
-
-            cleanWs()
-        }
-
-        success {
-            script {
-
-                if (env.SHOULD_DEPLOY == 'true') {
-
-                    echo """
-==========================================
+                echo """
+================================================
 DEPLOYMENT SUCCESSFUL
-==========================================
-
+================================================
 Project : ${env.PROJECT_NAME}
 Branch  : ${env.BRANCH_NAME}
 Build   : ${env.BUILD_NUMBER}
 Commit  : ${env.SHORT_COMMIT}
 Image   : ${env.DOCKER_ORG}/${env.PROJECT_NAME}:${env.IMAGE_TAG}
 Port    : ${env.APP_PORT}
-
-==========================================
+================================================
 """
 
-                } else {
+            } else {
 
-                    echo """
-==========================================
+                echo """
+================================================
 BUILD SUCCESSFUL - NO DEPLOYMENT
-==========================================
-
+================================================
 Project : ${env.PROJECT_NAME}
 Branch  : ${env.BRANCH_NAME}
 Build   : ${env.BUILD_NUMBER}
@@ -960,29 +850,35 @@ Commit  : ${env.SHORT_COMMIT}
 Frontend build and SonarQube analysis
 completed successfully.
 
-Docker publishing and deployment skipped.
-
-==========================================
+No Docker publishing or deployment performed.
+================================================
 """
-                }
             }
-        }
 
-        failure {
+        } catch (err) {
+
+            currentBuild.result = 'FAILURE'
+
             echo """
-==========================================
+================================================
 PIPELINE FAILED
-==========================================
-
+================================================
 Project : ${env.PROJECT_NAME}
 Branch  : ${env.BRANCH_NAME}
 Build   : ${env.BUILD_NUMBER}
 Commit  : ${env.SHORT_COMMIT}
 
 Please check Jenkins console output.
-
-==========================================
+================================================
 """
+
+            throw err
+
+        } finally {
+
+            sh 'docker logout >/dev/null 2>&1 || true'
+
+            cleanWs()
         }
     }
 }
