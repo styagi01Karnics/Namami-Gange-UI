@@ -1046,7 +1046,8 @@ export default function CctvMonitoring() {
                       const streams = getSiteStreams(site)
                       const hasLiveStream =
                         (streams.influent.status === 'Live' && Boolean(streams.influent.streamUrl)) ||
-                        (streams.effluent.status === 'Live' && Boolean(streams.effluent.streamUrl))
+                        (streams.effluent.status === 'Live' && Boolean(streams.effluent.streamUrl)) ||
+                        itemHasRecording(site)
 
                       return (
                         <button
