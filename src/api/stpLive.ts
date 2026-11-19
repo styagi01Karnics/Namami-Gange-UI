@@ -1,7 +1,7 @@
 import { authFetch } from '../auth/session'
 import { dashboardResourceUrl } from './plants'
 
-type LiveReading = Record<string, unknown>
+export type LiveReading = Record<string, unknown>
 
 export type LiveParam = {
   key: string
@@ -152,7 +152,7 @@ function isBreach(value: number | null, min?: number, max?: number) {
 }
 
 /** Calculate realistic sample flow (in m³/hr) based on plant rated capacity when flow sensor is 0 or null but plant is operating. */
-function getSampleFlow(side: 'inlet' | 'outlet', merged: LiveReading): number {
+export function getSampleFlow(side: 'inlet' | 'outlet', merged: LiveReading): number {
   let capacityMld = 20
   if (typeof merged.capacity_mld === 'number' && merged.capacity_mld > 0) {
     capacityMld = merged.capacity_mld
@@ -188,7 +188,7 @@ function getSampleFlow(side: 'inlet' | 'outlet', merged: LiveReading): number {
 }
 
 /** Provide realistic sample parameter values for any STP when missing in the database. */
-function getSampleParamValue(key: string, side: 'inlet' | 'outlet', seedStr: string): number {
+export function getSampleParamValue(key: string, side: 'inlet' | 'outlet', seedStr: string): number {
   let seed = 0
   for (let i = 0; i < seedStr.length; i++) {
     seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0
