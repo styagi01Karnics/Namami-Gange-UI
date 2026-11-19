@@ -264,7 +264,7 @@ export default function RealtimeParametersPanel({
         const params = REALTIME_PARAM_KEYS.map((key) => data.params.find((param) => param.key === key) ?? EMPTY_PARAMS[key])
           .map((param) => {
             if (isInfluent) {
-              return { ...param, tone: 'ok' as const }
+              return { ...param, note: undefined, tone: 'ok' as const }
             }
             // In effluent: if any parameter exceeds ideal values -> show in Red color ('breach'), else Green ('ok')
             const exceeds = isExceedingIdeal(param.key, param.value, param.note)
