@@ -275,6 +275,11 @@ export function getMothorowala2RecordingChannel(
   return label.includes('effluent') || label.includes('treated') ? 2 : 1
 }
 
+/** 20 MLD Mothorowala Unit 1 & 2: live streams are down, so these STPs show recordings only. */
+export function isRecordingOnlyStp(stpId?: string) {
+  return /mothorowala-20|20mldmothorowala|20mldmoth_2|stp20mld[12]/i.test(stpId ?? '')
+}
+
 export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCamera) {
   if (camera?.streamUrl) return camera.streamUrl
 
@@ -980,8 +985,10 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
     const isOversizedRawClip =
       camera.recordingStreamUrl &&
       /20261016140000_20261016143027/i.test(camera.recordingStreamUrl)
-    const effectiveStreamUrl =
-      isRecordingMode && !isOversizedRawClip
+    const recordingOnly = isRecordingOnlyStp(stpId)
+    const effectiveStreamUrl = recordingOnly
+      ? null
+      : isRecordingMode && !isOversizedRawClip
         ? (camera.recordingStreamUrl ?? null)
         : isRecordingMode
           ? null
@@ -997,7 +1004,7 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
       timecode: null,
       image: null,
       streamUrl: effectiveStreamUrl,
-      player: isRecordingMode ? 'mp4' : camera.player,
+      player: recordingOnly ? undefined : isRecordingMode ? 'mp4' : camera.player,
       channel: camera.channel,
     }
   })
@@ -1050,6 +1057,7 @@ const CPV_RECORDING_PLANTS = new Set([
   'indiranagar',
   // 20 MLD Mothorowala Unit 1
   'mothorowala-20',
+  'stp20mld1',
   '20mldmothorowala',
   '20_mld_mothorwala_unit1',
   '20mld_mothorwala_unit1',
@@ -1072,6 +1080,7 @@ const CPV_RECORDING_PLANTS = new Set([
   // 20 MLD Mothorowala Unit 2
   'mothorowala-20-2',
   '20mldmoth_2',
+  'stp20mld2',
   '20mld_mothorwala_unit2',
   '20_mld_mothorwala_unit2',
   '20mld2',
