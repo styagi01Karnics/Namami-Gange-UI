@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StpAccessLink from '../stp/StpAccessLink'
 import { ChevronDown, TrendingUp } from 'lucide-react'
-import { active12StpDetails, dashboardKpis, official13StpDetails } from '../../data/mockData'
+import { active12StpDetails, dashboardKpis, HIDDEN_DASHBOARD_PLANT_CODES, official13StpDetails } from '../../data/mockData'
 import { fetchStpActiveStatus, fetchStpCountSummary, type StpActiveStatusData, type StpActiveStatusItem, type StpCountSummary } from '../../api/plants'
 import NonActiveStpModal from './NonActiveStpModal'
 
@@ -128,6 +128,9 @@ export default function DashboardKpiRow() {
   // Active list to display (12 active STPs when hardcoded, or dynamic from DB)
   const activeList = HARDCODE_12_ACTIVE_1_NON_ACTIVE ? active12StpDetails : dynamicActiveList
 
+  // Hidden plants are active, so the Active count drops by their number (Total is unchanged).
+  const hiddenActiveCount = official13StpDetails.filter((stp) => HIDDEN_DASHBOARD_PLANT_CODES.has(stp.plantCode)).length
+
   // Hardcoded 1 non-active item for Kashipur (used when override is active)
   const hardcodedNonActiveItems: StpActiveStatusItem[] = [
     {
@@ -168,7 +171,7 @@ export default function DashboardKpiRow() {
             kpi.key === 'total' && stpCounts
               ? String(stpCounts.totalCount)
               : kpi.key === 'active' && stpCounts
-                ? String(stpCounts.activeCount)
+                ? String(stpCounts.activeCount - hiddenActiveCount)
                 : HARDCODE_12_ACTIVE_1_NON_ACTIVE
                   ? kpi.key === 'nonActive'
                     ? '1'
@@ -256,7 +259,7 @@ export default function DashboardKpiRow() {
                   className="absolute left-0 top-[calc(100%+6px)] z-50 w-[320px] max-w-[90vw] overflow-hidden rounded-[10px] border border-[#CDE0F5] bg-white shadow-[0_12px_28px_rgba(7,104,210,0.18)]"
                 >
                   <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
-                    {official13StpDetails.map((stp) => (
+                    {official13StpDetails.filter((stp) => !HIDDEN_DASHBOARD_PLANT_CODES.has(stp.plantCode)).map((stp) => (
                       <StpAccessLink
                         key={stp.stpId}
                         plantCode={stp.plantCode || stp.stpId}
@@ -279,7 +282,7 @@ export default function DashboardKpiRow() {
                   className="absolute left-0 top-[calc(100%+6px)] z-50 w-[320px] max-w-[90vw] overflow-hidden rounded-[10px] border border-[#CDE0F5] bg-white shadow-[0_12px_28px_rgba(22,142,63,0.18)]"
                 >
                   <div className="max-h-[320px] overflow-y-auto py-1 divide-y divide-[#F1F5F9]">
-                    {activeList.map((stp) => (
+                    {activeList.filter((stp) => !HIDDEN_DASHBOARD_PLANT_CODES.has(stp.plantCode)).map((stp) => (
                       <StpAccessLink
                         key={stp.plantCode || stp.stpId}
                         plantCode={stp.plantCode || stp.stpId}

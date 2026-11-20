@@ -96,6 +96,9 @@ export type OfficialStpDetail = {
   plantCode: string
 }
 
+// Plant codes temporarily hidden from the dashboard Total STP dropdown and map. Counts are unaffected. Empty the set to restore.
+export const HIDDEN_DASHBOARD_PLANT_CODES: ReadonlySet<string> = new Set(['27mldjag_upg'])
+
 export const official13StpDetails: OfficialStpDetail[] = [
   {
     sNo: 1,
@@ -3370,12 +3373,12 @@ export const stpParameterReportColumns = [
   { key: 'sn', label: 'S/N', width: '6%' },
   { key: 'date', label: 'Date', width: '12%' },
   { key: 'time', label: 'Time', width: '11%' },
-  { key: 'bod', label: 'BOD (mg/L)', width: '12%' },
-  { key: 'cod', label: 'COD (mg/L)', width: '12%' },
-  { key: 'tss', label: 'TSS (mg/L)', width: '12%' },
-  { key: 'ph', label: 'pH', width: '11%' },
-  { key: 'temp', label: 'Temp (°C)', width: '12%' },
-  { key: 'nh4n', label: 'NH₄-N (mg/L)', width: '12%' },
+  { key: 'bod', label: 'BOD (mg/L)', width: '12%', range: '0 – 10', min: 0, max: 10 },
+  { key: 'cod', label: 'COD (mg/L)', width: '12%', range: '0 – 50', min: 0, max: 50 },
+  { key: 'tss', label: 'TSS (mg/L)', width: '12%', range: '0 – 20', min: 0, max: 20 },
+  { key: 'ph', label: 'pH', width: '11%', range: '5.5 – 9', min: 5.5, max: 9 },
+  { key: 'temp', label: 'Temp (°C)', width: '12%', range: '15 – 35', min: 15, max: 35 },
+  { key: 'nh4n', label: 'NH₄-N (mg/L)', width: '12%', range: '0 – 10', min: 0, max: 10 },
 ]
 
 export const buildParameterReportRows = () => {

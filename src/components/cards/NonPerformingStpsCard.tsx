@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import Card from '../ui/Card'
 import PrintDocument from '../export/PrintDocument'
-import { criticalStps } from '../../data/mockData'
+import { criticalStps, HIDDEN_DASHBOARD_PLANT_CODES } from '../../data/mockData'
 import { useStpDetails } from '../../context/StpDetailsContext'
 import { stpCompliancePath } from '../../routes'
 import { formatParameterName } from '../../lib/parameters'
@@ -74,7 +74,9 @@ export default function NonPerformingStpsCard() {
   const rows = useMemo(
     () =>
       status === 'ready'
-        ? criticalStps['Parameter Breach'].map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
+        ? criticalStps['Parameter Breach']
+            .filter((row) => !HIDDEN_DASHBOARD_PLANT_CODES.has(row.plantCode))
+            .map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
         : [],
     [status, names],
   )

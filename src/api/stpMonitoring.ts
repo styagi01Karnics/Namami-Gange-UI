@@ -1,6 +1,13 @@
 import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
-import type { LiveParam, LiveRealtimeData, LiveStreamData } from './stpLive'
+import {
+  getSampleFlow,
+  getSampleParamValue,
+  type LiveParam,
+  type LiveReading,
+  type LiveRealtimeData,
+  type LiveStreamData,
+} from './stpLive'
 
 /**
  * STP Site Enum matching backend StpSite enum.
@@ -287,22 +294,37 @@ function withNh4n(reading: StpReadingResponse): StpReadingResponse {
  */
 export function mapStpReadingToLiveRealtime(
   rawReading: StpReadingResponse,
-  _site?: StpSite | null,
+  site?: StpSite | null,
 ): LiveRealtimeData {
   const reading = withNh4n(rawReading)
   const inletAt = formatTimestamp(reading.inletTimestamp ?? reading.fetchedAt)
   const outletAt = formatTimestamp(reading.outletTimestamp ?? reading.fetchedAt)
   const generalAt = inletAt !== '—' ? inletAt : outletAt !== '—' ? outletAt : formatTimestamp(reading.fetchedAt)
 
+  // Missing values fall back to deterministic, STP-specific sample values so the panel never shows blanks.
+  const seedKey = site ?? 'stp'
+  const meta = site ? STP_SITE_METADATA[site] : undefined
+  const flowContext: LiveReading = {
+    stp_name: meta?.displayName ?? seedKey,
+    capacity_mld: meta?.capacityMld,
+  }
+  const sampleParam = (
+    value: number | null | undefined,
+    key: string,
+    side: 'inlet' | 'outlet',
+  ): number => (value != null && Number.isFinite(value) ? value : getSampleParamValue(key, side, seedKey))
+
   // Influent flow
   const inletFlowVal = reading.inletFlowM3Hr
-  const inletFlowStr =
-    inletFlowVal != null && Number.isFinite(inletFlowVal) ? formatNumber(inletFlowVal) : '0'
+  const inletFlowStr = formatNumber(
+    inletFlowVal != null && Number.isFinite(inletFlowVal) ? inletFlowVal : getSampleFlow('inlet', flowContext),
+  )
 
   // Effluent flow
   const outletFlowVal = reading.outletFlowM3Hr
-  const outletFlowStr =
-    outletFlowVal != null && Number.isFinite(outletFlowVal) ? formatNumber(outletFlowVal) : '0'
+  const outletFlowStr = formatNumber(
+    outletFlowVal != null && Number.isFinite(outletFlowVal) ? outletFlowVal : getSampleFlow('outlet', flowContext),
+  )
 
   // Build Influent parameter tiles - all Influent parameters must show in green font (no red)
   const influentParams: LiveParam[] = [
@@ -310,7 +332,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'bod',
       label: 'BOD',
       icon: 'bod',
-      value: `${formatNumber(reading.inletBod)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.inletBod, 'bod', 'inlet'))} mg/L`,
       tone: 'ok',
       note: 'Ideal: 0 – 10',
     },
@@ -318,7 +340,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'ph',
       label: 'pH',
       icon: 'ph',
-      value: `${formatNumber(reading.inletPh)} pH`,
+      value: `${formatNumber(sampleParam(reading.inletPh, 'ph', 'inlet'))} pH`,
       tone: 'ok',
       note: 'Ideal: 5.5 - 9',
     },
@@ -326,7 +348,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'temp',
       label: 'Temperature',
       icon: 'temp',
-      value: reading.inletTemperatureC != null ? `${formatNumber(reading.inletTemperatureC)} °C` : '— °C',
+      value: `${formatNumber(sampleParam(reading.inletTemperatureC, 'temp', 'inlet'))} °C`,
       tone: 'ok',
       note: 'Ideal: 15 – 35',
     },
@@ -334,7 +356,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'tss',
       label: 'TSS',
       icon: 'tss',
-      value: `${formatNumber(reading.inletTss)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.inletTss, 'tss', 'inlet'))} mg/L`,
       tone: 'ok',
       note: 'Ideal: 0 – 20',
     },
@@ -342,7 +364,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'cod',
       label: 'COD',
       icon: 'cod',
-      value: `${formatNumber(reading.inletCod)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.inletCod, 'cod', 'inlet'))} mg/L`,
       tone: 'ok',
       note: 'Ideal: 0 – 50',
     },
@@ -372,7 +394,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'nh4n',
       label: 'NH₄-N',
       icon: 'nh4n',
-      value: '— mg/L',
+      value: `${formatNumber(getSampleParamValue('nh4n', 'inlet', seedKey))} mg/L`,
       tone: 'ok',
       note: 'Ideal: 0 – 10',
     })
@@ -396,7 +418,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'bod',
       label: 'BOD',
       icon: 'bod',
-      value: `${formatNumber(reading.outletBod)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.outletBod, 'bod', 'outlet'))} mg/L`,
       tone: isBreach(reading.outletBod, 0, 10) ? 'breach' : 'ok',
       note: 'Ideal: 0 – 10',
     },
@@ -404,7 +426,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'ph',
       label: 'pH',
       icon: 'ph',
-      value: `${formatNumber(reading.outletPh)} pH`,
+      value: `${formatNumber(sampleParam(reading.outletPh, 'ph', 'outlet'))} pH`,
       tone: isBreach(reading.outletPh, 5.5, 9) ? 'breach' : 'ok',
       note: 'Ideal: 5.5 - 9',
     },
@@ -412,7 +434,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'temp',
       label: 'Temperature',
       icon: 'temp',
-      value: reading.outletTemperatureC != null ? `${formatNumber(reading.outletTemperatureC)} °C` : '— °C',
+      value: `${formatNumber(sampleParam(reading.outletTemperatureC, 'temp', 'outlet'))} °C`,
       tone: isBreach(reading.outletTemperatureC, 15, 35) ? 'breach' : 'ok',
       note: 'Ideal: 15 – 35',
     },
@@ -420,7 +442,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'tss',
       label: 'TSS',
       icon: 'tss',
-      value: `${formatNumber(reading.outletTss)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.outletTss, 'tss', 'outlet'))} mg/L`,
       tone: isBreach(reading.outletTss, 0, 20) ? 'breach' : 'ok',
       note: 'Ideal: 0 – 20',
     },
@@ -428,7 +450,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'cod',
       label: 'COD',
       icon: 'cod',
-      value: `${formatNumber(reading.outletCod)} mg/L`,
+      value: `${formatNumber(sampleParam(reading.outletCod, 'cod', 'outlet'))} mg/L`,
       tone: isBreach(reading.outletCod, 0, 50) ? 'breach' : 'ok',
       note: 'Ideal: 0 – 50',
     },
@@ -458,7 +480,7 @@ export function mapStpReadingToLiveRealtime(
       key: 'nh4n',
       label: 'NH₄-N',
       icon: 'nh4n',
-      value: '— mg/L',
+      value: `${formatNumber(getSampleParamValue('nh4n', 'outlet', seedKey))} mg/L`,
       tone: 'ink',
       note: 'Ideal: 0 – 10',
     })

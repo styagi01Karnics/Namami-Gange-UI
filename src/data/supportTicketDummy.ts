@@ -6,7 +6,7 @@ export type DummySupportTicket = ApiTicketListItem & {
   timeline: ApiTimelineEvent[]
 }
 
-/** Sample tickets shown only to the admin@namami.com login on the Support Tickets page. */
+/** Sample tickets shown on the Support Tickets pages for every user. */
 export const DUMMY_SUPPORT_TICKETS: DummySupportTicket[] = [
   {
     ticketNo: 'TKT-10301',
