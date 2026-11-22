@@ -143,6 +143,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
   const [stps, setStps] = useState<string[]>([])
+  const [roleVersion, setRoleVersion] = useState<number | null>(null)
   const [stpOpen, setStpOpen] = useState(false)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
@@ -185,6 +186,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       setForm(EMPTY)
       setGranted({})
       setStps([])
+      setRoleVersion(null)
       setStpOpen(false)
       setSubmitError('')
       return
@@ -216,6 +218,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
                 setGranted(detail.granted)
               }
               setStps(detail.stps || [])
+              setRoleVersion(detail.version ?? null)
             }
           })
           .catch((err) => {
@@ -359,7 +362,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         payload.granted = cleanedGranted
       }
 
-      await onSubmit({ ...payload, stps: selectedStpIds })
+      await onSubmit({ ...payload, stps: selectedStpIds, allStps: allStpsSelected, version: roleVersion })
       onClose()
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')

@@ -11,11 +11,7 @@ export type AuthSession = {
   userCode: string
   name: string
   email: string
-  role: string
   roleId: string
-  permissions: Record<string, string[]>
-  /** Role STP codes (e.g. `BAZPUR`, `JAG_18`) the user may open from the dashboard. */
-  stps: string[]
 }
 
 /**

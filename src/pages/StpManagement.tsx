@@ -152,16 +152,16 @@ export default function StpManagement() {
   }, [plantParam, plantOptions])
 
   // Deep links to STPs outside the user's role are sent back to the dashboard with an error toast.
-  const { can, hasStpAccess } = useAuth()
+  const { can, hasStpAccess, stpAccessLoading } = useAuth()
   const requestedPlantCode = useMemo(() => {
     const matchedId = resolvePlantId(plantOptions, plantParam)
     return plantOptions.find((option) => option.id === matchedId)?.plantCode ?? plantParam
   }, [plantOptions, plantParam])
 
   useEffect(() => {
-    if (!plantParam || hasStpAccess(requestedPlantCode)) return
+    if (!plantParam || stpAccessLoading || hasStpAccess(requestedPlantCode)) return
     navigate('/dashboard', { replace: true, state: { stpAccessError: NO_STP_ACCESS_MESSAGE } })
-  }, [plantParam, requestedPlantCode, hasStpAccess, navigate])
+  }, [plantParam, requestedPlantCode, hasStpAccess, stpAccessLoading, navigate])
 
   // Only show section tabs the user's role grants under the STP module.
   const visibleStpTabs = useMemo(

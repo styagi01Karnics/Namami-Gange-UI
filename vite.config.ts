@@ -111,6 +111,12 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/role-api/, '/api'),
         },
+        '/catalog-role-api': {
+          target: env.VITE_ROLE_CREATE_API_BASE_URL || 'http://45.195.229.15:8901',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/catalog-role-api/, '/catalog/roles/api'),
+          configure: withBearerFromCookie,
+        },
         '/user-api': {
           target: env.VITE_USER_API_BASE_URL || 'http://45.195.229.15:8904',
           changeOrigin: true,
