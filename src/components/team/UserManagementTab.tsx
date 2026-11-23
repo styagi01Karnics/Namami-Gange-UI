@@ -152,22 +152,13 @@ export default function UserManagementTab({
     }
   }
 
-  const [roleItems, setRoleItems] = useState<{ id: string; name: string }[]>([])
-
-  // Load available roles from database
+  // Load available role names from database
   const loadRoles = async () => {
     try {
       const roleCards = await fetchRoles()
-      if (roleCards?.length) {
-        setRoleItems(roleCards.map((r) => ({ id: r.id, name: r.name })))
-        const names = roleCards.map((r) => r.name).filter(Boolean)
-        setAvailableRoles(Array.from(new Set(names)))
-      } else {
-        setRoleItems([])
-        setAvailableRoles([])
-      }
+      const names = (roleCards ?? []).map((r) => r.name).filter(Boolean)
+      setAvailableRoles(Array.from(new Set(names)))
     } catch {
-      setRoleItems([])
       setAvailableRoles([])
     }
   }
@@ -190,14 +181,9 @@ export default function UserManagementTab({
   // Dynamic statistics calculated exclusively from database records
   const stats = useMemo(() => buildTeamUserStats(users as any, availableRoles.length), [users, availableRoles])
 
-  // POST /api/users
+  // POST /api/users - user-service resolves the role id from role-service by name
   const handleAddUser = async (userPayload: UserRequest) => {
-    const matched = roleItems.find((r) => r.name.toLowerCase() === (userPayload.role || '').toLowerCase())
-    const payloadWithRoleId: UserRequest = {
-      ...userPayload,
-      roleId: userPayload.roleId || matched?.id,
-    }
-    await createUser(payloadWithRoleId)
+    await createUser(userPayload)
     await loadUsers()
   }
 
