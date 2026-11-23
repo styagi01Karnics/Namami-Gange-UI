@@ -7,6 +7,7 @@ import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
 const USER_API_URL = API_BASE_URL.user
+const USER_PAGE_API_URL = API_BASE_URL.userPage
 
 export type UserItem = {
   id: string
@@ -121,13 +122,50 @@ export async function fetchUser(id: string): Promise<UserItem> {
 }
 
 /**
- * POST /api/users - Create user
+ * POST /catalog/users/api/users - Create user (catalog service, port 8901)
  */
 export async function createUser(user: UserRequest): Promise<UserItem> {
-  return request<UserItem>(ENDPOINTS.users.list, {
+  const response = await authFetch(`${USER_PAGE_API_URL}${ENDPOINTS.users.list}`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
     body: JSON.stringify(user),
   })
+  const text = await response.text()
+
+  let payload: any = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      // Non-JSON response
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.message ||
+        (payload as any)?.error ||
+        `Request failed with status ${response.status}: ${response.statusText}`,
+    )
+  }
+
+  const item = payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  return {
+    ...item,
+    id: String(item.id),
+    userId: item.userId || `#${item.id}`,
+    name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
+    phone: item.phone || '',
+    email: item.email || '',
+    role: item.role || '',
+    roleId: item.roleId || '',
+    status: item.statusLabel || item.status || 'Active',
+    statusLabel: item.statusLabel || item.status || 'Active',
+    lastLogin: item.lastLogin || '—',
+  }
 }
 
 /**
@@ -172,4 +210,80 @@ export async function countUsersByRole(params?: {
 
   const query = search.toString() ? `?${search.toString()}` : ''
   return request<number>(`${ENDPOINTS.users.count}${query}`)
+}
+
+/**
+ * GET /catalog/users/api/users/page - Paginated user list (10 records per page)
+ */
+export type UsersPageResponse = {
+  users: UserItem[]
+  total: number
+  page: number
+  size: number
+}
+
+export async function fetchUsersPage(params?: {
+  page?: number
+  size?: number
+}): Promise<UsersPageResponse> {
+  const page = Math.max(1, params?.page ?? 1)
+  const size = Math.max(1, params?.size ?? 10)
+
+  const response = await authFetch(`${USER_PAGE_API_URL}${ENDPOINTS.users.page(page, size)}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  })
+  const text = await response.text()
+
+  let payload: any = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      // Non-JSON response
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.message ||
+        (payload as any)?.error ||
+        `Request failed with status ${response.status}: ${response.statusText}`,
+    )
+  }
+
+  const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  let items: any[] = []
+  let total = 0
+  if (Array.isArray(data)) {
+    items = data
+    total = data.length
+  } else if (data && typeof data === 'object') {
+    items =
+      Array.isArray(data.content ?? data.users ?? data.items ?? data.rows)
+        ? (data.content ?? data.users ?? data.items ?? data.rows)
+        : []
+    total = Number(data.total ?? data.totalElements ?? data.totalCount ?? items.length) || 0
+  }
+
+  return {
+    users: items.map((item) => ({
+      ...item,
+      id: String(item.id),
+      userId: item.userId || `#${item.id}`,
+      name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
+      phone: item.phone || '',
+      email: item.email || '',
+      role: item.role || '',
+      roleId: item.roleId || '',
+      status: item.statusLabel || item.status || 'Active',
+      statusLabel: item.statusLabel || item.status || 'Active',
+      lastLogin: item.lastLogin || '—',
+    })),
+    total,
+    page,
+    size,
+  }
 }
