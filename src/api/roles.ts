@@ -7,6 +7,7 @@ import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
 const ROLE_API_URL = API_BASE_URL.role
+const ROLE_CATALOG_API_URL = API_BASE_URL.roleCatalog
 
 export type LabeledValue = {
   id: string
@@ -147,6 +148,66 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   return payload as unknown as T
+}
+
+/**
+ * GET /catalog/roles/api/roles - List all created roles (catalog service, port 8901)
+ */
+export type CatalogRole = { id: string; name: string }
+
+export async function fetchCatalogRoles(): Promise<CatalogRole[]> {
+  const response = await authFetch(`${ROLE_CATALOG_API_URL}${ENDPOINTS.roles.list}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  })
+  const text = await response.text()
+
+  let payload: any = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      // Non-JSON response
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.message ||
+        (payload as any)?.error ||
+        `Request failed with status ${response.status}: ${response.statusText}`,
+    )
+  }
+
+  const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  const roles: CatalogRole[] = []
+  const seen = new Set<string>()
+
+  const add = (item: any) => {
+    if (!item || typeof item !== 'object') return
+    const name = String(item.name ?? item.roleName ?? item.title ?? '').trim()
+    const id = String(item.id ?? item.roleId ?? item.code ?? name)
+    if (!name || seen.has(id)) return
+    seen.add(id)
+    roles.push({ id, name })
+  }
+
+  if (Array.isArray(data)) {
+    for (const item of data) add(item)
+  } else if (data && typeof data === 'object') {
+    for (const key of Object.keys(data)) {
+      const value = (data as any)[key]
+      if (Array.isArray(value)) {
+        for (const item of value) add(item)
+      } else if (value && typeof value === 'object') {
+        add(value)
+      }
+    }
+  }
+
+  return roles
 }
 
 /**
