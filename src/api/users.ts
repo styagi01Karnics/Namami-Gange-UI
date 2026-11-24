@@ -103,7 +103,7 @@ export async function fetchUsers(params?: {
     ...item,
     id: String(item.id),
     userId: item.userId || `#${item.id}`,
-    name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
+    name: `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
     phone: item.phone || '',
     email: item.email || '',
     role: item.role || '',
@@ -157,7 +157,7 @@ export async function createUser(user: UserRequest): Promise<UserItem> {
     ...item,
     id: String(item.id),
     userId: item.userId || `#${item.id}`,
-    name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
+    name: `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
     phone: item.phone || '',
     email: item.email || '',
     role: item.role || '',
@@ -273,7 +273,7 @@ export async function fetchUsersPage(params?: {
       ...item,
       id: String(item.id),
       userId: item.userId || `#${item.id}`,
-      name: item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
+      name: `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'User',
       phone: item.phone || '',
       email: item.email || '',
       role: item.role || '',
@@ -287,3 +287,4 @@ export async function fetchUsersPage(params?: {
     size,
   }
 }
+
