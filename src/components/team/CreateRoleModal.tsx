@@ -309,7 +309,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      setSubmitError('Please fill in role name, description, and select at least one STP.')
+      setSubmitError('Please enter a role name and description, and select at least one permission checkbox under Support Tickets.')
       scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -393,6 +393,9 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               <h2 id="role-modal-title" className="text-[16px] font-extrabold leading-6 text-ink">
                 {editing ? 'Edit Role' : 'Create Role'}
               </h2>
+              {submitError && (
+                <p className="text-[12px] font-medium text-red-600">{submitError}</p>
+              )}
               {loadingRole && (
                 <p className="text-[12px] text-ink-muted">Loading role details from database...</p>
               )}
