@@ -317,13 +317,8 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       return
     }
     const supportPerms = granted?.support || []
-    if (!supportPerms || supportPerms.length === 0) {
-      setSubmitError('Please select a checkbox under Raise Tickets.')
-      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
     if (supportPerms.length > 1) {
-      setSubmitError('Please select only one checkbox under Support Tickets.')
+      setSubmitError('Please select only one checkbox under Raise Tickets.')
       scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
