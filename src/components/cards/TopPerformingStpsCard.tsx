@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Trophy } from 'lucide-react'
-import { topPerformingStps } from '../../data/mockData'
+import { HIDDEN_DASHBOARD_PLANT_CODES, topPerformingStps } from '../../data/mockData'
 import { useStpDetails } from '../../context/StpDetailsContext'
 import { stpCompliancePath } from '../../routes'
 import Card from '../ui/Card'
@@ -14,7 +14,10 @@ export default function TopPerformingStpsCard() {
   const [open, setOpen] = useState(false)
   const { status, names, error } = useStpDetails()
   const rows = status === 'ready'
-    ? topPerformingStps.slice(0, TOP_COUNT).map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
+    ? topPerformingStps
+        .filter((row) => !HIDDEN_DASHBOARD_PLANT_CODES.has(row.plantCode))
+        .slice(0, TOP_COUNT)
+        .map((row) => ({ ...row, name: names[row.plantCode] ?? '\u2014' }))
     : []
 
   return (

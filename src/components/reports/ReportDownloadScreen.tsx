@@ -13,7 +13,7 @@ type ReportDownloadScreenProps = {
   moduleKey: 'parameters' | 'cctv' | 'manpower' | 'inventory' | 'contracts' | 'violation'
   title: string
   description: string
-  columns: { key: string; label: string; width?: string; align?: string }[]
+  columns: { key: string; label: string; width?: string; align?: string; range?: string; min?: number; max?: number }[]
   rows: any[]
   renderCell?: (row: any, col: any, index?: number) => any
   getValue?: (row: any, col: any) => any
@@ -92,6 +92,14 @@ export default function ReportDownloadScreen({
       if (custom !== undefined) return custom
     }
     return row[col.key]
+  }
+
+  const isOutOfRange = (row: any, col: any) => {
+    const raw = row[col.key]
+    if (raw === null || raw === undefined || raw === '') return false
+    const value = Number(raw)
+    if (Number.isNaN(value)) return false
+    return (col.min !== undefined && value < col.min) || (col.max !== undefined && value > col.max)
   }
 
   const resolveCell = (row: any, col: any, index: number) => {
@@ -454,6 +462,7 @@ export default function ReportDownloadScreen({
                           className="px-[14px] py-[12px] font-bold text-[#363636]"
                         >
                           {c.label}
+                          {c.range && <span className="mt-[2px] block text-[11.5px] font-medium text-[#6B7280]">{c.range}</span>}
                         </th>
                       ))}
                     </tr>
@@ -466,7 +475,10 @@ export default function ReportDownloadScreen({
                           }`}
                       >
                         {columns.map((c) => (
-                          <td key={c.key} className="px-[14px] py-[12px] text-[#1F2937]">
+                          <td
+                            key={c.key}
+                            className={`px-[14px] py-[12px] ${isOutOfRange(r, c) ? 'font-semibold text-[#DC2626]' : 'text-[#1F2937]'}`}
+                          >
                             {resolveCell(r, c, i)}
                           </td>
                         ))}

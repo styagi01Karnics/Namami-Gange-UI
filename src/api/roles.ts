@@ -7,6 +7,7 @@ import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS } from '../config/api'
 
 const ROLE_API_URL = API_BASE_URL.role
+const ROLE_CATALOG_API_URL = API_BASE_URL.roleCatalog
 
 export type LabeledValue = {
   id: string
@@ -58,6 +59,10 @@ export type RoleDetail = {
   createdOn: string
   granted: Record<string, string[]>
   stps?: string[]
+  allStps?: boolean
+  stpIds?: number[]
+  permissionIds?: number[]
+  version?: number | null
 }
 
 export type RoleUser = {
@@ -81,6 +86,26 @@ export type RoleRequest = {
   permissionPreset?: string
   granted?: Record<string, string[]>
   stps?: string[]
+  allStps?: boolean
+  version?: number | null
+}
+
+export type PermissionCatalogRecord = {
+  id: number
+  moduleId: string
+  permissionKey: string
+  active: boolean
+}
+
+/** Body expected by POST and PUT /catalog/roles/api/roles (see role-service RoleRequest). */
+export type RolePayload = {
+  name: string
+  description: string
+  status: string
+  allStps: boolean
+  stpIds: number[]
+  permissionIds: number[]
+  version: number | null
 }
 
 type ApiResponseEnvelope<T> = {
@@ -126,6 +151,66 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 /**
+ * GET /catalog/roles/api/roles - List all created roles (catalog service, port 8901)
+ */
+export type CatalogRole = { id: string; name: string }
+
+export async function fetchCatalogRoles(): Promise<CatalogRole[]> {
+  const response = await authFetch(`${ROLE_CATALOG_API_URL}${ENDPOINTS.roles.list}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  })
+  const text = await response.text()
+
+  let payload: any = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      // Non-JSON response
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.message ||
+        (payload as any)?.error ||
+        `Request failed with status ${response.status}: ${response.statusText}`,
+    )
+  }
+
+  const data = payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload
+  const roles: CatalogRole[] = []
+  const seen = new Set<string>()
+
+  const add = (item: any) => {
+    if (!item || typeof item !== 'object') return
+    const name = String(item.name ?? item.roleName ?? item.title ?? '').trim()
+    const id = String(item.id ?? item.roleId ?? item.code ?? name)
+    if (!name || seen.has(id)) return
+    seen.add(id)
+    roles.push({ id, name })
+  }
+
+  if (Array.isArray(data)) {
+    for (const item of data) add(item)
+  } else if (data && typeof data === 'object') {
+    for (const key of Object.keys(data)) {
+      const value = (data as any)[key]
+      if (Array.isArray(value)) {
+        for (const item of value) add(item)
+      } else if (value && typeof value === 'object') {
+        add(value)
+      }
+    }
+  }
+
+  return roles
+}
+
+/**
  * 1. GET /api/roles - List role cards
  */
 export async function fetchRoles(): Promise<RoleCardItem[]> {
@@ -161,6 +246,12 @@ export async function fetchRole(id: string): Promise<RoleDetail> {
   return request<RoleDetail>(ENDPOINTS.roles.byId(id))
 }
 
+/** GET /permission-catalog - every permission (id, moduleId, permissionKey). */
+export async function fetchPermissionCatalog(): Promise<PermissionCatalogRecord[]> {
+  const catalog = await request<PermissionCatalogRecord[]>(ENDPOINTS.roles.permissionCatalog)
+  return Array.isArray(catalog) ? catalog : []
+}
+
 /**
  * 4. GET /api/roles/{id}/users - Users assigned to a role
  */
@@ -169,12 +260,46 @@ export async function fetchRoleUsers(id: string): Promise<RoleUsersResponse> {
 }
 
 /**
+ * Maps the form payload to the backend contract: STP ids → stpIds, and
+ * module/permission keys → permissionIds (resolved via GET /permission-catalog).
+ */
+async function toRolePayload(role: RoleRequest): Promise<RolePayload> {
+  const catalog = await fetchPermissionCatalog()
+  const idByKey = new Map(
+    catalog
+      .filter((entry) => entry.active)
+      .map((entry) => [`${entry.moduleId}|${entry.permissionKey.toLowerCase()}`, entry.id]),
+  )
+
+  const permissionIds = new Set<number>()
+  Object.entries(role.granted ?? {}).forEach(([moduleId, keys]) => {
+    keys.forEach((key) => {
+      const id = idByKey.get(`${moduleId}|${key.toLowerCase()}`)
+      if (id === undefined) {
+        throw new Error(`Unknown permission '${key}' for module '${moduleId}'`)
+      }
+      permissionIds.add(id)
+    })
+  })
+
+  return {
+    name: role.name,
+    description: role.description,
+    status: role.status,
+    allStps: role.allStps ?? false,
+    stpIds: (role.stps ?? []).map(Number),
+    permissionIds: Array.from(permissionIds),
+    version: role.version ?? null,
+  }
+}
+
+/**
  * 5. POST /api/roles - Create role
  */
 export async function createRole(role: RoleRequest): Promise<RoleDetail> {
   return request<RoleDetail>(ENDPOINTS.roles.list, {
     method: 'POST',
-    body: JSON.stringify(role),
+    body: JSON.stringify(await toRolePayload(role)),
   })
 }
 
@@ -184,7 +309,7 @@ export async function createRole(role: RoleRequest): Promise<RoleDetail> {
 export async function updateRole(id: string, role: RoleRequest): Promise<RoleDetail> {
   return request<RoleDetail>(ENDPOINTS.roles.byId(id), {
     method: 'PUT',
-    body: JSON.stringify(role),
+    body: JSON.stringify(await toRolePayload(role)),
   })
 }
 

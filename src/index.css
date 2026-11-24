@@ -37,7 +37,8 @@ body {
 /* ~6 data rows (~58px) + sticky header — vertical scroll for all app tables */
 .table-scroll {
   max-height: 400px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 /* thin scrollbars used by the sidebar + scrollable card lists */
@@ -46,18 +47,20 @@ body {
   scrollbar-color: #cbd5e1 transparent;
 }
 .scroll-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 .scroll-thin::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 .scroll-thin::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
 }
 /* Windows classic scrollbars steal layout width; keep the gutter off the nav. */
 .scroll-thin::-webkit-scrollbar-corner {

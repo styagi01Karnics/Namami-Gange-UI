@@ -1,4 +1,4 @@
-import { authFetch } from '../auth/session'
+﻿import { authFetch } from '../auth/session'
 import { API_BASE_URL, ENDPOINTS, STREAM_BASE_URL } from '../config/api'
 
 const CCTV_API = API_BASE_URL.cctv
@@ -275,6 +275,11 @@ export function getMothorowala2RecordingChannel(
   return label.includes('effluent') || label.includes('treated') ? 2 : 1
 }
 
+/** 20 MLD Mothorowala Unit 1 & 2: live streams are down, so these STPs show recordings only. */
+export function isRecordingOnlyStp(stpId?: string) {
+  return /mothorowala-20|20mldmothorowala|20mldmoth_2|stp20mld[12]/i.test(stpId ?? '')
+}
+
 export function getStreamUrl(siteCode: string, channel: number, camera?: CctvCamera) {
   if (camera?.streamUrl) return camera.streamUrl
 
@@ -484,6 +489,70 @@ export async function fetchStpDetailRecords(): Promise<StpDetail[]> {
   const details = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : null
   if (!details) throw new Error('Unable to load STP details: invalid response from /stp-details')
   return details
+}
+
+/** In-charge + contractor info from /stp-vendor, linked to /stp-details by `stp_id` (= stp_details.id). */
+export type StpVendorInfo = {
+  stpId: number
+  inCharge: { name?: string; designation?: string; department?: string; mobile?: string; email?: string; alternateContact?: string }
+  vendor: { name?: string; contactPerson?: string; mobile?: string; email?: string; address?: string; contractNumber?: string; contractStart?: string; contractEnd?: string }
+}
+
+function pickField(record: Record<string, unknown>, keys: string[]): string | undefined {
+  const normalized: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(record)) normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()] = value
+  for (const key of keys) {
+    const value = normalized[key.replace(/[^a-z0-9]/gi, '').toLowerCase()]
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim()
+  }
+  return undefined
+}
+
+function toStpVendorInfo(raw: Record<string, unknown>): StpVendorInfo | null {
+  const stpId = Number(pickField(raw, ['stp_id', 'stpId']))
+  if (!Number.isFinite(stpId)) return null
+  return {
+    stpId,
+    inCharge: {
+      name: pickField(raw, ['stpInchargeName', 'stp_incharge_name', 'incharge_name', 'stp_in_charge_name', 'in_charge_name', 'incharge', 'concern_person_name']),
+      designation: pickField(raw, ['inchargeDesig', 'stp_incharge_designation', 'incharge_designation', 'in_charge_designation', 'designation']),
+      department: pickField(raw, ['stp_incharge_department', 'incharge_department', 'in_charge_department', 'department']),
+      mobile: pickField(raw, ['inchargeContact', 'stp_incharge_mobile', 'incharge_mobile', 'in_charge_mobile', 'incharge_contact_no', 'incharge_phone', 'incharge_contact']),
+      email: pickField(raw, ['stp_incharge_email', 'incharge_email', 'in_charge_email']),
+      alternateContact: pickField(raw, ['stp_incharge_alternate_contact', 'incharge_alternate_contact', 'alternate_contact', 'alternate_contact_no']),
+    },
+    vendor: {
+      name: pickField(raw, ['vendor_name', 'contractor_name', 'vendor', 'contractor']),
+      contactPerson: pickField(raw, ['vendor_contact_person', 'contractor_contact_person', 'contact_person', 'contact_person_name']),
+      mobile: pickField(raw, ['vendor_mobile', 'contractor_mobile', 'vendor_contact_no', 'vendor_phone', 'contractor_contact_no', 'mobile', 'phone']),
+      email: pickField(raw, ['vendor_email', 'contractor_email', 'email']),
+      address: pickField(raw, ['vendor_address', 'contractor_address']),
+      contractNumber: pickField(raw, ['contractNumber']),
+      contractStart: pickField(raw, ['contractStart']),
+      contractEnd: pickField(raw, ['contractEnd']),
+    },
+  }
+}
+
+/** /stp-vendor records keyed by plantCode. Empty when unavailable. */
+export async function fetchStpVendorsByPlantCode(): Promise<Record<string, StpVendorInfo>> {
+  try {
+    const response = await authFetch(`${API_BASE_URL.stpDataQuery}${ENDPOINTS.stpDataQuery.vendors}`)
+    if (!response.ok) return {}
+    const data = await parseJsonSafely<unknown>(response)
+    const list = Array.isArray(data) ? data : Array.isArray((data as { data?: unknown })?.data) ? (data as { data: unknown[] }).data : []
+    const byCode: Record<string, StpVendorInfo> = {}
+    for (const item of list) {
+      const info = item && typeof item === 'object' ? toStpVendorInfo(item as Record<string, unknown>) : null
+      const plantCode = info ? STP_DETAIL_PLANT_CODES[info.stpId] : undefined
+      // Prefer the active contract when an STP has several vendor rows.
+      const isActive = (item as { active?: boolean }).active !== false
+      if (info && plantCode && (isActive || !byCode[plantCode])) byCode[plantCode] = info
+    }
+    return byCode
+  } catch {
+    return {}
+  }
 }
 
 /** STP names keyed by plantCode, built from /stp-details records. */
@@ -916,8 +985,10 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
     const isOversizedRawClip =
       camera.recordingStreamUrl &&
       /20261016140000_20261016143027/i.test(camera.recordingStreamUrl)
-    const effectiveStreamUrl =
-      isRecordingMode && !isOversizedRawClip
+    const recordingOnly = isRecordingOnlyStp(stpId)
+    const effectiveStreamUrl = recordingOnly
+      ? null
+      : isRecordingMode && !isOversizedRawClip
         ? (camera.recordingStreamUrl ?? null)
         : isRecordingMode
           ? null
@@ -933,7 +1004,7 @@ export function toSiteCameras(stpId: string, cameras: CctvCamera[]): LiveSiteCam
       timecode: null,
       image: null,
       streamUrl: effectiveStreamUrl,
-      player: isRecordingMode ? 'mp4' : camera.player,
+      player: recordingOnly ? undefined : isRecordingMode ? 'mp4' : camera.player,
       channel: camera.channel,
     }
   })
@@ -986,6 +1057,7 @@ const CPV_RECORDING_PLANTS = new Set([
   'indiranagar',
   // 20 MLD Mothorowala Unit 1
   'mothorowala-20',
+  'stp20mld1',
   '20mldmothorowala',
   '20_mld_mothorwala_unit1',
   '20mld_mothorwala_unit1',
@@ -1008,6 +1080,7 @@ const CPV_RECORDING_PLANTS = new Set([
   // 20 MLD Mothorowala Unit 2
   'mothorowala-20-2',
   '20mldmoth_2',
+  'stp20mld2',
   '20mld_mothorwala_unit2',
   '20_mld_mothorwala_unit2',
   '20mld2',

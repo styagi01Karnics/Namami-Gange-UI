@@ -9,7 +9,9 @@ export const API_BASE_URL = {
   dashboard: import.meta.env.VITE_DASHBOARD_API_URL ?? '/dashboard-api',
   penalty: import.meta.env.VITE_PENALTY_API_URL ?? '/penalty-api',
   role: import.meta.env.VITE_ROLE_API_URL ?? '/role-api',
+  roleCatalog: import.meta.env.VITE_ROLE_CATALOG_API_URL ?? '/role-catalog-api',
   user: import.meta.env.VITE_USER_API_URL ?? '/user-api',
+  userPage: import.meta.env.VITE_USER_PAGE_API_URL ?? '/user-page-api',
   // Same-origin proxy (nginx / vite). A direct http:// call is blocked as mixed content on the https site.
   auth: import.meta.env.VITE_AUTH_API_URL ?? '/auth-api',
   // Served through the dev/nginx proxy because the upstream does not send CORS headers.
@@ -34,6 +36,7 @@ export const ENDPOINTS = {
   },
   stpDataQuery: {
     list: '/stp-details',
+    vendors: '/stp-vendor',
   },
   manpower: {
     byStp: (stpId: string | number) => `/manpower/stp/${encodeURIComponent(stpId)}`,
@@ -62,6 +65,7 @@ export const ENDPOINTS = {
   roles: {
     list: '/roles',
     catalog: '/roles/catalog',
+    permissionCatalog: '/permission-catalog',
     byId: (id: string | number) => `/roles/${encodeURIComponent(id)}`,
     users: (id: string | number) => `/roles/${encodeURIComponent(id)}/users`,
   },
@@ -90,6 +94,7 @@ export const ENDPOINTS = {
     list: '/users',
     count: '/users/count',
     byId: (id: string | number) => `/users/${encodeURIComponent(id)}`,
+    page: (page: number, size: number) => `/users/page?page=${page}&size=${size}`,
     auditLogs: '/audit-logs',
   },
 } as const
