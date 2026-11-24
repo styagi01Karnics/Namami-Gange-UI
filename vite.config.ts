@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     build: {
+      target: 'es2020',
       rolldownOptions: {
         output: {
           // Keep heavy third-party libraries in their own cacheable chunks.
