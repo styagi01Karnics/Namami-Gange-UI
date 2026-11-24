@@ -3,6 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all",
+    "Chrome >= 90",
+    "Firefox >= 90",
+    "Safari >= 14",
+    "Edge >= 90"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

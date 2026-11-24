@@ -3865,7 +3865,7 @@ export const rolePermissionModules = [
     blurb: 'View and manage support tickets',
     color: '#7C3AED',
     icon: 'support',
-    permissions: ['View Tickets', 'Manage Tickets'],
+    permissions: ['Raise Tickets', 'Manage Tickets'],
   },
   {
     id: 'reports',
@@ -3905,7 +3905,7 @@ export const roleGrantedPresets = {
   },
   Vendor: {
     stp: ['Inventory', 'Contracts', 'Violation'],
-    support: ['View Tickets'],
+    support: ['Raise Tickets'],
     reports: ['Violation'],
   },
   'Field Volunteer': {
