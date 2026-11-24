@@ -32,14 +32,16 @@ export default function RoleCard({ role, onEdit, onDelete, onViewUsers }: any) {
           >
             <PencilIcon size={16} />
           </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label={`Delete ${role.name}`}
-            className="text-danger transition-colors hover:text-[#C8353A]"
-          >
-            <TrashIcon size={16} />
-          </button>
+          {role.name !== 'Super Admin' && role.name !== 'Admin' && (
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label={`Delete ${role.name}`}
+              className="text-danger transition-colors hover:text-[#C8353A]"
+            >
+              <TrashIcon size={16} />
+            </button>
+          )}
         </div>
       </div>
 

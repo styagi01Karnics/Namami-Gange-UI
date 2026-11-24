@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, RefreshCw, X } from 'lucide-react'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
@@ -149,6 +149,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   const [catalogError, setCatalogError] = useState('')
   const [loadingRole, setLoadingRole] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [submitError, setSubmitError] = useState('')
   const editing = Boolean(role)
 
@@ -307,7 +308,11 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   }
 
   const handleSubmit = async () => {
-    if (!canSubmit) return
+    if (!canSubmit) {
+      setSubmitError('Please fill in role name, description, and select at least one STP.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     try {
       setSubmitting(true)
       setSubmitError('')
@@ -358,6 +363,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       onClose()
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setSubmitting(false)
     }
@@ -402,7 +408,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </button>
         </div>
 
-        <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
+        <div ref={scrollRef} className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
           {submitError && (
             <div className="rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
               {submitError}
