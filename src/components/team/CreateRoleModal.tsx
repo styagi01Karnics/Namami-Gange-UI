@@ -311,8 +311,24 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   }
 
   const handleSubmit = async () => {
+    if (!form.role.trim() || !form.description.trim()) {
+      setSubmitError('Please enter a role name and description.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    const supportPerms = granted?.support || []
+    if (!supportPerms || supportPerms.length === 0) {
+      setSubmitError('Please select a checkbox under Raise Tickets.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (supportPerms.length > 1) {
+      setSubmitError('Please select only one checkbox under Raise Tickets.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     if (!canSubmit) {
-      setSubmitError('Please enter a role name and description, and select at least one permission checkbox under Support Tickets.')
+      setSubmitError('Please complete all required fields.')
       scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
