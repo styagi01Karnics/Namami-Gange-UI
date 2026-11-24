@@ -199,9 +199,19 @@ export default function UserManagementTab({
   // Dynamic statistics calculated exclusively from database records
   const stats = useMemo(() => buildTeamUserStats(users as any, availableRoles.length), [users, availableRoles])
 
-  // POST /api/users - user-service resolves the role id from role-service by name
+  // POST /catalog/users/api/users - create user with roleId resolved from the Role dropdown
   const handleAddUser = async (userPayload: UserRequest) => {
-    await createUser(userPayload)
+    const matched = roleItems.find((r) => r.name.toLowerCase() === (userPayload.role || '').toLowerCase())
+    const payload = {
+      firstName: userPayload.firstName,
+      lastName: userPayload.lastName,
+      phone: userPayload.phone,
+      email: userPayload.email,
+      password: userPayload.password,
+      roleId: matched?.id || userPayload.roleId || '',
+      status: userPayload.status,
+    } as UserRequest
+    await createUser(payload)
     await loadUsers()
   }
 
