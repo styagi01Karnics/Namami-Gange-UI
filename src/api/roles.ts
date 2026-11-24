@@ -115,8 +115,8 @@ type ApiResponseEnvelope<T> = {
   data: T
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${ROLE_API_URL}${path}`
+async function request<T>(path: string, options: RequestInit = {}, baseUrl = ROLE_API_URL): Promise<T> {
+  const url = `${baseUrl}${path}`
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -208,6 +208,14 @@ export async function fetchCatalogRoles(): Promise<CatalogRole[]> {
   }
 
   return roles
+}
+
+/**
+ * GET /catalog/roles/api/roles/{id} - Single role by id (catalog service, port 8901)
+ */
+export async function fetchCatalogRole(id: string): Promise<CatalogRole> {
+  const role = await request<any>(ENDPOINTS.roles.byId(id), {}, ROLE_CATALOG_API_URL)
+  return { id: String(role.id), name: role.name ?? '' }
 }
 
 /**
