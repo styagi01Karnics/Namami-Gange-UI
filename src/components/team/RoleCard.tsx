@@ -24,14 +24,16 @@ export default function RoleCard({ role, onEdit, onDelete, onViewUsers }: any) {
         </div>
 
         <div className="flex shrink-0 items-center gap-[10px]">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={`Edit ${role.name}`}
-            className="text-brand transition-colors hover:text-[#1259C7]"
-          >
-            <PencilIcon size={16} />
-          </button>
+          {role.name !== 'Super Admin' && role.name !== 'Admin' && (
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label={`Edit ${role.name}`}
+              className="text-brand transition-colors hover:text-[#1259C7]"
+            >
+              <PencilIcon size={16} />
+            </button>
+          )}
           {role.name !== 'Super Admin' && role.name !== 'Admin' && (
             <button
               type="button"
