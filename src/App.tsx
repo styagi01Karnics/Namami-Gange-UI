@@ -3,6 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import Sidebar from './layout/Sidebar'
 import Topbar from './layout/Topbar'
+import Footer from './layout/Footer'
+import { ErrorProvider } from './context/ErrorContext'
 import ComingSoon from './pages/ComingSoon'
 import FloatingCctvButton from './components/cctv/FloatingCctvButton'
 
@@ -145,24 +147,27 @@ function Shell() {
 
   // One chrome for every authenticated page — Figma mountain header on all tabs.
   return (
-    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[#EEF8FC]">
-      {/* Full-width mountain wash behind header (matches Figma on every screen). */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[230px] overflow-hidden"
-      >
-        <img
-          src="/dashboard/hero-mountains.png"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(189,226,253,0.2)] via-transparent to-[#EEF8FC]" />
-      </div>
+    <ErrorProvider>
+      <div className="relative flex h-screen w-full flex-col overflow-hidden bg-[#EEF8FC]">
+        {/* Full-width mountain wash behind header (matches Figma on every screen). */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[230px] overflow-hidden"
+        >
+          <img
+            src="/dashboard/hero-mountains.png"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-[center_40%]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[rgba(189,226,253,0.2)] via-transparent to-[#EEF8FC]" />
+        </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <Topbar title={title} variant="dashboard" />
+        {/* Fixed header — stays at the top while the page body scrolls. */}
+        <div className="relative z-[40] sticky top-0 flex shrink-0">
+          <Topbar title={title} variant="dashboard" />
+        </div>
 
-        <div className="flex min-h-0 flex-1 overflow-visible">
+        <div className="relative z-10 flex min-h-0 flex-1 overflow-visible">
           <Sidebar
             collapsed={collapsed}
             onToggleCollapse={() => setCollapsed((v) => !v)}
@@ -174,10 +179,13 @@ function Shell() {
             </Lazy>
           </main>
         </div>
-      </div>
 
-      {!hideCctvFloat && <FloatingCctvButton />}
-    </div>
+        {/* Fixed footer — stays at the bottom while the page body scrolls. */}
+        <Footer />
+
+        {!hideCctvFloat && <FloatingCctvButton />}
+      </div>
+    </ErrorProvider>
   )
 }
 

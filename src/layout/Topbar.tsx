@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight, LogOut } from 'lucide-react'
+import { ChevronDown, ChevronRight, LogOut, AlertTriangle, X } from 'lucide-react'
 import { ico } from '../components/ui/Ico'
 import { useAuth } from '../auth/AuthContext'
+import { useError } from '../context/ErrorContext'
 import LogoutModal from '../components/auth/LogoutModal'
 import NotificationsModal from '../components/notifications/NotificationsModal'
 import ChangePasswordModal from '../components/settings/ChangePasswordModal'
@@ -78,6 +79,7 @@ export default function Topbar({
   const [passwordOpen, setPasswordOpen] = useState(false)
   const [updatedOpen, setUpdatedOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const { error, clearError } = useError()
   const [today, setToday] = useState(() => new Date())
 
   useEffect(() => {
@@ -262,6 +264,20 @@ export default function Topbar({
             </button>
           </div>
         </header>
+        {error && (
+          <div className="flex items-center gap-[10px] px-[16px] py-[7px] bg-danger/10 border border-danger/30 text-danger text-[13px] font-medium">
+            <AlertTriangle size={14} className="shrink-0" />
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={clearError}
+              aria-label="Dismiss error"
+              className="ml-auto shrink-0 p-[2px] rounded text-danger/60 hover:text-danger hover:bg-danger/5 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
         {modals}
       </>
     )
@@ -360,6 +376,20 @@ export default function Topbar({
           </button>
         </div>
       </header>
+      {error && (
+        <div className="flex items-center gap-[10px] px-[16px] py-[7px] bg-danger/10 border border-danger/30 text-danger text-[13px] font-medium">
+          <AlertTriangle size={14} className="shrink-0" />
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={clearError}
+            aria-label="Dismiss error"
+            className="ml-auto shrink-0 p-[2px] rounded text-danger/60 hover:text-danger hover:bg-danger/5 transition-colors"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       {modals}
     </>
   )
