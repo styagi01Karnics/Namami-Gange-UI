@@ -8,7 +8,7 @@ import {
   saveSession,
   type AuthSession,
 } from './session'
-import { canAccessStp } from '../lib/stpAccess'
+import { canAccessStp, loadRoleAccess, plantCodesForStpDetails } from '../lib/stpAccess'
 
 type LoginEnvelope = {
   success?: boolean
@@ -17,11 +17,22 @@ type LoginEnvelope = {
     token?: string
     expiresInSeconds: number
     user: { userCode: string; name: string; email: string }
-    role: string
     roleId: string
-    permissions: Record<string, string[]>
-    stps?: string[]
   }
+}
+
+type RoleAccessState = {
+  status: 'idle' | 'loading' | 'ready' | 'error'
+  roleName: string | null
+  permissions: Record<string, string[]>
+  plantCodes: Set<string>
+}
+
+const EMPTY_ROLE_ACCESS: RoleAccessState = {
+  status: 'idle',
+  roleName: null,
+  permissions: {},
+  plantCodes: new Set(),
 }
 
 type AuthContextValue = {
@@ -38,6 +49,8 @@ type AuthContextValue = {
   can: (moduleId: string, key?: string) => boolean
   /** True when the dashboard plant code maps to one of the STPs assigned to the user's role. */
   hasStpAccess: (plantCode?: string | null) => boolean
+  /** True while the role's STP list is still loading; `hasStpAccess` is false until it resolves. */
+  stpAccessLoading: boolean
   login:  (email: string, password: string, remember?: boolean) => Promise<void>
   logout: () => void
 }
@@ -63,6 +76,34 @@ function readLastLogin() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(getSession)
   const [lastLoginAt, setLastLoginAt] = useState<string | null>(readLastLogin)
+  const [roleAccess, setRoleAccess] = useState<RoleAccessState>(EMPTY_ROLE_ACCESS)
+  const roleId = session?.roleId
+
+  // Role details, permissions and STPs all come from the login roleId (login and page reload both land here).
+  useEffect(() => {
+    if (!roleId) {
+      setRoleAccess(EMPTY_ROLE_ACCESS)
+      return
+    }
+    let cancelled = false
+    setRoleAccess({ ...EMPTY_ROLE_ACCESS, status: 'loading' })
+    loadRoleAccess(roleId)
+      .then((access) => {
+        if (cancelled) return
+        setRoleAccess({
+          status: 'ready',
+          roleName: access.roleName,
+          permissions: access.permissions,
+          plantCodes: plantCodesForStpDetails(access.stpDetails),
+        })
+      })
+      .catch(() => {
+        if (!cancelled) setRoleAccess({ ...EMPTY_ROLE_ACCESS, status: 'error' })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [roleId])
 
   const clearLocal = useCallback(() => {
     clearSession()
@@ -101,10 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userCode: data.user.userCode,
       name: data.user.name,
       email: data.user.email,
-      role: data.role,
       roleId: data.roleId,
-      permissions: data.permissions ?? {},
-      stps: data.stps ?? [],
     }
 
     saveSession(next, remember)
@@ -128,16 +166,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const can = useCallback(
     (moduleId: string, key?: string) => {
-      const keys = session?.permissions?.[moduleId] ?? []
+      const keys = roleAccess.permissions[moduleId] ?? []
       if (!key) return keys.length > 0
       return keys.includes(key)
     },
-    [session],
+    [roleAccess.permissions],
   )
 
   const hasStpAccess = useCallback(
-    (plantCode?: string | null) => canAccessStp(session?.stps ?? [], plantCode),
-    [session],
+    (plantCode?: string | null) => roleAccess.status === 'ready' && canAccessStp(roleAccess.plantCodes, plantCode),
+    [roleAccess],
   )
 
   const value = useMemo<AuthContextValue>(
@@ -146,14 +184,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: session?.name ?? null,
       email: session?.email ?? null,
       lastLoginAt,
-      role: session?.role ?? null,
-      permissions: session?.permissions ?? {},
+      role: roleAccess.roleName,
+      permissions: roleAccess.permissions,
       can,
       hasStpAccess,
+      stpAccessLoading: roleAccess.status === 'idle' || roleAccess.status === 'loading',
       login,
       logout,
     }),
-    [session, lastLoginAt, can, hasStpAccess, login, logout],
+    [session, lastLoginAt, roleAccess, can, hasStpAccess, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     build: {
+      target: 'es2020',
       rolldownOptions: {
         output: {
           // Keep heavy third-party libraries in their own cacheable chunks.
@@ -111,10 +112,22 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/role-api/, '/api'),
         },
+        '/role-catalog-api': {
+          target: env.VITE_ROLE_CATALOG_API_BASE_URL || 'http://45.195.229.15:8901',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/role-catalog-api/, '/catalog/roles/api'),
+          configure: withBearerFromCookie,
+        },
         '/user-api': {
           target: env.VITE_USER_API_BASE_URL || 'http://45.195.229.15:8904',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/user-api/, '/api'),
+        },
+        '/user-page-api': {
+          target: env.VITE_USER_PAGE_API_BASE_URL || 'http://45.195.229.15:8901',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/user-page-api/, '/catalog/users/api'),
+          configure: withBearerFromCookie,
         },
         '/auth-api': {
           target: env.VITE_AUTH_API_BASE_URL || 'http://45.195.229.15:8906',

@@ -27,6 +27,10 @@ type DataTableProps<T extends DataRow> = {
   emptyMessage?: string
   minWidth?: number
   pageSize?: number
+  page?: number
+  total?: number
+  onPageChange?: (page: number) => void
+  pageSizeOptions?: number[]
   toolbarFill?: boolean
 }
 
@@ -42,13 +46,24 @@ export default function DataTable<T extends DataRow>({
   emptyMessage = 'Nothing matches the current filters.',
   minWidth = 980,
   pageSize: initialPageSize = 6,
+  page: controlledPage,
+  total: serverTotal,
+  onPageChange,
+  pageSizeOptions,
   toolbarFill = false,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<{ key: string | null; dir: 'asc' | 'desc' }>({ key: null, dir: 'asc' })
-  const [page, setPage] = useState(1)
+  const [internalPage, setInternalPage] = useState(1)
   const [pageSize, setPageSize] = useState(initialPageSize)
   const [expanded, setExpanded] = useState<string | number | null>(null)
+
+  const activePage = controlledPage !== undefined ? controlledPage : internalPage
+
+  const handlePageChange = (next: number) => {
+    if (controlledPage === undefined) setInternalPage(next)
+    onPageChange?.(next)
+  }
 
   const toggleSort = (key: string) =>
     setSort((prev) => (prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }))
@@ -66,18 +81,20 @@ export default function DataTable<T extends DataRow>({
     })
   }, [rows, query, sort, searchKeys])
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const safePage = Math.min(page, pageCount)
-  const slice = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
+  const pageCount = serverTotal != null ? Math.max(1, Math.ceil(serverTotal / pageSize)) : Math.max(1, Math.ceil(filtered.length / pageSize))
+  const safePage = Math.min(activePage, pageCount)
+  const slice = serverTotal != null ? rows : filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const onSearch = (value: string) => {
     setQuery(value)
-    setPage(1)
+    if (controlledPage === undefined) setInternalPage(1)
+    onPageChange?.(1)
   }
 
   const onPageSizeChange = (size: number) => {
     setPageSize(size)
-    setPage(1)
+    if (controlledPage === undefined) setInternalPage(1)
+    onPageChange?.(1)
   }
 
   const toggleExpanded = (id: string | number) => setExpanded((prev) => (prev === id ? null : id))
@@ -197,9 +214,10 @@ export default function DataTable<T extends DataRow>({
       <Pagination
         page={safePage}
         pageSize={pageSize}
-        total={filtered.length}
-        onPageChange={setPage}
+        total={serverTotal ?? filtered.length}
+        onPageChange={handlePageChange}
         onPageSizeChange={onPageSizeChange}
+        pageSizeOptions={pageSizeOptions}
       />
     </div>
   )

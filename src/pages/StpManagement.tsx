@@ -22,7 +22,7 @@ import ContractsTab from '../components/contracts/ContractsTab'
 import ComplianceTab from '../components/compliance/ComplianceTab'
 import BillingTab from '../components/billing/BillingTab'
 import { useAuth } from '../auth/AuthContext'
-import { defaultDateRange, stpDetails, stpSectionTabs } from '../data/mockData'
+import { defaultDateRange, HIDDEN_DASHBOARD_PLANT_CODES, stpDetails, stpSectionTabs } from '../data/mockData'
 import { stpTabFromSlug, stpTabPath } from '../routes'
 import { ExportMetaProvider, stpExportMeta } from '../components/export/exportMeta'
 import {
@@ -152,16 +152,16 @@ export default function StpManagement() {
   }, [plantParam, plantOptions])
 
   // Deep links to STPs outside the user's role are sent back to the dashboard with an error toast.
-  const { can, hasStpAccess } = useAuth()
+  const { can, hasStpAccess, stpAccessLoading } = useAuth()
   const requestedPlantCode = useMemo(() => {
     const matchedId = resolvePlantId(plantOptions, plantParam)
     return plantOptions.find((option) => option.id === matchedId)?.plantCode ?? plantParam
   }, [plantOptions, plantParam])
 
   useEffect(() => {
-    if (!plantParam || hasStpAccess(requestedPlantCode)) return
+    if (!plantParam || stpAccessLoading || hasStpAccess(requestedPlantCode)) return
     navigate('/dashboard', { replace: true, state: { stpAccessError: NO_STP_ACCESS_MESSAGE } })
-  }, [plantParam, requestedPlantCode, hasStpAccess, navigate])
+  }, [plantParam, requestedPlantCode, hasStpAccess, stpAccessLoading, navigate])
 
   // Only show section tabs the user's role grants under the STP module.
   const visibleStpTabs = useMemo(
@@ -194,7 +194,7 @@ export default function StpManagement() {
   )
   // The STP picker only lists STPs the user's role grants access to.
   const accessiblePlantOptions = useMemo(
-    () => plantOptions.filter((option) => hasStpAccess(option.plantCode)),
+    () => plantOptions.filter((option) => hasStpAccess(option.plantCode) && !HIDDEN_DASHBOARD_PLANT_CODES.has(option.plantCode)),
     [plantOptions, hasStpAccess],
   )
   const pickerOptions = useMemo(() => {

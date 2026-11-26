@@ -13,14 +13,18 @@ import ConfirmModal from '../ui/ConfirmModal'
 import { ROLE_TONE } from './teamTheme'
 import { downloadCsv } from '../../lib/csv'
 import {
-  fetchUsers,
+  fetchUsersPage,
   createUser,
   patchUser,
   deleteUser,
   type UserItem,
   type UserRequest,
+  type UsersPageResponse,
 } from '../../api/users'
-import { fetchRoles } from '../../api/roles'
+import {
+  fetchCatalogRoles,
+  type CatalogRole,
+} from '../../api/roles'
 
 export const teamUserColumns = [
   { key: 'name', label: 'User', width: '19%' },
@@ -119,6 +123,7 @@ export default function UserManagementTab({
   onRoleFilterChange?: (role: string) => void
 }) {
   const [users, setUsers] = useState<UserItem[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [apiError, setApiError] = useState('')
   const [deleteError, setDeleteError] = useState('')
@@ -130,36 +135,40 @@ export default function UserManagementTab({
   const [draft, setDraft] = useState({ role: '', status: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<UserItem | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
   const selectedRole = onRoleFilterChange ? roleFilter : role
   const setSelectedRole = onRoleFilterChange ?? setRole
   const roleFilterList = ['All Roles', ...availableRoles]
   const roleOptions = roleFilterList.includes(selectedRole) ? roleFilterList : [...roleFilterList, selectedRole]
 
-  // 1. GET /api/users from database
+  // 1. GET /catalog/users/api/users/page - paginated users, 10 per page
   const loadUsers = async () => {
     try {
       setLoading(true)
       setApiError('')
-      const data = await fetchUsers()
-      setUsers(Array.isArray(data) ? data : [])
+      const result: UsersPageResponse = await fetchUsersPage({ page, size: pageSize })
+      setUsers(result.users)
+      setTotal(result.total)
     } catch (err: any) {
-      console.error('Failed to load users from database:', err)
+      console.error('Failed to load users:', err)
       setUsers([])
-      setApiError(err?.message || 'Failed to connect to database. Please verify user-service is running.')
+      setTotal(0)
+      setApiError(err?.message || 'Failed to load users. Please verify user-service is running.')
     } finally {
       setLoading(false)
     }
   }
 
-  const [roleItems, setRoleItems] = useState<{ id: string; name: string }[]>([])
+  const [roleItems, setRoleItems] = useState<CatalogRole[]>([])
 
-  // Load available roles from database
+  // Load available roles from catalog service (port 8901)
   const loadRoles = async () => {
     try {
-      const roleCards = await fetchRoles()
+      const roleCards = await fetchCatalogRoles()
       if (roleCards?.length) {
-        setRoleItems(roleCards.map((r) => ({ id: r.id, name: r.name })))
+        setRoleItems(roleCards)
         const names = roleCards.map((r) => r.name).filter(Boolean)
         setAvailableRoles(Array.from(new Set(names)))
       } else {
@@ -175,7 +184,7 @@ export default function UserManagementTab({
   useEffect(() => {
     loadUsers()
     loadRoles()
-  }, [])
+  }, [page])
 
   const rows = useMemo(
     () =>
@@ -190,14 +199,19 @@ export default function UserManagementTab({
   // Dynamic statistics calculated exclusively from database records
   const stats = useMemo(() => buildTeamUserStats(users as any, availableRoles.length), [users, availableRoles])
 
-  // POST /api/users
+  // POST /catalog/users/api/users - create user with roleId resolved from the Role dropdown
   const handleAddUser = async (userPayload: UserRequest) => {
     const matched = roleItems.find((r) => r.name.toLowerCase() === (userPayload.role || '').toLowerCase())
-    const payloadWithRoleId: UserRequest = {
-      ...userPayload,
-      roleId: userPayload.roleId || matched?.id,
-    }
-    await createUser(payloadWithRoleId)
+    const payload = {
+      firstName: userPayload.firstName,
+      lastName: userPayload.lastName,
+      phone: userPayload.phone,
+      email: userPayload.email,
+      password: userPayload.password,
+      roleId: matched?.id || userPayload.roleId || '',
+      status: userPayload.status,
+    } as UserRequest
+    await createUser(payload)
     await loadUsers()
   }
 
@@ -381,6 +395,11 @@ export default function UserManagementTab({
       <DataTable
         columns={teamUserColumns}
         rows={rows}
+        pageSize={pageSize}
+        page={page}
+        total={total}
+        onPageChange={setPage}
+        pageSizeOptions={[10, 20, 50]}
         searchKeys={['name', 'email', 'phone', 'role', 'status', 'userId']}
         renderCell={renderCell}
         minWidth={1100}

@@ -4,6 +4,7 @@
  */
 import { authFetch } from '../auth/session'
 import { API_BASE_URL } from '../config/api'
+import { fetchCatalogRole } from './roles'
 
 const PROFILE_API_URL = `${API_BASE_URL.user}/profile/me`
 
@@ -19,6 +20,43 @@ export type MyProfile = {
   role: string
   /** Full data URL (`data:image/png;base64,...`) or null when no photo is set. */
   photo: string | null
+}
+
+/** Shape returned by the user service `/api/profile/me` endpoints. */
+type RawProfile = {
+  id: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  roleId?: string | number
+  photo?: string | null
+}
+
+async function toMyProfile(raw: RawProfile): Promise<MyProfile> {
+  const name = `${raw.firstName ?? ''} ${raw.lastName ?? ''}`.trim()
+
+  let role = ''
+  if (raw.roleId !== undefined && raw.roleId !== null && raw.roleId !== '') {
+    try {
+      role = (await fetchCatalogRole(String(raw.roleId))).name
+    } catch {
+      // Role lookup is non-critical; the profile still renders without it.
+    }
+  }
+
+  return {
+    id: String(raw.id),
+    name,
+    email: raw.email ?? '',
+    phone: raw.phone ?? '',
+    role,
+    photo: raw.photo ?? null,
+  }
+}
+
+async function requestProfile(path: string, init: RequestInit = {}): Promise<MyProfile> {
+  return toMyProfile(await request<RawProfile>(path, init))
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -53,11 +91,11 @@ function readAsBase64(file: File): Promise<string> {
 }
 
 export function getMyProfile() {
-  return request<MyProfile>('')
+  return requestProfile('')
 }
 
 export function updateMyPhone(phone: string) {
-  return request<MyProfile>('/phone', { method: 'PATCH', body: JSON.stringify({ phone }) })
+  return requestProfile('/phone', { method: 'PATCH', body: JSON.stringify({ phone }) })
 }
 
 export async function uploadMyPhoto(file: File) {
@@ -68,14 +106,14 @@ export async function uploadMyPhoto(file: File) {
     throw new Error('Photo must be 2 MB or smaller.')
   }
   const contentBase64 = await readAsBase64(file)
-  return request<MyProfile>('/photo', {
+  return requestProfile('/photo', {
     method: 'PUT',
     body: JSON.stringify({ fileName: file.name, contentType: file.type, contentBase64 }),
   })
 }
 
 export function removeMyPhoto() {
-  return request<MyProfile>('/photo', { method: 'DELETE' })
+  return requestProfile('/photo', { method: 'DELETE' })
 }
 
 export function changeMyPassword(input: { currentPassword: string; newPassword: string; confirmPassword: string }) {

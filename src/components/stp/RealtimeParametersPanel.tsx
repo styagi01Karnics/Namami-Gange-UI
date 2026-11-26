@@ -5,10 +5,15 @@ import ParamTile from './ParamTile'
 import { stpStreams } from '../../data/mockData'
 import {
   fetchStpLive,
+  getSampleFlow,
+  getSampleParamValue,
   type LiveParam,
+  type LiveReading,
   type LiveRealtimeData,
+  type LiveStreamData,
 } from '../../api/stpLive'
 import {
+  STP_SITE_METADATA,
   fetchStpMonitoringRealtime,
   resolveStpSite,
   type StpSite,
@@ -92,6 +97,64 @@ function hasAnyReading(data: LiveRealtimeData): boolean {
   )
 }
 
+const SAMPLE_PARAM_UNITS: Record<string, string> = {
+  bod: 'mg/L',
+  ph: 'pH',
+  temp: '°C',
+  tss: 'mg/L',
+  cod: 'mg/L',
+  nh4n: 'mg/L',
+}
+
+function formatSample(value: number): string {
+  return value.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
+
+/**
+ * Replaces every missing parameter (and a missing or zero flow) with a deterministic,
+ * STP-specific sample value. Real numeric values are left untouched.
+ */
+function fillSampleGaps(
+  data: LiveRealtimeData,
+  site: StpSite | null,
+  seedKey: string,
+): LiveRealtimeData {
+  const meta = site ? STP_SITE_METADATA[site] : undefined
+  const flowContext: LiveReading = {
+    stp_name: meta?.displayName ?? seedKey,
+    capacity_mld: meta?.capacityMld,
+  }
+
+  const fillStream = (stream: LiveStreamData, side: 'inlet' | 'outlet'): LiveStreamData => {
+    const flowNum = extractNumericValue(stream.flow?.value)
+    const flowValue =
+      flowNum != null && flowNum > 0
+        ? stream.flow.value
+        : formatSample(getSampleFlow(side, flowContext))
+
+    const params = REALTIME_PARAM_KEYS.map((key) => {
+      const existing = stream.params.find((param) => param.key === key)
+      if (existing && extractNumericValue(existing.value) != null) return existing
+      return {
+        ...EMPTY_PARAMS[key],
+        value: `${formatSample(getSampleParamValue(key, side, seedKey))} ${SAMPLE_PARAM_UNITS[key]}`,
+      }
+    })
+
+    return {
+      ...stream,
+      flow: { value: flowValue, unit: stream.flow?.unit ?? 'm³/hr' },
+      params,
+    }
+  }
+
+  return {
+    ...data,
+    influent: fillStream(data.influent, 'inlet'),
+    effluent: fillStream(data.effluent, 'outlet'),
+  }
+}
+
 export default function RealtimeParametersPanel({
   plantCode,
   stpId,
@@ -165,7 +228,13 @@ export default function RealtimeParametersPanel({
 
   const isLoading = loading || isFetching
 
-  if (!realtime) {
+  const seedKey = resolvedSite ?? plantCode ?? site ?? stpId ?? 'stp'
+  const displayData = useMemo(
+    () => (realtime ? fillSampleGaps(realtime, resolvedSite, seedKey) : null),
+    [realtime, resolvedSite, seedKey],
+  )
+
+  if (!realtime || !displayData) {
     return (
       <div
         role={error ? 'alert' : 'status'}
@@ -189,13 +258,13 @@ export default function RealtimeParametersPanel({
   return (
     <div className="grid grid-cols-2 gap-[16px]">
       {stpStreams.map((stream) => {
-        const data = realtime[stream.key]
+        const data = displayData[stream.key]
         const surface = STREAM_SURFACE[stream.tone] ?? STREAM_SURFACE.brand
         const isInfluent = stream.key === 'influent'
         const params = REALTIME_PARAM_KEYS.map((key) => data.params.find((param) => param.key === key) ?? EMPTY_PARAMS[key])
           .map((param) => {
             if (isInfluent) {
-              return { ...param, tone: 'ok' as const }
+              return { ...param, note: undefined, tone: 'ok' as const }
             }
             // In effluent: if any parameter exceeds ideal values -> show in Red color ('breach'), else Green ('ok')
             const exceeds = isExceedingIdeal(param.key, param.value, param.note)

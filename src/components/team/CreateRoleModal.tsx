@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, RefreshCw, X } from 'lucide-react'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
@@ -143,12 +143,14 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   const [form, setForm] = useState(EMPTY)
   const [granted, setGranted] = useState<Record<string, string[]>>({})
   const [stps, setStps] = useState<string[]>([])
+  const [roleVersion, setRoleVersion] = useState<number | null>(null)
   const [stpOpen, setStpOpen] = useState(false)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [catalogError, setCatalogError] = useState('')
   const [loadingRole, setLoadingRole] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [submitError, setSubmitError] = useState('')
   const editing = Boolean(role)
 
@@ -184,6 +186,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
       setForm(EMPTY)
       setGranted({})
       setStps([])
+      setRoleVersion(null)
       setStpOpen(false)
       setSubmitError('')
       return
@@ -215,6 +218,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
                 setGranted(detail.granted)
               }
               setStps(detail.stps || [])
+              setRoleVersion(detail.version ?? null)
             }
           })
           .catch((err) => {
@@ -307,7 +311,22 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
   }
 
   const handleSubmit = async () => {
-    if (!canSubmit) return
+    if (!form.role.trim() || !form.description.trim()) {
+      setSubmitError('Please enter a role name and description.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    const supportPerms = granted?.support || []
+    if (supportPerms.length > 1) {
+      setSubmitError('Please select only one checkbox under Raise Tickets.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (!canSubmit) {
+      setSubmitError('Please complete all required fields.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     try {
       setSubmitting(true)
       setSubmitError('')
@@ -354,10 +373,11 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
         payload.granted = cleanedGranted
       }
 
-      await onSubmit({ ...payload, stps: selectedStpIds })
+      await onSubmit({ ...payload, stps: selectedStpIds, allStps: allStpsSelected, version: roleVersion })
       onClose()
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to save role to database. Please check role-service.')
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setSubmitting(false)
     }
@@ -387,6 +407,9 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
               <h2 id="role-modal-title" className="text-[16px] font-extrabold leading-6 text-ink">
                 {editing ? 'Edit Role' : 'Create Role'}
               </h2>
+              {submitError && (
+                <p className="text-[12px] font-medium text-red-600">{submitError}</p>
+              )}
               {loadingRole && (
                 <p className="text-[12px] text-ink-muted">Loading role details from database...</p>
               )}
@@ -402,7 +425,7 @@ export default function CreateRoleModal({ open, onClose, onSubmit, role = null }
           </button>
         </div>
 
-        <div className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
+        <div ref={scrollRef} className="scroll-thin mt-[16px] max-h-[68vh] space-y-[16px] overflow-y-auto px-[22px] pb-[8px]">
           {submitError && (
             <div className="rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
               {submitError}
