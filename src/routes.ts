@@ -49,7 +49,7 @@ export const ACCESS: Record<string, Access> = {
   dashboard: { module: 'dashboard' },
   stp: { module: 'stp' },
   cctv: { module: 'cctv' },
-  support: { module: 'support' },
+  support: { module: 'support', key: 'Raise Tickets' },
   supportAdmin: { module: 'support', key: 'Manage Tickets' },
   reports: { module: 'reports' },
   team: { module: 'team' },
