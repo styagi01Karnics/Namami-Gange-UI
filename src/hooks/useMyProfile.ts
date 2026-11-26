@@ -9,6 +9,7 @@ import {
   type MyProfile,
 } from '../api/profile'
 import type { ToastFeedback } from '../components/ui/Toast'
+import { useAuth } from '../auth/AuthContext'
 
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
@@ -18,9 +19,14 @@ function messageOf(error: unknown) {
 let cachedProfile: MyProfile | null = null
 const listeners = new Set<() => void>()
 
-function setCachedProfile(next: MyProfile) {
+function setCachedProfile(next: MyProfile | null) {
   cachedProfile = next
   listeners.forEach((listener) => listener())
+}
+
+/** Drops the cached profile so the next mounted consumer fetches the current user's profile. */
+export function clearCachedProfile() {
+  setCachedProfile(null)
 }
 
 function subscribe(listener: () => void) {
@@ -49,6 +55,7 @@ export function useMyProfile() {
   const [pendingPhoto, setPendingPhoto] = useState<PendingPhoto | null>(null)
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false)
   const pendingUrl = useRef<string | null>(null)
+  const { email: sessionEmail } = useAuth()
 
   const showFeedback = useCallback((tone: ToastFeedback['tone'], text: string) => {
     setFeedback({ id: Date.now(), tone, text })
@@ -82,9 +89,10 @@ export function useMyProfile() {
     }
   }, [discardChanges, showFeedback])
 
+  // Refetch whenever the logged-in user changes (the cache is cleared on logout/login).
   useEffect(() => {
     if (!getCachedProfile()) reload()
-  }, [reload])
+  }, [reload, sessionEmail])
 
   useEffect(() => () => replacePendingUrl(null), [replacePendingUrl])
 
@@ -133,6 +141,11 @@ export function useMyProfile() {
 
   const saveChanges = useCallback(async () => {
     if (!isDirty || busy) return
+    const phoneDigits = phone.replace(/\D/g, '')
+    if (phoneChanged && !/^\d{10}$/.test(phoneDigits)) {
+      showFeedback('error', 'Phone number must be 10 digits.')
+      return
+    }
     setBusy(true)
     try {
       if (pendingPhoto) {
