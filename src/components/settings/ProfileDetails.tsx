@@ -64,7 +64,7 @@ export default function ProfileDetails({ hook }: { hook: ProfileHook }) {
         <Field
           label="Phone number"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
           disabled={loading}
         />
       </div>

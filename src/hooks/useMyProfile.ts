@@ -133,6 +133,11 @@ export function useMyProfile() {
 
   const saveChanges = useCallback(async () => {
     if (!isDirty || busy) return
+    const phoneDigits = phone.replace(/\D/g, '')
+    if (phoneChanged && !/^\d{10}$/.test(phoneDigits)) {
+      showFeedback('error', 'Phone number must be 10 digits.')
+      return
+    }
     setBusy(true)
     try {
       if (pendingPhoto) {

@@ -130,10 +130,12 @@ export default function AddUserModal({
   const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const rulesMet = PASSWORD_RULES.every((rule) => rule.test(form.password))
   const phoneDigits = form.phone.replace(/\D/g, '')
+  const phoneRegex = /^\d{10}$/
+  const isPhoneValid = phoneRegex.test(phoneDigits)
   const canSubmit =
     form.firstName.trim() &&
     form.lastName.trim() &&
-    phoneDigits.length >= 10 &&
+    phoneDigits.length >= 10 && isPhoneValid &&
     form.email.trim() &&
     rulesMet &&
     form.confirm === form.password &&
@@ -173,22 +175,24 @@ export default function AddUserModal({
         aria-modal="true"
         aria-labelledby="add-user-title"
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-[16px] bg-white p-[22px] shadow-pop"
+        className="flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-[16px] bg-white shadow-pop"
       >
-        <div className="flex items-center gap-[10px]">
-          <TitleIcon size={20} className="text-brand" />
-          <h2 id="add-user-title" className="text-[17px] font-extrabold leading-6 text-ink">
+        <div className="flex shrink-0 items-center gap-[10px] px-[22px] pt-[22px]">
+          <TitleIcon size={20} className="shrink-0 text-brand" />
+          <h2 id="add-user-title" className="shrink-0 text-[17px] font-extrabold leading-6 text-ink">
             Add User
           </h2>
+          {submitError && (
+            <div
+              role="alert"
+              className="ml-auto min-w-0 rounded-[8px] border border-red-200 bg-red-50 px-3 py-[6px] text-[12.5px] leading-5 text-red-600"
+            >
+              {submitError}
+            </div>
+          )}
         </div>
 
-        {submitError && (
-          <div className="mt-[14px] rounded-[8px] border border-red-200 bg-red-50 p-3 text-[12.5px] leading-5 text-red-600">
-            {submitError}
-          </div>
-        )}
-
-        <div className="mt-[18px] space-y-[14px]">
+        <div className="min-h-0 flex-1 space-y-[14px] overflow-y-auto px-[22px] pb-[18px] pt-[18px]">
           <FormSection icon={PersonalIcon} title="Personal Information">
             <div className="grid grid-cols-2 gap-x-[16px]">
               <label className="block">
@@ -318,7 +322,7 @@ export default function AddUserModal({
           </FormSection>
         </div>
 
-        <div className="mt-[18px] flex items-center justify-end gap-[10px]">
+        <div className="flex shrink-0 items-center justify-end gap-[10px] border-t border-line px-[22px] py-[14px]">
           <Button variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
