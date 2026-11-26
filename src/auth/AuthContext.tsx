@@ -9,6 +9,7 @@ import {
   type AuthSession,
 } from './session'
 import { canAccessStp, loadRoleAccess, plantCodesForStpDetails } from '../lib/stpAccess'
+import { clearCachedProfile } from '../hooks/useMyProfile'
 
 type LoginEnvelope = {
   success?: boolean
@@ -16,7 +17,7 @@ type LoginEnvelope = {
   data?: {
     token?: string
     expiresInSeconds: number
-    user: { userCode: string; name: string; email: string }
+    user: { userCode: string; name: string | null; firstName?: string; lastName?: string; email: string }
     roleId: string
   }
 }
@@ -107,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearLocal = useCallback(() => {
     clearSession()
+    clearCachedProfile()
     setSession(null)
     setLastLoginAt(null)
   }, [])
@@ -140,11 +142,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next: AuthSession = {
       expiresAt: Date.now() + data.expiresInSeconds * 1000,
       userCode: data.user.userCode,
-      name: data.user.name,
+      name: data.user.name || `${data.user.firstName ?? ''} ${data.user.lastName ?? ''}`.trim(),
       email: data.user.email,
       roleId: data.roleId,
     }
 
+    // Drop the previous user's profile so the header shows the newly logged-in user.
+    clearCachedProfile()
     saveSession(next, remember)
     const stamp = formatLoginStamp(new Date())
     const store = remember ? localStorage : sessionStorage
