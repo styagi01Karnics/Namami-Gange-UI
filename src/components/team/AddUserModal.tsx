@@ -130,10 +130,12 @@ export default function AddUserModal({
   const set = (key: string) => (value: any) => setForm((prev) => ({ ...prev, [key]: value }))
   const rulesMet = PASSWORD_RULES.every((rule) => rule.test(form.password))
   const phoneDigits = form.phone.replace(/\D/g, '')
+  const phoneRegex = /^\d{10}$/
+  const isPhoneValid = phoneRegex.test(phoneDigits)
   const canSubmit =
     form.firstName.trim() &&
     form.lastName.trim() &&
-    phoneDigits.length >= 10 &&
+    phoneDigits.length >= 10 && isPhoneValid &&
     form.email.trim() &&
     rulesMet &&
     form.confirm === form.password &&
