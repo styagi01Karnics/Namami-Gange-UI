@@ -66,7 +66,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { id: 'stp', label: 'STP Management', icon: BuildingIcon, path: '/stp-management', access: ACCESS.stp },
   { id: 'cctv', label: 'Live Camera Feed', icon: CctvIcon, path: '/cctv-monitoring', access: ACCESS.cctv },
   { id: 'support', label: 'Support Tickets', icon: SupportIcon, path: '/support-tickets', access: ACCESS.support },
-  { id: 'support-admin', label: 'Support Tickets Admin', icon: SupportIcon, path: '/support-tickets-admin', access: ACCESS.supportAdmin },
+  { id: 'support-admin', label: 'Support Tickets(admin)', icon: SupportIcon, path: '/support-tickets-admin', access: ACCESS.supportAdmin },
   // Contracts, Compliance, Manpower and Inventory are hidden — the same content
   // is reachable as tabs inside STP Management. Uncomment to bring them back;
   // the routes and pages still exist.
